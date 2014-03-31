@@ -1,0 +1,488 @@
+package Parse;
+
+import java_cup.runtime.*;
+import Lex.Lexer;
+import Parse.*;
+
+/* Java 1.4 parser for CUP.  
+ * Copyright (C) 2002-2003 C. Scott Ananian <cananian@alumni.princeton.edu>
+ * This program is released under the terms of the GPL; see the file
+ * COPYING for more details.  There is NO WARRANTY on this code.
+ */
+
+parser code  {: 
+  Lexer lexer;
+
+  public Parser(Lexer l) {
+    this();
+    lexer=l;
+  }
+
+  public void syntax_error(java_cup.runtime.Symbol current) {
+    report_error("Syntax error (" + current.sym + ")", current);
+  }
+
+  public void report_error(String message, java_cup.runtime.Symbol info) {
+    lexer.errorMsg(message, info);
+  }
+:};
+
+scan with {: return lexer.nextToken(); :};
+
+terminal INT; // integral_type
+terminal java.lang.String IDENTIFIER; // name
+terminal DOT; // qualified_name
+terminal SEMICOLON, MULT, COMMA, LBRACE, RBRACE, EQ, LPAREN, RPAREN;
+terminal CLASS; // class_declaration
+terminal EXTENDS; // super
+terminal VOID; // method_header
+terminal THIS;
+terminal IF, ELSE; // if_then_statement, if_then_else_statement
+terminal WHILE; // while_statement
+terminal RETURN; // return_statement
+terminal NEW; // class_instance_creation_expression
+terminal PLUS, MINUS, NOT, DIV;
+terminal LT, GT; // relational_expression
+terminal EQEQ, NOTEQ; // equality_expression
+terminal AND; // and_expression
+terminal XOR; // exclusive_or_expression
+terminal OR;  // conditional_expression
+
+terminal java.lang.Number INTEGER_LITERAL;
+terminal NULL_LITERAL;
+
+// 19.2) The Syntactic Grammar
+non terminal ParseNode goal;
+// 19.3) Lexical Structure
+non terminal ParseNode literal;
+// 19.4) Types, Values, and Variables
+non terminal ParseNode type, primitive_type;
+non terminal ParseNode class_type;
+// 19.5) Names
+non terminal ParseNode name;
+// 19.6) Packages
+non terminal ParseNode compilation_unit;
+non terminal ParseNode type_declarations_opt, type_declarations;
+non terminal ParseNode type_declaration;
+// 19.7) Productions used only in the LALR(1) grammar
+// 19.8.1) Class Declaration
+non terminal ParseNode class_declaration, super, super_opt;
+non terminal ParseNode class_body_declarations, class_body_declarations_opt;
+non terminal ParseNode class_body_declaration;
+// 19.8.2) Field Declarations
+non terminal ParseNode field_declaration, variable_declarator;
+non terminal ParseNode variable_declarator_id;
+// 19.8.3) Method Declarations
+non terminal ParseNode method_declaration, method_header, method_declarator;
+non terminal ParseNode formal_parameter_list_opt, formal_parameter_list;
+non terminal ParseNode formal_parameter;
+non terminal ParseNode method_body;
+// 19.11) Blocks and Statements
+non terminal ParseNode block;
+non terminal ParseNode block_statements_opt, block_statements, block_statement;
+non terminal ParseNode local_variable_declaration_statement, local_variable_declaration;
+non terminal ParseNode statement, statement_no_short_if;
+non terminal ParseNode statement_without_trailing_substatement;
+non terminal ParseNode empty_statement;
+non terminal ParseNode expression_statement, statement_expression;
+non terminal ParseNode if_then_statement;
+non terminal ParseNode if_then_else_statement, if_then_else_statement_no_short_if;
+non terminal ParseNode while_statement, while_statement_no_short_if;
+non terminal ParseNode return_statement;
+// 19.12) Expressions
+non terminal ParseNode primary;
+non terminal ParseNode class_instance_creation_expression;
+non terminal ParseNode argument_list_opt, argument_list;
+non terminal ParseNode field_access, method_invocation;
+non terminal ParseNode postfix_expression;
+non terminal ParseNode unary_expression;
+non terminal ParseNode cast_expression;
+non terminal ParseNode multiplicative_expression, additive_expression;
+non terminal ParseNode relational_expression, equality_expression;
+non terminal ParseNode and_expression, exclusive_or_expression;
+non terminal ParseNode conditional_expression;
+non terminal ParseNode assignment;
+non terminal ParseNode expression_opt,expression;
+
+start with goal;
+
+// 19.2) The Syntactic Grammar
+goal ::=	compilation_unit:cu {: RESULT = cu; :};
+
+// 19.3) Lexical Structure.
+literal ::=	INTEGER_LITERAL:integer_lit {:
+    ParseNode pn=new ParseNode("literal",parser.lexer.line_num);
+	  pn.addChild("integer").setLiteral(integer_lit);
+	  RESULT=pn; :}
+|	NULL_LITERAL {:
+    RESULT=(new ParseNode("literal",parser.lexer.line_num)).addChild("null").getRoot(); :};
+
+// 19.4) Types, Values, and Variables
+type	::=	primitive_type:type {: RESULT=type; :}
+|	class_type:type {: RESULT=type; :};
+
+primitive_type::=	INT {: RESULT=(new ParseNode("type",parser.lexer.line_num)).addChild("int").getRoot(); :};
+
+class_type ::= name:name {: 
+    RESULT=(new ParseNode("type",parser.lexer.line_num)).addChild("class").addChild(name).getRoot(); :};
+
+// 19.5) Names
+name	::=	IDENTIFIER:id {: 
+    RESULT=(new ParseNode("name",parser.lexer.line_num)).addChild("identifier").addChild(id).getRoot();  :}
+| name:name DOT IDENTIFIER:id {: 
+    ParseNode pn=new ParseNode("name",parser.lexer.line_num);
+    pn.addChild("base").addChild(name);
+    pn.addChild("identifier").addChild(id);
+    RESULT=pn; :};
+
+// 19.6) Packages
+compilation_unit ::= type_declarations_opt:tdo {: 
+    ParseNode pn=new ParseNode("compilation_unit",parser.lexer.line_num);
+    pn.addChild(tdo);
+    RESULT=pn; :};
+
+type_declarations_opt ::= type_declarations:tds {: RESULT=tds; :}   
+| {: RESULT=new ParseNode("empty",parser.lexer.line_num); :};
+
+type_declarations ::= type_declaration:td {:
+    ParseNode pn=new ParseNode("type_declaration_list",parser.lexer.line_num);
+    pn.addChild(td);
+    RESULT=pn; :}
+|	type_declarations:tds type_declaration:td {:
+    tds.addChild(td);
+    RESULT=tds; :};
+
+type_declaration ::= class_declaration:cd  {: RESULT=cd; :}
+|	SEMICOLON {: 
+    RESULT=new ParseNode("empty",parser.lexer.line_num); 
+:};
+
+// 19.8) Classes
+
+// 19.8.1) Class Declaration:
+class_declaration ::= CLASS IDENTIFIER:id super_opt:so LBRACE class_body_declarations_opt:body RBRACE {:
+    ParseNode pn=new ParseNode("class_declaration",parser.lexer.line_num);
+    pn.addChild("name").addChild(id);
+    pn.addChild("super").addChild(so);
+    pn.addChild("classbody").addChild(body);
+    RESULT=pn; :};
+
+super ::=	EXTENDS class_type:classtype {: RESULT=classtype; :};
+
+super_opt ::=	{: RESULT=new ParseNode("empty",parser.lexer.line_num); :}
+|	super:su {: RESULT=su; :};
+
+class_body_declarations_opt ::= {: RESULT=new ParseNode("empty",parser.lexer.line_num); :}
+|	class_body_declarations:cbd {: RESULT=cbd; :};
+
+class_body_declarations ::= class_body_declaration:cbd {: 
+    ParseNode pn=new ParseNode("class_body_declaration_list",parser.lexer.line_num);
+    pn.addChild(cbd);
+    RESULT=pn; :}
+|	class_body_declarations:cbds class_body_declaration:cbd {: 
+    cbds.addChild(cbd);
+    RESULT=cbds; :};
+
+class_body_declaration ::= field_declaration:field {:
+    RESULT=(new ParseNode("field",parser.lexer.line_num)).addChild(field).getRoot(); :}
+|	method_declaration:method {:
+    RESULT=(new ParseNode("method",parser.lexer.line_num)).addChild(method).getRoot(); :}
+|	SEMICOLON	{: RESULT=new ParseNode("empty",parser.lexer.line_num); :};
+
+// 19.8.2) Field Declarations
+field_declaration ::= type:type variable_declarator:var SEMICOLON {: 
+    ParseNode pn=new ParseNode("field_declaration",parser.lexer.line_num);
+    pn.addChild("type").addChild(type);
+    pn.addChild("variables").addChild(var);
+    RESULT=pn; :};
+
+variable_declarator ::= variable_declarator_id:id {:
+    ParseNode pn=new ParseNode("variable_declarator",parser.lexer.line_num);
+    pn.addChild(id);
+    RESULT=pn; :}
+|	variable_declarator_id:id EQ expression:init {: 
+    ParseNode pn=new ParseNode("variable_declarator",parser.lexer.line_num);
+    pn.addChild(id);
+    pn.addChild("initializer").addChild(init);
+    RESULT=pn; :};
+
+variable_declarator_id ::= IDENTIFIER:id {:
+    RESULT=(new ParseNode("single",parser.lexer.line_num)).addChild(id).getRoot(); :};
+
+// 19.8.3) Method Declarations
+method_declaration ::= method_header:header method_body:body {:
+    ParseNode pn=new ParseNode("method_declaration",parser.lexer.line_num);
+    pn.addChild(header);
+    pn.addChild("body").addChild(body);
+    RESULT=pn;
+:};
+
+method_header ::= type:type method_declarator:decl {:
+    ParseNode pn=new ParseNode("method_header",parser.lexer.line_num);
+    pn.addChild("returntype").addChild(type);
+    pn.addChild(decl);
+    RESULT=pn; :}
+|	VOID method_declarator:decl {:
+    ParseNode pn=new ParseNode("method_header",parser.lexer.line_num);
+    pn.addChild(decl);
+    RESULT=pn; :};
+
+method_declarator ::= IDENTIFIER:id LPAREN formal_parameter_list_opt:params RPAREN {:
+    ParseNode pn=new ParseNode("method_declarator",parser.lexer.line_num);
+    pn.addChild("name").addChild(id);
+    pn.addChild("parameters").addChild(params);
+    RESULT=pn; :};
+
+formal_parameter_list_opt ::= {: RESULT=new ParseNode("empty",parser.lexer.line_num); :}
+|	formal_parameter_list:fpl {: RESULT=fpl; :};
+
+formal_parameter_list ::=	formal_parameter:fp {:
+    ParseNode pn=new ParseNode("formal_parameter_list",parser.lexer.line_num);
+    pn.addChild(fp);
+    RESULT=pn; :}
+|	formal_parameter_list:fpl COMMA formal_parameter:fp {: 
+    fpl.addChild(fp);
+    RESULT=fpl; :};
+
+formal_parameter ::= type:type variable_declarator_id:name {:
+ParseNode pn=new ParseNode("formal_parameter",parser.lexer.line_num);
+    pn.addChild(type);
+    pn.addChild(name);
+    RESULT=pn; :};
+
+method_body ::=	block:block {: RESULT=block; :}
+|	SEMICOLON	{: RESULT=new ParseNode("no_method_body",parser.lexer.line_num); :};
+
+// 19.11) Blocks and Statements
+block ::=	LBRACE block_statements_opt:bso RBRACE {: RESULT=bso; :};
+
+block_statements_opt ::= {: RESULT=new ParseNode("empty",parser.lexer.line_num); :}
+|	block_statements:bs {: RESULT=bs; :};
+
+block_statements ::= block_statement:bs {:
+    ParseNode pn=new ParseNode("block_statement_list",parser.lexer.line_num);
+    pn.addChild(bs);
+    RESULT=pn; :}
+|	block_statements:bss block_statement:bs {: 
+    bss.addChild(bs);
+    RESULT=bss; :};
+
+block_statement ::= local_variable_declaration_statement:lvds {: RESULT=lvds; :}
+|	statement:statement {: RESULT=statement; :};
+
+local_variable_declaration_statement ::= local_variable_declaration:lvd SEMICOLON {: RESULT=lvd; :};
+
+local_variable_declaration ::= type:type variable_declarator:var {:
+    ParseNode pn=new ParseNode("local_variable_declaration",parser.lexer.line_num);
+    pn.addChild(type);
+    pn.addChild(var);
+    RESULT=pn; :};
+
+statement ::=	statement_without_trailing_substatement:st {: RESULT=st; :}
+|	if_then_statement:st {: RESULT=st; :}
+|	if_then_else_statement:st {: RESULT=st; :}
+|	while_statement:st {: RESULT=st; :};
+
+statement_no_short_if ::=	statement_without_trailing_substatement:st {: RESULT=st; :}
+|	if_then_else_statement_no_short_if:st {: RESULT=st; :}
+|	while_statement_no_short_if:st {: RESULT=st; :};
+
+statement_without_trailing_substatement ::= block:st {: RESULT=st; :}
+|	empty_statement:st {: RESULT=st; :}
+|	expression_statement:st {: RESULT=st; :}
+|	return_statement:st {: RESULT=st; :};
+
+empty_statement ::=	SEMICOLON {: 
+    RESULT=new ParseNode("nop",parser.lexer.line_num); :};
+
+expression_statement ::= statement_expression:se SEMICOLON {: 
+    ParseNode pn=new ParseNode("expression",parser.lexer.line_num);
+    pn.addChild(se);
+    RESULT=pn; :};
+
+statement_expression ::= assignment:st {: RESULT=st; :}
+|	method_invocation:st {: RESULT=st; :}
+|	class_instance_creation_expression:st {: RESULT=st; :};
+
+if_then_statement ::= IF LPAREN expression:exp RPAREN statement:st {: 
+    ParseNode pn=new ParseNode("ifstatement",parser.lexer.line_num);
+    pn.addChild("condition").addChild(exp);
+    pn.addChild("statement").addChild(st);
+    RESULT=pn; :};
+
+if_then_else_statement ::= IF LPAREN expression:exp RPAREN statement_no_short_if:st	ELSE statement:else_st {:
+    ParseNode pn=new ParseNode("ifstatement",parser.lexer.line_num);
+    pn.addChild("condition").addChild(exp);
+    pn.addChild("statement").addChild(st);
+    pn.addChild("else_statement").addChild(else_st);
+    RESULT=pn; :};
+
+if_then_else_statement_no_short_if ::= IF LPAREN expression:exp RPAREN statement_no_short_if:st	ELSE statement_no_short_if:else_st {:
+    ParseNode pn=new ParseNode("ifstatement",parser.lexer.line_num);
+    pn.addChild("condition").addChild(exp);
+    pn.addChild("statement").addChild(st);
+    pn.addChild("else_statement").addChild(else_st);
+    RESULT=pn; :};
+
+while_statement ::= WHILE LPAREN expression:exp RPAREN statement:st {: 
+    ParseNode pn=new ParseNode("whilestatement",parser.lexer.line_num);
+    pn.addChild("condition").addChild(exp);
+    pn.addChild("statement").addChild(st);
+    RESULT=pn; :};
+
+while_statement_no_short_if ::= WHILE LPAREN expression:exp RPAREN statement_no_short_if:st {:
+    ParseNode pn=new ParseNode("whilestatement",parser.lexer.line_num);
+    pn.addChild("condition").addChild(exp);
+    pn.addChild("statement").addChild(st);
+    RESULT=pn; :};
+
+return_statement ::= RETURN expression_opt:exp SEMICOLON {: 
+    RESULT=(new ParseNode("return",parser.lexer.line_num)).addChild(exp).getRoot(); :};
+
+// 19.12) Expressions
+
+primary ::= literal:lit {: RESULT=lit; :}
+|	THIS {: RESULT=new ParseNode("this",parser.lexer.line_num); :}
+|	LPAREN expression:exp RPAREN {: RESULT=exp; :}
+|	class_instance_creation_expression:exp {: RESULT=exp; :}
+|	field_access:exp {: RESULT=exp; :}
+|	method_invocation:exp {: RESULT=exp; :};
+
+class_instance_creation_expression ::= NEW class_type:type LPAREN RPAREN {:
+    ParseNode pn=new ParseNode("createobject",parser.lexer.line_num);
+    pn.addChild(type);
+    RESULT=pn; :};
+
+argument_list_opt ::= {: RESULT=new ParseNode("empty",parser.lexer.line_num); :}
+|	argument_list:args {: RESULT=args; :};
+
+argument_list ::= expression:exp {:
+    ParseNode pn=new ParseNode("argument_list",parser.lexer.line_num);
+    pn.addChild(exp);
+    RESULT=pn; :}
+|	argument_list:list COMMA expression:exp {:
+    list.addChild(exp);
+    RESULT=list; :};
+
+field_access ::= primary:base DOT IDENTIFIER:id {: 
+    ParseNode pn=new ParseNode("fieldaccess",parser.lexer.line_num);
+    pn.addChild("base").addChild(base);
+    pn.addChild("field").addChild(id);
+    RESULT=pn; :};
+
+method_invocation ::= name:name LPAREN argument_list_opt:args RPAREN {: 
+    ParseNode pn=new ParseNode("methodinvoke1",parser.lexer.line_num);
+    pn.addChild(name);
+    pn.addChild(args);
+    RESULT=pn; :}
+|	primary:base DOT IDENTIFIER:name LPAREN argument_list_opt:args RPAREN {: 
+    ParseNode pn=new ParseNode("methodinvoke2",parser.lexer.line_num);
+    pn.addChild("base").addChild(base);
+    pn.addChild("id").addChild(name);
+    pn.addChild(args);
+    RESULT=pn; :};
+
+postfix_expression ::= primary:exp {: RESULT=exp; :}
+|	name:exp {: RESULT=exp; :};
+
+unary_expression ::= postfix_expression:exp {: RESULT=exp; :}
+|	NOT unary_expression:exp {: 
+    RESULT=(new ParseNode("not",parser.lexer.line_num)).addChild(exp).getRoot(); :}
+|	cast_expression:exp {: RESULT=exp; :};
+
+cast_expression ::= LPAREN primitive_type:type RPAREN unary_expression:exp {: 
+    ParseNode pn=new ParseNode("cast1",parser.lexer.line_num);
+    pn.addChild("type").addChild(type);
+    pn.addChild("exp").addChild(exp);
+    RESULT=pn; :}
+|	LPAREN expression:type RPAREN unary_expression:exp {: 
+    ParseNode pn=new ParseNode("cast2",parser.lexer.line_num);
+    pn.addChild("type").addChild(type);
+    pn.addChild("exp").addChild(exp);
+    RESULT=pn; :};
+
+multiplicative_expression ::= unary_expression:exp {: RESULT=exp; :}
+|	multiplicative_expression:exp1 MULT unary_expression:exp2 {: 
+    ParseNode pn=new ParseNode("mult",parser.lexer.line_num);
+    pn.addChild(exp1);
+    pn.addChild(exp2);
+    RESULT=pn; :}
+|	multiplicative_expression:exp1 DIV unary_expression:exp2 {:
+    ParseNode pn=new ParseNode("div",parser.lexer.line_num);
+    pn.addChild(exp1);
+    pn.addChild(exp2);
+    RESULT=pn; :};
+
+additive_expression ::= multiplicative_expression:exp {: RESULT=exp; :}
+|	additive_expression:exp1 PLUS multiplicative_expression:exp2 {: 
+    ParseNode pn=new ParseNode("add",parser.lexer.line_num);
+    pn.addChild(exp1);
+    pn.addChild(exp2);
+    RESULT=pn; :}
+|	additive_expression:exp1 MINUS multiplicative_expression:exp2 {: 
+    ParseNode pn=new ParseNode("sub",parser.lexer.line_num);
+    pn.addChild(exp1);
+    pn.addChild(exp2);
+    RESULT=pn; :};
+
+relational_expression ::= additive_expression:exp {: RESULT=exp; :}
+|	relational_expression:exp1 LT additive_expression:exp2 {:
+    ParseNode pn=new ParseNode("comp_lt",parser.lexer.line_num);
+    pn.addChild(exp1);
+    pn.addChild(exp2);
+    RESULT=pn; :}
+|	relational_expression:exp1 GT additive_expression:exp2 {:
+    ParseNode pn=new ParseNode("comp_gt",parser.lexer.line_num);
+    pn.addChild(exp1);
+    pn.addChild(exp2);
+    RESULT=pn; :};
+
+equality_expression ::= relational_expression:exp {: RESULT=exp; :}
+|	equality_expression:exp1 EQEQ relational_expression:exp2 {: 
+    ParseNode pn=new ParseNode("equal",parser.lexer.line_num);
+    pn.addChild(exp1);
+    pn.addChild(exp2);
+    RESULT=pn; :}
+|	equality_expression:exp1 NOTEQ relational_expression:exp2 {: 
+    ParseNode pn=new ParseNode("not_equal",parser.lexer.line_num);
+    pn.addChild(exp1);
+    pn.addChild(exp2);
+    RESULT=pn; :};
+
+and_expression ::= equality_expression:exp {: RESULT=exp; :}
+|	and_expression:exp1 AND equality_expression:exp2 {: 
+    ParseNode pn=new ParseNode("bitwise_and",parser.lexer.line_num);
+    pn.addChild(exp1);
+    pn.addChild(exp2);
+    RESULT=pn; :};
+
+exclusive_or_expression ::= and_expression:expr {: RESULT=expr; :}
+|	exclusive_or_expression:exp1 XOR and_expression:exp2 {: 
+    ParseNode pn=new ParseNode("bitwise_xor",parser.lexer.line_num);
+    pn.addChild(exp1);
+    pn.addChild(exp2);
+    RESULT=pn; :};
+
+conditional_expression ::= exclusive_or_expression:exclor {: RESULT=exclor; :}
+|	conditional_expression:exp1 OR exclusive_or_expression:exp2 {: 
+    ParseNode pn=new ParseNode("bitwise_or",parser.lexer.line_num);
+    pn.addChild(exp1);
+    pn.addChild(exp2);
+    RESULT=pn; :};
+
+
+expression ::= conditional_expression:expr {: RESULT=expr; :} 
+| assignment:assign {: RESULT=assign; :};
+
+// semantic check necessary here to ensure a valid left-hand side.
+// allowing a parenthesized variable here on the lhs was introduced in
+// JLS 2; thanks to Eric Blake for pointing this out.
+assignment ::=	postfix_expression:lvalue EQ expression:rvalue {:
+    ParseNode pn=new ParseNode("assignment",parser.lexer.line_num);
+    ParseNode pnargs=pn.addChild("args");
+    pnargs.addChild(lvalue);
+    pnargs.addChild(rvalue);
+    RESULT=pn; :};
+
+expression_opt ::= {: RESULT=new ParseNode("empty",parser.lexer.line_num); :}
+| expression:exp {: RESULT=exp; :};
