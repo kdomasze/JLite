@@ -1,8 +1,6 @@
 package IR.Tree;
 
-
-import IR.State;
-import IR.TypeUtil;
+import java.util.List;
 
 /***
  * Implement the check function for each type of AST Node
