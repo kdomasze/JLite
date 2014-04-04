@@ -1,3 +1,5 @@
+package IR.Tree;
+
 import java.util.Vector;
 
 public class class_declaration

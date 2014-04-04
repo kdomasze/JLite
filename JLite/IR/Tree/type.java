@@ -1,3 +1,5 @@
+package IR.Tree;
+
 public class type
 {
 	String Type;
