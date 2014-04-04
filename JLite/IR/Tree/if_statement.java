@@ -1,5 +1,7 @@
 package IR.Tree;
 
+import java.util.Vector;
+
 public class if_statement extends block_statement
 {
 	String condition;
