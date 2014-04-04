@@ -4,7 +4,8 @@ public class class_declaration
 {
 	String name;
 	Vector<field> Field = new Vector<field>(1,1);
-	
+	Vector<method> Method = new Vector<method>(1,1);
+
 	public class_declaration(String n)
 	{
 		name = n;
