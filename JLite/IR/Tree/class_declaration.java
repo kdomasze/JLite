@@ -5,8 +5,8 @@ import java.util.Vector;
 public class class_declaration
 {
 	String name;
-	Vector<field> Field = new Vector<field>(1,1);
-	Vector<method> Method = new Vector<method>(1,1);
+	Vector<field> field_list = new Vector<field>(1,1);
+	Vector<method> method_list = new Vector<method>(1,1);
 
 	public class_declaration(String n)
 	{
@@ -16,6 +16,12 @@ public class class_declaration
 	public void addField(type Type, String name)
 	{
 		field tempField = new field(Type, name);
-		Field.add(tempField);
+		field_list.add(tempField);
+	}
+	
+	public void addMethod(String name, type returnType)
+	{
+		method tempMethod = new method(name, returnType);
+		method_list.add(tempMethod);
 	}
 }

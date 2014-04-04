@@ -1,6 +1,6 @@
 package IR.Tree;
 
-public class whilestatement extends expression
+public class whilestatement extends block_statement
 {
 
 }
