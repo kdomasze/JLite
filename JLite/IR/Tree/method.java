@@ -27,21 +27,21 @@ public class method
 	// adds an if-statement to the block_statement_list
 	public void addIfStatement(String condition, String identifier, int literal)
 	{
-		block_statement tempBlockStatement = new if_statement(String condition, String identifier, int literal);
-		block_statement_list.add(tempBlockStatement)
+		block_statement tempBlockStatement = new if_statement(condition, identifier,literal);
+		block_statement_list.add(tempBlockStatement);
 	}
 	
 	// adds a variable declaration to the block_statement_list
 	public void addLocalVarDeclaration(type Type, String identifier, int literal)
 	{
-		block_statement tempBlockStatement = new local_variable_declaration(type Type, String identifier, int literal);
-		block_statement_list.add(tempBlockStatement)
+		block_statement tempBlockStatement = new local_variable_declaration(Type, identifier, literal);
+		block_statement_list.add(tempBlockStatement);
 	}
 	
 	// adds an assignment to the block_statement_list
 	public void addAssignment(String identifier, int literal)
 	{
-		block_statement tempBlockStatement = new assignment(String identifier, int literal);
-		block_statement_list.add(tempBlockStatement)
+		block_statement tempBlockStatement = new assignment(identifier, literal);
+		block_statement_list.add(tempBlockStatement);
 	}
 }
