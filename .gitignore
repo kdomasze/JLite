@@ -41,3 +41,9 @@ JLite/Parse/Sym.java
 # Temp Files #
 ##############
 *~
+*.save
+
+# Directories #
+###############
+bin/
+.metadata/
