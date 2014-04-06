@@ -28,7 +28,7 @@ public class method
 	// adds an if-statement to the block_statement_list
 	public void addIfStatement(String condition, String identifier, int literal)
 	{
-		block_statement tempBlockStatement = new if_statement(condition, identifier,literal);
+		block_statement tempBlockStatement = new if_statement(condition, identifier, literal);
 		block_statement_list.add(tempBlockStatement);
 	}
 	
@@ -40,9 +40,9 @@ public class method
 	}
 	
 	// adds an assignment to the block_statement_list
-	public void addAssignment(String identifier, int literal)
+	public void addAssignment(String identifier, expression Expression)
 	{
-		block_statement tempBlockStatement = new assignment(identifier, literal);
+		block_statement tempBlockStatement = new assignment(identifier, Expression);
 		block_statement_list.add(tempBlockStatement);
 	}
 }

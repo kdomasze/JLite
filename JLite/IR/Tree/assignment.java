@@ -3,12 +3,12 @@ package IR.Tree;
 public class assignment extends expression
 {
     String identifier;
-    int literal;
+    expression Expression;
 
 	// Constructor
-	public assignment(String i, int l)
+	public assignment(String i, expression e)
 	{
 		identifier = i;
-		literal = l;
+		Expression = e;
 	}
 }
