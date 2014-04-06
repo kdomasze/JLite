@@ -12,7 +12,7 @@ public class method_invoke extends expression
 		identifier = i;
 	}
 	
-	public addArgument(argument a)
+	public void addArgument(argument a)
 	{
 		argument_list.add(a);
 	}

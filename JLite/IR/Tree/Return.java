@@ -3,9 +3,9 @@ package IR.Tree;
 public class Return
 {
 	type returnType;
-	String returnValue;
+	expression returnValue;
 	
-	public Return(type rt, String rv)
+	public Return(type rt, expression rv)
 	{
 		returnType = rt;
 		returnValue = rv;
