@@ -22,9 +22,9 @@ public class class_declaration
 	}
 
 	// add method to method_list
-	public void addMethod(String name, type returnType)
+	public void addMethod(String name, Return r)
 	{
-		method tempMethod = new method(name, returnType);
+		method tempMethod = new method(name, r);
 		method_list.add(tempMethod);
 	}
 }

@@ -5,16 +5,17 @@ import java.util.Vector;
 public class method
 {
     String name;
-    type returnType;
+    
+	Return returnStatement;
 	
     Vector<formal_parameter> formal_parameter_list = new Vector<formal_parameter>(1,1); // contains all of the method header components
 	Vector<block_statement> block_statement_list = new Vector<block_statement>(1,1); // contains all of the block statements within the method
 	
 	// Constructor
-	public method(String n, type rt)
+	public method(String n, Return r)
 	{
 		name = n;
-		returnType = rt;
+		returnStatement = r;
 	}
 	
 	// adds a parameter into the formal_parameter_list
