@@ -1,5 +1,7 @@
 package IR.Tree;
 
+import java.util.Vector;
+
 public class method_invoke extends expression
 {
 	String identifier;
