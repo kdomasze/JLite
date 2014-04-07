@@ -75,17 +75,17 @@ public class method
 		block_statement_list.add(tempBlockStatement);
 	}
 	
-<<<<<<< HEAD
 	// adds a bitwise_xor to the block_statement list
 	public void addBitWiseXor(expression Expression)
 	{
 		block_statement tempBlockStatement = new bitwise_xor(Expression);
-=======
+		block_statement_list.add(tempBlockStatement);
+	}
+	
 	// adds a subtract to the block_statement list
 	public void addbitwise_or(expression Expression)
 	{
 		block_statement tempBlockStatement = new bitwise_or(Expression);
->>>>>>> 86aadd91f9949baef7b534d4657dc15fb754b0a8
 		block_statement_list.add(tempBlockStatement);
 	}
 	
