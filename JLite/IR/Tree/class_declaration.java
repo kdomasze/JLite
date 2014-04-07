@@ -15,10 +15,10 @@ public class class_declaration
 		name = n;
 	}
 
-	// define an extend identifer;
+	// define an extend identifier;
 	public void addField(String e_i)
 	{
-		extend_identifer = e_i;
+		extend_identifier = e_i;
 	}
 	
 	// add field to field_list
