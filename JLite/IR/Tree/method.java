@@ -45,4 +45,25 @@ public class method
 		block_statement tempBlockStatement = new assignment(identifier, Expression);
 		block_statement_list.add(tempBlockStatement);
 	}
+	
+	// adds an add to the block_statement list
+	public void addAdd(string identifier)
+	{
+		block_statement tempBlockStatement = new Add(identifier);
+		block_statement_list.add(tempBlockStatement);
+	}
+	
+	// adds a multiply to the block_statement list
+	public void addMultiply(string identifier)
+	{
+		block_statement tempBlockStatement = new multiply(identifier);
+		block_statement_list.add(tempBlockStatement);
+	}
+	
+	// adds a subtract to the block_statement list
+	public void addSubtract(string identifier)
+	{
+		block_statement tempBlockStatement = new subtract(identifier);
+		block_statement_list.add(tempBlockStatement);
+	}
 }
