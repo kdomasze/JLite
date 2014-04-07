@@ -75,6 +75,13 @@ public class method
 		block_statement_list.add(tempBlockStatement);
 	}
 	
+	// adds a subtract to the block_statement list
+	public void addbitwise_or(expression Expression)
+	{
+		block_statement tempBlockStatement = new bitwise_or(Expression);
+		block_statement_list.add(tempBlockStatement);
+	}
+	
 	// adds a create_object to the block_statement_list
 	public void addcreateObject(type Type)
 	{
