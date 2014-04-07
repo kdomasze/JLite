@@ -95,4 +95,11 @@ public class method
 		block_statement tempBlockStatement = new create_object(Type);
 		block_statement_list.add(tempBlockStatement);
 	}
+
+	// adds a bitwise_and to the block_statement_list
+	public void addbitwise_and(expression Expression)
+	{
+		block_statement tempBlockStatement = new bitwise_and(Expression);
+		block_statement_list.add(tempBlockStatement);
+	}
 }
