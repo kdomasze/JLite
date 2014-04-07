@@ -1,6 +1,6 @@
 package IR.Tree;
 
-public class create_object
+public class create_object extends block_statement
 {
 	type Type;
 	
