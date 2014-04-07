@@ -5,6 +5,7 @@ import java.util.Vector;
 public class class_declaration
 {
 	String name;
+	String extend_identifier;
 	Vector<field> field_list = new Vector<field>(1,1);
 	Vector<method> method_list = new Vector<method>(1,1);
 
@@ -14,6 +15,12 @@ public class class_declaration
 		name = n;
 	}
 
+	// define an extend identifer;
+	public void addField(String e_i)
+	{
+		extend_identifer = e_i;
+	}
+	
 	// add field to field_list
 	public void addField(type Type, String name)
 	{
