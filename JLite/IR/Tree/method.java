@@ -75,6 +75,13 @@ public class method
 		block_statement_list.add(tempBlockStatement);
 	}
 	
+	// adds a bitwise_xor to the block_statement list
+	public void addBitWiseXor(expression Expression)
+	{
+		block_statement tempBlockStatement = new bitwise_xor(Expression);
+		block_statement_list.add(tempBlockStatement);
+	}
+	
 	// adds a create_object to the block_statement_list
 	public void addcreateObject(type Type)
 	{
