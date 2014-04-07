@@ -6,7 +6,7 @@ public class multiply extends expression
 {
 	Vector<expression>Identifier = new Vector<expression>(2,1);
 	
-	public multiply(expresion Expression)
+	public multiply(expression Expression)
 	{
 		Identifier.add(Expression);
 	}
@@ -28,6 +28,5 @@ public class multiply extends expression
 		expression tempExpression = new method_invoke(identifier);
 		Identifier.add(tempExpression);
 		
-	}
 	}
 }
