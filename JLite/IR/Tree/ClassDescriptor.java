@@ -18,7 +18,7 @@ public class ClassDescriptor extends Descriptor
 	
 	public void addMethodDescriptor(String identifier, MethodDescriptor mD)
 	{
-		methodDescriptorMap.put(identifier, mD);
+		MethodDescriptorMap.put(identifier, mD);
 	}
 	
 	public void defineSuperClass(ClassDescriptor sC)
