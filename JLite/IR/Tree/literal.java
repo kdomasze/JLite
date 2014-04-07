@@ -3,7 +3,7 @@ package IR.Tree;
 /**
  * Created by Anthony Diep on 4/7/14.
  */
-public class literal
+public class literal extends expression
 {
 	int literal;
 
