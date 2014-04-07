@@ -55,23 +55,23 @@ public class method
 	}
 	
 	// adds an add to the block_statement list
-	public void addAdd(string identifier)
+	public void addAdd(expression Expression)
 	{
-		block_statement tempBlockStatement = new Add(identifier);
+		block_statement tempBlockStatement = new Add(Expression);
 		block_statement_list.add(tempBlockStatement);
 	}
 	
 	// adds a multiply to the block_statement list
-	public void addMultiply(string identifier)
+	public void addMultiply(expression Expression)
 	{
-		block_statement tempBlockStatement = new multiply(identifier);
+		block_statement tempBlockStatement = new multiply(Expression);
 		block_statement_list.add(tempBlockStatement);
 	}
 	
 	// adds a subtract to the block_statement list
-	public void addSubtract(string identifier)
+	public void addSubtract(expression Expression)
 	{
-		block_statement tempBlockStatement = new subtract(identifier);
+		block_statement tempBlockStatement = new subtract(Expression);
 		block_statement_list.add(tempBlockStatement);
 	}
 	
