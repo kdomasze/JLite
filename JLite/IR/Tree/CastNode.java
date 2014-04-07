@@ -1,5 +1,6 @@
 package IR.Tree;
 
-public class CastNode {
+public class CastNode extends ExpressionNode
+{
 
 }
