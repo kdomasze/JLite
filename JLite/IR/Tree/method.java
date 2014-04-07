@@ -45,4 +45,10 @@ public class method
 		block_statement tempBlockStatement = new assignment(identifier, Expression);
 		block_statement_list.add(tempBlockStatement);
 	}
+	
+	// adds a create_object to the block_statement_list
+	{
+		block_statement tempBlockStatement = new assignment(Type);
+		block_statement_list.add(tempBlockStatement);
+	}
 }
