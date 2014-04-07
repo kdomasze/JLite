@@ -15,14 +15,14 @@ public class VarDescriptor extends Descriptor
 	}
 	
 	//getMethods
-	public NameDescriptor getName()
+	public String getName()
 	{
-		return name;
+		return name.getName();
 	}
 	
-	public TypeDescriptor getType()
+	public String getType()
 	{
-		return type;
+		return type.getType();
 	}
 	
 	public int getValue()
