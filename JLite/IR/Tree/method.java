@@ -64,6 +64,12 @@ public class method
 	public void addSubtract(string identifier)
 	{
 		block_statement tempBlockStatement = new subtract(identifier);
+	}
+	
+	// adds a create_object to the block_statement_list
+	public void addcreateObject(type Type)
+	{
+		block_statement tempBlockStatement = new create_object(Type);
 		block_statement_list.add(tempBlockStatement);
 	}
 }
