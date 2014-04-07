@@ -32,6 +32,14 @@ public class method
 		block_statement_list.add(tempBlockStatement);
 	}
 	
+	// adds a while-statement to the block_statement_list
+	public void addWhileStatement(String condition, String identifier, int literal)
+	{
+		block_statement tempBlockStatement = new while_statement(condition, identifier, literal);
+		block_statement_list.add(tempBlockStatement);
+		
+	}
+	
 	// adds a variable declaration to the block_statement_list
 	public void addLocalVarDeclaration(type Type, String identifier, int literal)
 	{

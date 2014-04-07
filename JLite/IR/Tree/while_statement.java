@@ -10,7 +10,7 @@ public class while_statement extends block_statement
 	
 	Vector<block_statement> block_statement_list = new Vector<block_statement>(1,1);
 	
-	public void while_Statement (String c, String id, int lit)
+	public while_statement (String c, String id, int lit)
 	{
 		condition = c;
 		identifier = id;
