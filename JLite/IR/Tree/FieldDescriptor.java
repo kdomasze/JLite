@@ -16,12 +16,12 @@ public class FieldDescriptor extends Descriptor
 	}
 	
 	// get methods
-	public NameDescriptor getFieldName()
+	public String getFieldName()
 	{
 		return Name.getName();
 	}
 	
-	public TypeDescriptor getFieldType()
+	public String getFieldType()
 	{
 		return Type.getType();
 	}
