@@ -5,18 +5,18 @@ import java.util.Map;
 
 public class ClassDescriptor extends Descriptor
 {
-	private Map<String, FieldDescriptor> FieldDescriptorMap = new HashMap<String, FieldDescriptor>(); // hashMap for field descriptors
-	private Map<String, MethodDescriptor> MethodDescriptorMap = new HashMap<String, MethodDescriptor>(); // hashMap for method descriptors
+	private Map<NameDescriptor, FieldDescriptor> FieldDescriptorMap = new HashMap<NameDescriptor, FieldDescriptor>(); // hashMap for field descriptors
+	private Map<NameDescriptor, MethodDescriptor> MethodDescriptorMap = new HashMap<NameDescriptor, MethodDescriptor>(); // hashMap for method descriptors
 	
 	private ClassDescriptor superClass; // holds reference for super/parent class
 	
 	// put methods
-	public void addFieldDescriptor(String identifier, FieldDescriptor fD)
+	public void addFieldDescriptor(NameDescriptor identifier, FieldDescriptor fD)
 	{
 		FieldDescriptorMap.put(identifier, fD);
 	}
 	
-	public void addMethodDescriptor(String identifier, MethodDescriptor mD)
+	public void addMethodDescriptor(NameDescriptor identifier, MethodDescriptor mD)
 	{
 		MethodDescriptorMap.put(identifier, mD);
 	}
@@ -27,12 +27,12 @@ public class ClassDescriptor extends Descriptor
 	}
 	
 	// get methods
-	public FieldDescriptor getFieldDescriptor(String identifier)
+	public FieldDescriptor getFieldDescriptor(NameDescriptor identifier)
 	{
 		return FieldDescriptorMap.get(identifier);
 	}
 	
-	public MethodDescriptor getMethodDescriptor(String identifier)
+	public MethodDescriptor getMethodDescriptor(NameDescriptor identifier)
 	{
 		return MethodDescriptorMap.get(identifier);
 	}

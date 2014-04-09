@@ -4,10 +4,10 @@ public class VarDescriptor extends Descriptor
 {
 	private NameDescriptor name;
 	private TypeDescriptor type;
-	private int value;
+	private ExpressionNode value;
 	
 	//constructor:
-	public VarDescriptor(NameDescriptor N, TypeDescriptor T, int V)
+	public VarDescriptor(NameDescriptor N, TypeDescriptor T, ExpressionNode V)
 	{
 		name = N;
 		type = T;
@@ -25,7 +25,7 @@ public class VarDescriptor extends Descriptor
 		return type.getType();
 	}
 	
-	public int getValue()
+	public ExpressionNode getValue()
 	{
 		return value;
 	}
