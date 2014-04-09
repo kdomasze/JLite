@@ -17,12 +17,12 @@ public class VarDescriptor extends Descriptor
 	}
 	
 	//getMethods
-	public String getName()
+	public NameNode getName()
 	{
 		return name.getName();
 	}
 	
-	public String getType()
+	public TypeNode getType()
 	{
 		return type.getType();
 	}
