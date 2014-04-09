@@ -1,7 +1,5 @@
 package IR.Tree;
 
-import java.util.Vector;
-
 public class OpNode extends ExpressionNode
 {
 	private ExpressionNode Operand1;

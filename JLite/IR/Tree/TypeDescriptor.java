@@ -2,15 +2,16 @@ package IR.Tree;
 
 public class TypeDescriptor extends Descriptor
 {
-	private String Type;
+	private TypeNode Type;
 	
 	// Constructor
-	public TypeDescriptor(String t)
+	public TypeDescriptor(TypeNode t)
 	{
 		Type = t;
 	}
-	
-	public String getType()
+
+	// get method
+	public TypeNode getType()
 	{
 		return Type;
 	}
