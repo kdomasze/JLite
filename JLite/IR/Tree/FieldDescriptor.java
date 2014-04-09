@@ -1,7 +1,5 @@
 package IR.Tree;
 
-import java.util.HashMap;
-import java.util.Map;
 
 public class FieldDescriptor extends Descriptor
 {
