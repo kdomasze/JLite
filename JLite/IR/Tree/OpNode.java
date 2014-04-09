@@ -1,6 +1,4 @@
-package IR.Tree;
-
-import java.util.Vector;
+package IR.Tree;s
 
 public class OpNode extends ExpressionNode
 {
