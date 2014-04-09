@@ -1,4 +1,4 @@
-package IR.Tree;s
+package IR.Tree;
 
 public class OpNode extends ExpressionNode
 {
