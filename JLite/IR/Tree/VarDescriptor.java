@@ -2,6 +2,8 @@ package IR.Tree;
 
 public class VarDescriptor extends Descriptor
 {
+
+	// MIGHT NEED TO REDO
 	private NameDescriptor name;
 	private TypeDescriptor type;
 	private ExpressionNode value;
