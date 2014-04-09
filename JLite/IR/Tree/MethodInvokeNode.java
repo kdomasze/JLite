@@ -1,6 +1,6 @@
 package IR.Tree;
 
-public class MethodInvokeNode extends BlockStatementNode
+public class MethodInvokeNode extends ExpressionNode
 {
 	
 }
