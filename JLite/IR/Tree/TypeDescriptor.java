@@ -9,7 +9,8 @@ public class TypeDescriptor extends Descriptor
 	{
 		Type = t;
 	}
-	
+
+	// get method
 	public TypeNode getType()
 	{
 		return Type;
