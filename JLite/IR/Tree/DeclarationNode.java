@@ -7,7 +7,7 @@ public class DeclarationNode extends BlockStatementNode
 	private ExpressionNode initializer;
 	
 	// constructor
-	public DeclarationNode(n, t, i)
+	public DeclarationNode(NameNode n, TypeNode t, ExpressionNode i)
 	{
 		name = n;
 		type = t;
@@ -25,7 +25,7 @@ public class DeclarationNode extends BlockStatementNode
 		return type;
 	}
 	
-	public ExpressionNode getInitilizer()
+	public ExpressionNode getInitializer()
 	{
 		return initializer;
 	}
