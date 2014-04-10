@@ -11,8 +11,8 @@ public class NameDescriptor extends Descriptor
 	}
 	
 	// get method
-	public NameNode getName()
+	public String getName()
 	{
-		return name;
+		return name.getName();
 	}
 }
