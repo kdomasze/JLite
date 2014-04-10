@@ -1,4 +1,4 @@
-package IR.Tree;
+package IR;
 
 import java.util.HashMap;
 import java.util.Map;

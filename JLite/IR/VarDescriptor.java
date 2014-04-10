@@ -1,4 +1,4 @@
-package IR.Tree;
+package IR;
 
 public class VarDescriptor extends Descriptor
 {
