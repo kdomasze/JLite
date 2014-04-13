@@ -1,4 +1,4 @@
-package IR.Tree;
+package IR;
 
 public class TypeDescriptor extends Descriptor
 {
