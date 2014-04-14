@@ -1,5 +1,7 @@
 package IR;
 
+import IR.*;
+
 public class VarDescriptor extends Descriptor
 {
 	private TypeDescriptor type;

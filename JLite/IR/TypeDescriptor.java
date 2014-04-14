@@ -1,5 +1,7 @@
 package IR;
 
+import Tree.*;
+
 public class TypeDescriptor extends Descriptor
 {
 	private TypeNode Type;

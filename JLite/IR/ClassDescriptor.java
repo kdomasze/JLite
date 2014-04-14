@@ -1,8 +1,5 @@
 package IR;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class ClassDescriptor extends Descriptor
 {
 	private SymbolTable FieldDescriptorSymbolTable; // Symbol Table for field descriptors

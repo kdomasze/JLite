@@ -1,7 +1,6 @@
 package IR;
 
-import java.util.HashMap;
-import java.util.Map;
+import Tree.*;
 
 public class MethodDescriptor extends Descriptor
 {
