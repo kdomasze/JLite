@@ -1,6 +1,6 @@
 package IR;
 
-import Tree.*;
+import IR.Tree.ExpressionNode;
 
 public class VarDescriptor extends Descriptor
 {

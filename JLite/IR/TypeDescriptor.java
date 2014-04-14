@@ -1,6 +1,6 @@
 package IR;
 
-import Tree.*;
+import IR.Tree.TypeNode;
 
 public class TypeDescriptor extends Descriptor
 {

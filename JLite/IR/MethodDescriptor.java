@@ -1,6 +1,6 @@
 package IR;
 
-import Tree.*;
+import IR.Tree.TreeNode;
 
 public class MethodDescriptor extends Descriptor
 {
@@ -40,7 +40,7 @@ public class MethodDescriptor extends Descriptor
 		return ASTTree;
 	}
 	
-	public VarDescriptor getVarDescriptorTable()
+	public SymbolTable getVarDescriptorTable()
 	{
 		return VarDescriptorSymbolTable;
 	}
