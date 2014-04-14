@@ -1,6 +1,6 @@
 package IR;
 
-import IR.*;
+import Tree.*;
 
 public class VarDescriptor extends Descriptor
 {
