@@ -49,3 +49,5 @@ JLite/Parse/Sym.java
 bin/
 .metadata/
 JLite/test/Test011.java
+JLite/results.txt
+*.iml
