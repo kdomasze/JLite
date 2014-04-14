@@ -1,6 +1,6 @@
 package IR;
 
-import Tree.*;
+import IR.Tree.ExpressionNode;
 
 public class VarDescriptor extends Descriptor
 {
@@ -8,8 +8,9 @@ public class VarDescriptor extends Descriptor
 	private ExpressionNode value;
 	
 	//constructor:
-	public VarDescriptor(TypeDescriptor T, ExpressionNode V)
+	public VarDescriptor(String name, TypeDescriptor T, ExpressionNode V)
 	{
+		super(name);
 		type = T;
 		value = V;
 	}
