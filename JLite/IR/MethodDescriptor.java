@@ -6,30 +6,22 @@ import java.util.Map;
 public class MethodDescriptor extends Descriptor
 {
 	private TypeDescriptor ReturnType; // holds the return type of the Method
-	private Map<NameDescriptor, FieldDescriptor> ParameterMap = new HashMap<NameDescriptor, FieldDescriptor>(); // hashmap for the method parameters
+	private SymbolTable ParameterSymbolTable; // Symbol Table for the method parameters
 	private TreeNode ASTTree; // holds the AST Tree for the method
-	private Map<NameDescriptor, VarDescriptor> VarDescriptorMap = new HashMap<NameDescriptor, VarDescriptor>(); // hashMap for variable descriptors
+	private SymbolTable VarDescriptorSymbolTable; // Symbol Table for variable descriptors
 	
 	// constructor
-	public MethodDescriptor(TypeDescriptor rt)
+	public MethodDescriptor(TypeDescriptor rt, SymbolTable parent)
 	{
+		ParameterSymbolTable = new SymbolTable(parent);
 		ReturnType = rt;
+		VarDescriptorSymbolTable = new SymbolTable(parent);
 	}
 	
 	// put methods	
-	public void addParameter(NameDescriptor Identifier, FieldDescriptor Parameter)
-	{
-		ParameterMap.put(Identifier, Parameter);
-	}
-	
 	public void createASTTree(TreeNode AST)
 	{
 		ASTTree = AST;
-	}
-	
-	public void addVarDescriptor(NameDescriptor Identifier, VarDescriptor VD)
-	{
-		VarDescriptorMap.put(Identifier, VD);
 	}
 	
 	// get methods
@@ -38,9 +30,9 @@ public class MethodDescriptor extends Descriptor
 		return ReturnType;
 	}
 	
-	public FieldDescriptor getParameter(NameDescriptor Identifier)
+	public SymbolTable getParameterTable()
 	{
-		return ParameterMap.get(Identifier);
+		return ParameterSymbolTable;
 	}
 	
 	public TreeNode getASTTree()
@@ -48,8 +40,8 @@ public class MethodDescriptor extends Descriptor
 		return ASTTree;
 	}
 	
-	public VarDescriptor getVarDescriptor(NameDescriptor Identifier)
+	public VarDescriptor getVarDescriptorTable()
 	{
-		return VarDescriptorMap.get(Identifier);
+		return VarDescriptorSymbolTable;
 	}
 }
