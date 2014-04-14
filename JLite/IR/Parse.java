@@ -4,5 +4,11 @@ import Parse.ParseNode;
 
 public class Parse
 {
-	private ParseNode a;
+	private ParseNode node;
+	private SymbolTable table;
+	
+	public void ParseClassDeclarer(SymbolTable table, ParseNode node)
+	{
+		
+	}
 }
