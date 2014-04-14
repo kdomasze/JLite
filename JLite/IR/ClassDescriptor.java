@@ -8,8 +8,9 @@ public class ClassDescriptor extends Descriptor
 	private ClassDescriptor superClass; // holds reference for super/parent class
 	
 	// put methods
-	public void defineSuperClass(SymbolTable parent, ClassDescriptor sC)
+	public void defineSuperClass(String name, SymbolTable parent, ClassDescriptor sC)
 	{
+		super(name);
 		FieldDescriptorSymbolTable = new SymbolTable(parent);
 		MethodDescriptorSymbolTable = new SymbolTable(parent);
 		superClass = sC;

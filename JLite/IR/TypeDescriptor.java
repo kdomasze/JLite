@@ -7,8 +7,9 @@ public class TypeDescriptor extends Descriptor
 	private TypeNode Type;
 	
 	// Constructor
-	public TypeDescriptor(TypeNode t)
+	public TypeDescriptor(String name, TypeNode t)
 	{
+		super(name);
 		Type = t;
 	}
 

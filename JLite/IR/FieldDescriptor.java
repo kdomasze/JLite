@@ -5,8 +5,9 @@ public class FieldDescriptor extends Descriptor
 	private TypeDescriptor Type;
 	
 	// constructor
-	public FieldDescriptor(TypeDescriptor t)
+	public FieldDescriptor(String name, TypeDescriptor t)
 	{
+		super(name);
 		Type = t;
 	}
 	

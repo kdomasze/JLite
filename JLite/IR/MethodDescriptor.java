@@ -10,8 +10,9 @@ public class MethodDescriptor extends Descriptor
 	private SymbolTable VarDescriptorSymbolTable; // Symbol Table for variable descriptors
 	
 	// constructor
-	public MethodDescriptor(TypeDescriptor rt, SymbolTable parent)
+	public MethodDescriptor(String name, TypeDescriptor rt, SymbolTable parent)
 	{
+		super(name);
 		ParameterSymbolTable = new SymbolTable(parent);
 		ReturnType = rt;
 		VarDescriptorSymbolTable = new SymbolTable(parent);
