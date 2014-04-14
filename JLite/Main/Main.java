@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.Vector;
 
 import Parse.*;
+import IR.*;
 
 public class Main
 {
@@ -54,7 +55,9 @@ public class Main
                 files.add(option);
             }
         }
-
+       
+        SymbolTable table = new SymbolTable();
+      
         for (int i = 0; i < files.size(); i++)
         {
             String arg = files.get(i);
@@ -65,12 +68,10 @@ public class Main
                 {
                     System.out.println(pn.PPrint(2, true));
                 }
-/*
                 if (dumpast)
                 {
-
+                	TreeParse parse= new TreeParse(table, pn);
                 }
-                */
             } catch (Exception e)
             {
                 System.out.println("Error in sourcefile:" + arg);
