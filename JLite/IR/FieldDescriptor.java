@@ -3,23 +3,16 @@ package IR;
 public class FieldDescriptor extends Descriptor
 {
 	private TypeDescriptor Type;
-	private ClassDescriptor ParentClass;
 	
 	// constructor
-	public FieldDescriptor(TypeDescriptor t, ClassDescriptor pc)
+	public FieldDescriptor(TypeDescriptor t)
 	{
 		Type = t;
-		ParentClass = pc;
 	}
 	
 	// get methods
 	public TypeDescriptor getFieldType()
 	{
 		return Type;
-	}
-	
-	public ClassDescriptor getParentClass()
-	{
-		return ParentClass;
 	}
 }
