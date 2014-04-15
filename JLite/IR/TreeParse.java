@@ -45,16 +45,13 @@ public class TreeParse
 			while(i < size)
 			{
 				child = children.elementAt(i);
-				switch(child.getLabel())
+				if(child.getLabel() == "field")
 				{
-					case "field":
-						ParseField(table,child);
-						break;
-					case "method":
-						ParseMethod(table,child);
-						break;
-					default:
-						break;
+					ParseField(table,child);
+				}
+				else if(child.getLabel() == "method")
+				{
+					ParseMethod(table,child);
 				}
 			}
 		}
@@ -97,7 +94,7 @@ public class TreeParse
 	
 	public void ParseReturn(SymbolTable table, ParseNode node)
 	{
-		if(node.getLabel() == "return")
+		if(node.getLabel() == "returntype")
 		{
 			ParseNode child = node.getFirstChild();
 			
