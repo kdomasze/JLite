@@ -28,7 +28,9 @@ public class TreeParse
 	//methods
 	public void ParseClassDeclarer(SymbolTable table, ParseNode node)
 	{
-		
+		NameNode className = new NameNode(node.getChild("name").getFirstChild().getLabel());
+		NameNode superClassName = new NameNode(node.getChild("super").getFirstChild().getLabel());
+		// Call ParseClassBody once we know what we are getting back
 	}
 	
 	public void ParseClassBody(SymbolTable table, ParseNode node)
