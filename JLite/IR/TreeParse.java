@@ -1,5 +1,10 @@
 package IR;
 
+import com.sun.org.apache.xpath.internal.ExpressionNode;
+
+import IR.Tree.LiteralNode;
+import IR.Tree.NameNode;
+import IR.Tree.TypeNode;
 import Parse.ParseNode;
 
 public class TreeParse
@@ -63,7 +68,13 @@ public class TreeParse
 	}
 	public void ParseVarDeclaration(SymbolTable table, ParseNode node)
 	{
+		TypeNode varType = new TypeNode(node.getChild("type").getFirstChild().getLabel());
+		NameNode varName = new NameNode(node.getChild("variable_declarator").getChild("single").getFirstChild().getLabel());
+		LiteralNode varValue = new LiteralNode((int)node.getChild("variable_declarator").getChild("initializer").getChild("literal").getFirstChild().getLiteral());
 		
+		TypeDescriptor varTypeDesc = new TypeDescriptor("type", varType);
+		
+		VarDescriptor variable = new VarDescriptor(varName.getName(), varTypeDesc, varValue);
 	}
 	public void ParseIfStatement(SymbolTable table, ParseNode node)
 	{
