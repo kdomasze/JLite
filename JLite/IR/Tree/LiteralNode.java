@@ -5,7 +5,7 @@ public class LiteralNode extends ExpressionNode
 	private int literal;
 	
 	//Constructor
-	LiteralNode(int l)
+	public LiteralNode(int l)
 	{
 		literal = l;
 	}
