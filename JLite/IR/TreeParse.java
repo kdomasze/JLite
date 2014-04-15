@@ -6,6 +6,7 @@ import IR.Tree.LiteralNode;
 import IR.Tree.NameNode;
 import IR.Tree.TypeNode;
 import Parse.ParseNode;
+import Parse.ParseNodeVector;
 
 public class TreeParse
 {
@@ -38,9 +39,32 @@ public class TreeParse
 		// Call ParseClassBody once we know what we are getting back
 	}
 	
+	
+	//Does not return or use symboltable
 	public void ParseClassBody(SymbolTable table, ParseNode node)
 	{
-		
+		if(node.getLabel()=="class_body_declaration_list")
+		{
+			ParseNodeVector children = node.getChildren();
+			int size = children.size();
+			int i = 0;
+			ParseNode child;
+			while(i < size)
+			{
+				child = children.elementAt(i);
+				switch(child.getLabel())
+				{
+					case "field":
+						ParseField(table,child);
+						break;
+					case "method":
+						ParseMethod(table,child);
+						break;
+					default:
+						break;
+				}
+			}
+		}
 	}
 	public void ParseField(SymbolTable table, ParseNode node)
 	{
@@ -52,8 +76,23 @@ public class TreeParse
 	}
 	public void ParseMethodParameters(SymbolTable table, ParseNode node)
 	{
-		
+		if(node.getLabel() == "parameters")
+		{
+			ParseNode method = node.getFirstChild();
+			if(method.getLabel() == "formal_parameter_list")
+			{
+				ParseNodeVector children = method.getChildren();
+				int size = children.size();
+				int i = 0;
+				while(i < size)
+				{
+					ParseNode child = children.elementAt(i);
+					ParseField(table,child);
+				}
+			}
+		}
 	}
+	
 	public void ParseBlockBody(SymbolTable table, ParseNode node)
 	{
 		
@@ -62,10 +101,16 @@ public class TreeParse
 	{
 		
 	}
+	
 	public void ParseReturn(SymbolTable table, ParseNode node)
 	{
-		
+		if(node.getLabel() == "return")
+		{
+			ParseNode child = node.getFirstChild();
+			
+		}
 	}
+	
 	public void ParseVarDeclaration(SymbolTable table, ParseNode node)
 	{
 		TypeNode varType = new TypeNode(node.getChild("type").getFirstChild().getLabel());
