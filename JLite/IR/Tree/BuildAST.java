@@ -74,8 +74,8 @@ public class BuildAST {
     } 
     else if(label.equals("name"))
     {
-    	ParseNode c = pn.getFirstChild();
-    	return new NameNode((String)pn.getLabel());
+    	TreeNode n = buildAST(pnv.elementAt(0));
+    	return new NameNode(n);
     }
     else if(label.equals("classbody"))
     {
@@ -91,7 +91,8 @@ public class BuildAST {
     }
     else if(label.equals("type"))
     {
-    	
+    	TreeNode t = buildAST(pnv.elementAt(0));
+    	return new TypeNode(t);
     }
     else if(label.equals("variables"))
     {
@@ -103,7 +104,8 @@ public class BuildAST {
     }
     else if(label.equals("single"))
     {
-    	
+    	ParseNode c=pn.getFirstChild();
+        return new NameNode(((String)c.getLabel()));
     }
     else if(label.equals("class_body_declaration_list"))
     {
