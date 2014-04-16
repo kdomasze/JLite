@@ -12,8 +12,6 @@ public class CreateObjectNode extends BlockStatementNode
 
 	public String toString()
 	{
-		return Type;
-	}
-	
-	
+		return Type.toString();
+	}	
 }

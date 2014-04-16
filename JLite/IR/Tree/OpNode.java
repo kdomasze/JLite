@@ -2,30 +2,30 @@ package IR.Tree;
 
 public class OpNode extends ExpressionNode
 {
-	private ExpressionNode Operand1;
-	private ExpressionNode Operand2;
-	private ExpressionNode Operator;
+	private TreeNode Operand1;
+	private TreeNode Operand2;
+	private TreeNode Operator;
 
 	// Constructor
-	public OpNode(ExpressionNode O1, ExpressionNode O2, ExpressionNode Op)
+	public OpNode(TreeNode left, TreeNode right, TreeNode operation)
 	{
-		Operand1 = O1;
-		Operand2 = O2;
-		Operator = Op;
+		Operand1 = left;
+		Operand2 = right;
+		Operator = operation;
 	}
 
 	// get methods
-	public ExpressionNode getOperand1()
+	public TreeNode getOperand1()
 	{
 		return Operand1;
 	}
 
-	public ExpressionNode getOperand2()
+	public TreeNode getOperand2()
 	{
 		return Operand2;
 	}
 
-	public ExpressionNode getOperator()
+	public TreeNode getOperator()
 	{
 		return Operator;
 	}

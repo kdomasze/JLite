@@ -1,19 +1,21 @@
 package IR.Tree;
+
 import Parse.*;
-import IR.Tree.*
 
-public class BuildAST {
-  public BuildAST() {
+public class BuildAST
+{
+	public BuildAST()
+	{
 
-  }
+	}
 
-  public TreeNode buildAST(ParseNode pn) {
+	public TreeNode buildAST(ParseNode pn) {
     String label=pn.getLabel();
     ParseNodeVector pnv=pn.getChildren();
 	if (label.equals("literal"))
 	{
 	  ParseNode c = pn.getChild("integer");
-	  return new IntLit(((Integer) c.getLiteral()).intValue());
+	  return new LiteralNode(((Integer) c.getLiteral()).intValue());
 	}
 	else if (label.equals("add"))
 	{
@@ -118,7 +120,7 @@ public class BuildAST {
     {
 		TreeNode type = buildAST(pnv.elementAt(0));
 		TreeNode var = buildAST(pnv.elementAt(1));
-		return new FieldAccessNode(var, type);
+		return new FieldAccessNode((NameNode)var, (TypeNode)type);
     }
     else if(label.equals("field"))
     {
@@ -309,6 +311,5 @@ public class BuildAST {
       throw new Error();
     }
   }
-
 
 }

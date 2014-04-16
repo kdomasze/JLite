@@ -2,16 +2,16 @@ package IR.Tree;
 
 public class ReturnNode extends BlockStatementNode
 {
-	private ExpressionNode ReturnStatement;
+	private TreeNode ReturnStatement;
 	
 	// constructor
-	public ReturnNode(ExpressionNode RS)
+	public ReturnNode(TreeNode rs)
 	{
-		ReturnStatement = RS;
+		ReturnStatement = rs;
 	}
 	
 	// get method
-	public ExpressionNode getReturnStatement()
+	public TreeNode getReturnStatement()
 	{
 		return ReturnStatement;
 	}

@@ -2,23 +2,23 @@ package IR.Tree;
 
 public class IfStatementNode extends BlockStatementNode
 {
-	private OpNode condition;
-	private BlockNode block;
+	private TreeNode condition;
+	private TreeNode block;
 	
 	//Constructor
-	IfStatementNode(OpNode c, BlockNode b)
+	IfStatementNode(TreeNode condition2, TreeNode block2)
 	{
-		condition = c;
-		block = b;
+		condition = condition2;
+		block = block2;
 	}
 	
 	//Get methods
-	public OpNode getOperation()
+	public TreeNode getOperation()
 	{
 		return condition;
 	}
 	
-	public BlockNode getBlock()
+	public TreeNode getBlock()
 	{
 		return block;
 	}

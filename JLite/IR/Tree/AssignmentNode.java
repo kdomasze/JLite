@@ -2,22 +2,22 @@ package IR.Tree;
 
 public class AssignmentNode extends ExpressionNode
 {
-	private ExpressionNode leftHandSide;
-	private ExpressionNode rightHandSide;
+	private TreeNode leftHandSide;
+	private TreeNode rightHandSide;
 	
-	public AssignmentNode(ExpressionNode lhs, ExpressionNode rhs)
+	public AssignmentNode(TreeNode left, TreeNode right)
 	{
-		leftHandSide = lhs;
-		rightHandSide = rhs;
+		leftHandSide = left;
+		rightHandSide = right;
 	}
 	
 	// get methods
-	public ExpressionNode getLeftHandSide()
+	public TreeNode getLeftHandSide()
 	{
 		return leftHandSide;
 	}
 	
-	public ExpressionNode getRightHandSide()
+	public TreeNode getRightHandSide()
 	{
 		return rightHandSide;
 	}
