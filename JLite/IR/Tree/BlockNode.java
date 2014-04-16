@@ -28,4 +28,9 @@ public class BlockNode extends TreeNode
 	{
 		return blockStatementVector;
 	}
+	
+	public String toString()
+	{
+		return "[Block: " + statement + "]";
+	}
 }

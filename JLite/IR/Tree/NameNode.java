@@ -15,4 +15,9 @@ public class NameNode extends ExpressionNode
 	{
 		return name;
 	}
+	
+	public String toString()
+	{
+		return name;
+	}
 }

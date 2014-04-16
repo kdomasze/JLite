@@ -29,4 +29,9 @@ public class FieldAccessNode extends ExpressionNode
 	{
 		return Expression;
 	}
+	
+	public String toString()
+	{
+		return "[FieldAccess: " + Name + ": " + Type + " -> " + Expression + "]";
+	}
 }
