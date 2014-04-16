@@ -6,7 +6,7 @@ import java.util.Set;
 public class MethodInvokeNode extends ExpressionNode
 {
 	private NameNode Name;
-	private Map<NameNode, Object> ArgumentMap;
+	private Map<String, TreeNode> ArgumentMap;
 	
 	//constructor
 	public MethodInvokeNode(NameNode N)
@@ -14,11 +14,11 @@ public class MethodInvokeNode extends ExpressionNode
 		Name = N;
 	}
 	
-	public void addArgumentMap(NameNode N, FieldAccessNode F)
+	public void addArgumentMap(String N, FieldAccessNode F)
 	{
 		ArgumentMap.put(N, F);
 	}
-	public void addArgumentMap(NameNode N, OpNode O)
+	public void addArgumentMap(String N, OpNode O)
 	{
 		ArgumentMap.put(N, O);
 	}
