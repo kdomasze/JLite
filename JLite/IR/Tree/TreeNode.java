@@ -1,5 +1,7 @@
 package IR.Tree;
 
+import java.util.Set;
+
 import IR.*;
 
 /**
@@ -16,6 +18,7 @@ public class TreeNode
 	MethodDescriptor Method;
 	VarDescriptor Var;
 	TypeDescriptor Type;
+	Set<TreeNode> Tree;
 
 	public String printNode(int indent)
 	{

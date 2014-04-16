@@ -2,24 +2,26 @@ package IR.Tree;
 
 import java.util.Set;
 
+import IR.Descriptor;
+
 public class MethodInvokeNode extends ExpressionNode
 {
-	private NameNode Name;
+	private TreeNode Name;
 	private Set<TreeNode> ArgumentSet;
 	
 	//constructor
-	public MethodInvokeNode(NameNode N)
+	public MethodInvokeNode(TreeNode n)
 	{
-		Name = N;
+		Name = n;
 	}
 	
-	public void OverrideArgumentMap(Set<TreeNode> newSet)
+	public void setArgumentSet(Set<TreeNode> newSet)
 	{
 		ArgumentSet = newSet;
 	}
 	
 	//accessors
-	public NameNode getNameNode()
+	public TreeNode getNameNode()
 	{
 		return Name;
 	}

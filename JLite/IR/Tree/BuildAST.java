@@ -287,22 +287,21 @@ public class BuildAST
     	int size = al.Method.getParameterTable().getDescriptorsSet().size();
     	for(int counter = 0; counter < size; counter++)
     	{
-    		method.addArgumentMap(al.Method.getParameterTable().);
+    		method.setArgumentSet(al.Tree);
     	}
-    	return method;
     	
+    	return method;
     }
     else if(label.equals("argument_list"))
     {
-    	TreeNode tempMethod = new TreeNode();
-    	tempMethod.Method = new  MethodDescriptor(null, null, null);
+    	TreeNode arguments = new TreeNode();
     	
     	for(int i = 0; i < pnv.size(); i++)
     	{    		
     		TreeNode m = buildAST(pnv.elementAt(i));
-    		
+    		arguments.Tree.add(m);
     	}
-		return tempMethod;
+		return arguments;
     }
     else if(label.equals("super"))
     {
