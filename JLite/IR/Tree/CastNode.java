@@ -22,4 +22,9 @@ public class CastNode extends ExpressionNode
 	{
 		return expression;
 	}
+	
+	public String toString()
+	{
+		return "[Cast: " + Type + " -> " + expression + "]";
+	}
 }

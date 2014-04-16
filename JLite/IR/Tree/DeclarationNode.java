@@ -29,4 +29,9 @@ public class DeclarationNode extends BlockStatementNode
 	{
 		return initializer;
 	}
+	
+	public String toString()
+	{
+		return "[Declaration: " + name + ": " + type + " -> " + initializer + "]";
+	}
 }

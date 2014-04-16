@@ -29,5 +29,9 @@ public class OpNode extends ExpressionNode
 	{
 		return Operator;
 	}
-
+	
+	public String toString()
+	{
+		return "[Op: " + Operand1 + " " + Operator + " " + Operand2 + "]";
+	}
 }

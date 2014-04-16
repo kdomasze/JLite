@@ -15,4 +15,9 @@ public class LiteralNode extends ExpressionNode
 	{
 		return literal;
 	}
+	
+	public String toString()
+	{
+		return "[literal: " + literal + "]";
+	}
 }

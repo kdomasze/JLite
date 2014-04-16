@@ -9,4 +9,11 @@ public class CreateObjectNode extends BlockStatementNode
 	{
 		Type = T;
 	}
+
+	public String toString()
+	{
+		return Type;
+	}
+	
+	
 }

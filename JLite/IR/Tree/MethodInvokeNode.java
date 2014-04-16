@@ -37,4 +37,9 @@ public class MethodInvokeNode extends ExpressionNode
 	{
 		return ArgumentMap.get(N);
 	}
+	
+	public String toString()
+	{
+		return "[MethodInvoke: " + Name + ": " + ArgumentMap + "]";
+	}
 }

@@ -22,4 +22,9 @@ public class IfStatementNode extends BlockStatementNode
 	{
 		return block;
 	}
+	
+	public String toString()
+	{
+		return "[If: " + condition + " -> " + block + "]";
+	}
 }

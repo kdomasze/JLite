@@ -15,4 +15,9 @@ public class ReturnNode extends BlockStatementNode
 	{
 		return ReturnStatement;
 	}
+	
+	public String toString()
+	{
+		return "[Return: " + ReturnStatement + "]";
+	}
 }

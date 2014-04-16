@@ -15,4 +15,9 @@ public class TypeNode extends ExpressionNode
 	{
 		return Type;
 	}
+	
+	public String toString()
+	{
+		return Type;
+	}
 }

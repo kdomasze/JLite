@@ -21,4 +21,9 @@ public class AssignmentNode extends ExpressionNode
 	{
 		return rightHandSide;
 	}
+	
+	public String toString()
+	{
+		return "[Assignment: " + leftHandSide + " = " + rightHandSide + "]";
+	}
 }

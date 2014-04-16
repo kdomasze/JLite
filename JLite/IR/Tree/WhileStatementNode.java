@@ -22,4 +22,9 @@ public class WhileStatementNode extends BlockStatementNode
 	{
 		return block;
 	}
+	
+	public String toString()
+	{
+		return "[While: " + condition + ": " + block + "]";
+	}
 }
