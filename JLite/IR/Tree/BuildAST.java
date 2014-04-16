@@ -157,7 +157,7 @@ public class BuildAST
     {
     	TreeNode n = buildAST(pnv.elementAt(0));
 		TreeNode s = buildAST(pnv.elementAt(1));
-		Treenode cb = buildAST(pnv.elementAt(2));
+		TreeNode cb = buildAST(pnv.elementAt(2));
 		return
     }
     else if(label.equals("type_declaration_list"))
@@ -247,7 +247,7 @@ public class BuildAST
     {
 		TreeNode name = buildAST(pnv.elementAt(0));
 		TreeNode parameters = buildAST(pnv.elementAt(0));
-		return new MethodInvokeNode(name, parameters);
+		return new MethodInvokeNode(name, parameters); // MethodInvokeNode has only one argument
     }
     else if(label.equals("local_variable_declaration"))
     {
