@@ -197,6 +197,38 @@ public class BuildAST {
     {
     	
     }
+    else if(label.equals("super"))
+    {
+    	
+    }
+    else if(label.equals("ifstatement"))
+    {
+    	
+    }
+    else if(label.equals("condition"))
+    {
+    	
+    }
+    else if(label.equals("statement"))
+    {
+    	
+    }
+    else if(label.equals("createobject"))
+    {
+    	
+    }
+    else if(label.equals("whilestatement"))
+    {
+    	
+    }
+    else if(label.equals("class"))
+    {
+    	
+    }
+    else if(label.equals("cast2"))
+    {
+    	
+    }
       else {
       throw new Error();
     }
