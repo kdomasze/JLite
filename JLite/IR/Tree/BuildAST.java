@@ -41,12 +41,6 @@ public class BuildAST
 	  TreeNode right = buildAST(pnv.elementAt(1));
 	  return new OpNode(left, right, new Operation(Operation.DIV));
 	}
-	else if (label.equals("div"))
-	{
-	  TreeNode left = buildAST(pnv.elementAt(0));
-	  TreeNode right = buildAST(pnv.elementAt(1));
-	  return new OpNode(left, right, new Operation(Operation.DIV));
-	}
 	else if (label.equals("not"))
 	{
 	  TreeNode left = buildAST(pnv.elementAt(0));
@@ -129,7 +123,7 @@ public class BuildAST
     }
     else if(label.equals("type"))
     {
-    	TreeNode t = buildAST(pnv.elementAt(0));
+    	String t = pnv.elementAt(0).getFirstChild().getLabel();
     	return new TypeNode(t);
     }
     else if(label.equals("variables"))
