@@ -17,6 +17,6 @@ public class TypeDescriptor extends Descriptor
 	// get method
 	public String getType()
 	{
-		return Type.getType();
+		return ((TypeNode) Type).getType();
 	}
 }
