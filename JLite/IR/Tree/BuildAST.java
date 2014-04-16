@@ -136,8 +136,9 @@ public class BuildAST
     }
     else if(label.equals("variable_declarator"))
     {
-		TreeNode vd = buildAST(pnv.elementAt(0));
-		return vd;
+		String name = pnv.elementAt(0).getFirstChild().getLabel();
+		TreeNode expression = new LiteralNode((int)pnv.elementAt(1).getFirstChild().getLiteral());
+		return new DeclarationNode(name, null, expression);
     }
     else if(label.equals("single"))
     {
@@ -266,13 +267,13 @@ public class BuildAST
     {
 		TreeNode name = buildAST(pnv.elementAt(0));
 		TreeNode parameters = buildAST(pnv.elementAt(0));
-		return new MethodInvokeNode(name, parameters); // MethodInvokeNode has only one argument
+		return 
     }
     else if(label.equals("local_variable_declaration"))
     {
 		TreeNode t = buildAST(pnv.elementAt(0));
 		TreeNode vd = buildAST(pnv.elementAt(1));
-		return
+		return new DeclarationNode(((DeclarationNode)vd).getName(), (TypeNode)t, ((DeclarationNode)vd).getInitializer());
     }
     else if(label.equals("initializer"))
     {
@@ -302,10 +303,6 @@ public class BuildAST
     		arguments.Tree.add(m);
     	}
 		return arguments;
-    }
-    else if(label.equals("super"))
-    {
-    	
     }
     else if(label.equals("ifstatement"))
     {

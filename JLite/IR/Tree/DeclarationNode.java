@@ -2,20 +2,20 @@ package IR.Tree;
 
 public class DeclarationNode extends BlockStatementNode
 {
-	private NameNode name;
+	private String name;
 	private TypeNode type;
-	private ExpressionNode initializer;
+	private TreeNode initializer;
 	
 	// constructor
-	public DeclarationNode(NameNode n, TypeNode t, ExpressionNode i)
+	public DeclarationNode(String name2, TypeNode t, TreeNode i)
 	{
-		name = n;
+		name = name2;
 		type = t;
 		initializer = i;
 	}
 	
 	// get methods
-	public NameNode getName()
+	public String getName()
 	{
 		return name;
 	}
@@ -25,7 +25,7 @@ public class DeclarationNode extends BlockStatementNode
 		return type;
 	}
 	
-	public ExpressionNode getInitializer()
+	public TreeNode getInitializer()
 	{
 		return initializer;
 	}
