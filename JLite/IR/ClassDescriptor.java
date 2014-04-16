@@ -16,15 +16,15 @@ public class ClassDescriptor extends Descriptor
 		superClass = sC;
 	}
 	
-	// override symbol table functions
-	public void overrideFieldDescriptorSymbolTable(SymbolTable newSymbolTable)
+	// put methods
+	public void addFieldDescriptor(FieldDescriptor field)
 	{
-		FieldDescriptorSymbolTable = newSymbolTable;
+		FieldDescriptorSymbolTable.add(field);
 	}
 	
-	public void overrideMethodDescriptorSymbolTable(SymbolTable newSymbolTable)
+	public void addMethodDescriptor(MethodDescriptor method)
 	{
-		MethodDescriptorSymbolTable = newSymbolTable;
+		MethodDescriptorSymbolTable.add(method);
 	}
 	
 	// get methods
@@ -41,5 +41,10 @@ public class ClassDescriptor extends Descriptor
 	public String getSuperClass()
 	{
 		return superClass;
+	}
+	
+	public String toString()
+	{
+		return "\n\tFields: " + FieldDescriptorSymbolTable.toString() + "\n\tMethods: " + MethodDescriptorSymbolTable.toString() + "\n\tSuper Class: [" + superClass + "]\n";
 	}
 }

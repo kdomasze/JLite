@@ -13,6 +13,8 @@ import java.util.Vector;
 
 import Parse.*;
 import IR.*;
+import IR.Tree.BuildAST;
+import IR.Tree.TreeNode;
 
 public class Main
 {
@@ -57,7 +59,7 @@ public class Main
         }
        
         SymbolTable table = new SymbolTable();
-      
+        BuildAST program = new BuildAST();
         for (int i = 0; i < files.size(); i++)
         {
             String arg = files.get(i);
@@ -70,7 +72,8 @@ public class Main
                 }
                 if (dumpast)
                 {
-                	TreeParse parse= new TreeParse(table, pn);
+                	program.parse(pn);
+                	System.out.println(program);
                 }
             } catch (Exception e)
             {

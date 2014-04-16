@@ -5,10 +5,10 @@ import IR.Tree.TypeNode;
 
 public class TypeDescriptor extends Descriptor
 {
-	private TreeNode Type;
+	private TypeNode Type;
 	
 	// Constructor
-	public TypeDescriptor(String name, TreeNode type2)
+	public TypeDescriptor(String name, TypeNode type2)
 	{
 		super(name);
 		Type = type2;
@@ -17,6 +17,11 @@ public class TypeDescriptor extends Descriptor
 	// get method
 	public String getType()
 	{
-		return ((TypeNode) Type).getType();
+		return Type.getType();
+	}
+	
+	public String toString()
+	{
+		return Type.toString();
 	}
 }

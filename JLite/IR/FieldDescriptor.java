@@ -16,4 +16,9 @@ public class FieldDescriptor extends Descriptor
 	{
 		return Type;
 	}
+	
+	public String toString()
+	{
+		return Type.toString();
+	}
 }
