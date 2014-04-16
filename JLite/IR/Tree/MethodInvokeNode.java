@@ -1,12 +1,11 @@
 package IR.Tree;
 
-import java.util.Map;
 import java.util.Set;
 
 public class MethodInvokeNode extends ExpressionNode
 {
 	private NameNode Name;
-	private Map<String, TreeNode> ArgumentMap;
+	private Set<TreeNode> ArgumentSet;
 	
 	//constructor
 	public MethodInvokeNode(NameNode N)
@@ -14,13 +13,9 @@ public class MethodInvokeNode extends ExpressionNode
 		Name = N;
 	}
 	
-	public void addArgumentMap(String N, FieldAccessNode F)
+	public void OverrideArgumentMap(Set<TreeNode> newSet)
 	{
-		ArgumentMap.put(N, F);
-	}
-	public void addArgumentMap(String N, OpNode O)
-	{
-		ArgumentMap.put(N, O);
+		ArgumentSet = newSet;
 	}
 	
 	//accessors
@@ -29,17 +24,13 @@ public class MethodInvokeNode extends ExpressionNode
 		return Name;
 	}
 	
-	public Set<NameNode> getAllArgumentNames()
+	public Set<TreeNode> getAgruments()
 	{
-		return ArgumentMap.keySet();
-	}
-	public Object getAgruments(NameNode N)
-	{
-		return ArgumentMap.get(N);
+		return ArgumentSet;
 	}
 	
 	public String toString()
 	{
-		return "[MethodInvoke: " + Name + ": " + ArgumentMap + "]";
+		return "[MethodInvoke: " + Name + ": " + ArgumentSet + "]";
 	}
 }
