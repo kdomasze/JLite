@@ -4,14 +4,12 @@ public class FieldAccessNode extends ExpressionNode
 {
 	private NameNode Name;
 	private TypeNode Type;
-	private ExpressionNode Expression;
 
 	// Constructor
-	public FieldAccessNode(NameNode N, TypeNode T, ExpressionNode E)
+	public FieldAccessNode(NameNode N, TypeNode T)
 	{
 		Name = N;
 		Type = T;
-		Expression = E;
 	}
 
 	// get methods
@@ -24,14 +22,9 @@ public class FieldAccessNode extends ExpressionNode
 	{
 		return Type.getType();
 	}
-
-	public ExpressionNode getExpression()
-	{
-		return Expression;
-	}
 	
 	public String toString()
 	{
-		return "[FieldAccess: " + Name + ": " + Type + " -> " + Expression + "]";
+		return "[FieldAccess: " + Name + ": " + Type + "]";
 	}
 }
