@@ -5,10 +5,10 @@ public class ClassDescriptor extends Descriptor
 	private SymbolTable FieldDescriptorSymbolTable; // Symbol Table for field descriptors
 	private SymbolTable MethodDescriptorSymbolTable; // Symbol Table for method descriptors
 	
-	private ClassDescriptor superClass; // holds reference for super/parent class
+	private String superClass; // holds reference for super/parent class
 	
 	// constructor
-	public ClassDescriptor(String name, SymbolTable parent, ClassDescriptor sC)
+	public ClassDescriptor(String name, SymbolTable parent, String sC)
 	{
 		super(name);
 		FieldDescriptorSymbolTable = new SymbolTable(parent);
@@ -27,7 +27,7 @@ public class ClassDescriptor extends Descriptor
 		return MethodDescriptorSymbolTable;
 	}
 	
-	public ClassDescriptor getSuperClass()
+	public String getSuperClass()
 	{
 		return superClass;
 	}

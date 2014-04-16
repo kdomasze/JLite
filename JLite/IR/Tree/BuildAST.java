@@ -1,5 +1,6 @@
 package IR.Tree;
 
+import IR.ClassDescriptor;
 import Parse.*;
 
 public class BuildAST
@@ -143,16 +144,25 @@ public class BuildAST
     }
     else if(label.equals("class_body_declaration_list"))
     {
+    	for(int i = 0; i < pnv.size(); i++)
+    	{
+    		
+    	}
     	TreeNode f = buildAST(pnv.elementAt(0));
 		TreeNode m = buildAST(pnv.elementAt(1));
 		return
     }
     else if(label.equals("class_declaration"))
     {
-    	TreeNode n = buildAST(pnv.elementAt(0));
-		TreeNode s = buildAST(pnv.elementAt(1));
-		TreeNode cb = buildAST(pnv.elementAt(2));
-		return
+    	String name = pnv.elementAt(0).getFirstChild().getLabel();
+		String superClass = pnv.elementAt(1).getFirstChild().getLabel();
+		TreeNode classBody = buildAST(pnv.elementAt(2));
+		
+		TreeNode classReturn = new TreeNode();
+		
+		classReturn.Class = new ClassDescriptor(name, null, superClass);
+		
+		return classReturn;
     }
     else if(label.equals("type_declaration_list"))
     {
