@@ -16,6 +16,17 @@ public class ClassDescriptor extends Descriptor
 		superClass = sC;
 	}
 	
+	// override symbol table functions
+	public void overrideFieldDescriptorSymbolTable(SymbolTable newSymbolTable)
+	{
+		FieldDescriptorSymbolTable = newSymbolTable;
+	}
+	
+	public void overrideMethodDescriptorSymbolTable(SymbolTable newSymbolTable)
+	{
+		MethodDescriptorSymbolTable = newSymbolTable;
+	}
+	
 	// get methods
 	public SymbolTable getFieldDescriptorTable()
 	{

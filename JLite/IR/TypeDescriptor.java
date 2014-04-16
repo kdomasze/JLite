@@ -1,16 +1,17 @@
 package IR;
 
+import IR.Tree.TreeNode;
 import IR.Tree.TypeNode;
 
 public class TypeDescriptor extends Descriptor
 {
-	private TypeNode Type;
+	private TreeNode Type;
 	
 	// Constructor
-	public TypeDescriptor(String name, TypeNode t)
+	public TypeDescriptor(String name, TreeNode type2)
 	{
 		super(name);
-		Type = t;
+		Type = type2;
 	}
 
 	// get method

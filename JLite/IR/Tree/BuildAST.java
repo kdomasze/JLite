@@ -1,6 +1,6 @@
 package IR.Tree;
 
-import IR.ClassDescriptor;
+import IR.*;
 import Parse.*;
 
 public class BuildAST
@@ -114,17 +114,19 @@ public class BuildAST
     else if(label.equals("field_declaration"))
     {
 		TreeNode type = buildAST(pnv.elementAt(0));
-		TreeNode var = buildAST(pnv.elementAt(1));
-		return new FieldAccessNode((NameNode)var, (TypeNode)type);
-    }
-    else if(label.equals("field"))
-    {
-		TreeNode f = buildAST(pnv.elementAt(0));
-		return f;
+		String name = pnv.elementAt(1).getFirstChild().getFirstChild().getFirstChild().getLabel();
+		
+		TreeNode fieldReturn = new TreeNode();
+		TypeDescriptor typeReturn = new TypeDescriptor(name, type);
+		
+		fieldReturn.Field = new FieldDescriptor(name, typeReturn);
+		
+		return fieldReturn;
     }
     else if(label.equals("type"))
     {
     	String t = pnv.elementAt(0).getFirstChild().getLabel();
+    	
     	return new TypeNode(t);
     }
     else if(label.equals("variables"))
@@ -144,13 +146,23 @@ public class BuildAST
     }
     else if(label.equals("class_body_declaration_list"))
     {
+    	TreeNode tempClass = new TreeNode();
+    	tempClass.Class = new ClassDescriptor(null, null, null);
+    	
     	for(int i = 0; i < pnv.size(); i++)
-    	{
-    		
+    	{    		
+    		if(label.equals("field"))
+    		{
+    			TreeNode f = buildAST(pnv.elementAt(i));
+    			tempClass.Class.getFieldDescriptorTable().add(f.Field);
+    		}
+    		else if(label.equals("method"))
+    		{
+    			TreeNode m = buildAST(pnv.elementAt(i));
+    			tempClass.Class.getMethodDescriptorTable().add(m.Method);
+    		}
     	}
-    	TreeNode f = buildAST(pnv.elementAt(0));
-		TreeNode m = buildAST(pnv.elementAt(1));
-		return
+		return tempClass;
     }
     else if(label.equals("class_declaration"))
     {
@@ -161,6 +173,9 @@ public class BuildAST
 		TreeNode classReturn = new TreeNode();
 		
 		classReturn.Class = new ClassDescriptor(name, null, superClass);
+		
+		classReturn.Class.overrideFieldDescriptorSymbolTable(classBody.Class.getFieldDescriptorTable());
+		classReturn.Class.overrideMethodDescriptorSymbolTable(classBody.Class.getMethodDescriptorTable());
 		
 		return classReturn;
     }
