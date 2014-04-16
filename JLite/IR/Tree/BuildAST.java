@@ -281,11 +281,28 @@ public class BuildAST
     }
     else if(label.equals("methodinvoke1"))
     {
+    	TreeNode n = buildAST(pnv.elementAt(0));
+    	TreeNode al = buildAST(pnv.elementAt(1));
+    	MethodInvokeNode method = new MethodInvokeNode(n); 
+    	int size = al.Method.getParameterTable().getDescriptorsSet().size();
+    	for(int counter = 0; counter < size; counter++)
+    	{
+    		method.addArgumentMap(al.Method.getParameterTable().);
+    	}
+    	return method;
     	
     }
     else if(label.equals("argument_list"))
     {
+    	TreeNode tempMethod = new TreeNode();
+    	tempMethod.Method = new  MethodDescriptor(null, null, null);
     	
+    	for(int i = 0; i < pnv.size(); i++)
+    	{    		
+    		TreeNode m = buildAST(pnv.elementAt(i));
+    		
+    	}
+		return tempMethod;
     }
     else if(label.equals("super"))
     {
