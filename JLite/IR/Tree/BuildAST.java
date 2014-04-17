@@ -97,10 +97,42 @@ public class BuildAST
 	
 	public MethodDescriptor ParseMethod(ParseNode node)
 	{
-		return new MethodDescriptor(null, null, null);
+		ParseNode pn = node.getFirstChild();
+		ParseNodeVector pnv = pn.getChildren();
+		String s = null;
+		TypeNode typeNode = new TypeNode("void");
+		for(int i = 0; i < pnv.size(); i++)
+		{
+			if(pnv.elementAt(i).getLabel().equals("method_header"))
+			{
+				ParseNodeVector pnc = pnv.elementAt(i).getChildren();
+				for(int j = 0; j < pnc.size(); j++)
+				{
+					if(pnc.elementAt(j).getLabel().equals("returntype"))
+					{
+						typeNode = new TypeNode(pnc.elementAt(j).getLabel());
+					}
+					else if(pnc.elementAt(j).getLabel().equals("method_declarator"))
+					{
+						s = pnc.elementAt(j).getChild("name").getFirstChild().getLabel();
+					}
+				}
+			}
+			else if(pnv.elementAt(i).getLabel().equals("body"))
+			{
+				BlockNode blockNode = ParseBlockNode(pnv.elementAt(i).getChild("block_statement_list"));
+			}
+		}
+		
+		TypeDescriptor type = new TypeDescriptor(s, typeNode);
+		
+		return new MethodDescriptor(s, type, null);
 	}
 	
-	
+	public BlockNode ParseBlockNode(ParseNode node)
+	{
+		return new BlockNode(null);
+	}
 	
 	
 	

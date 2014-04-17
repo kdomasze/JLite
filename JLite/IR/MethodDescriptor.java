@@ -44,4 +44,9 @@ public class MethodDescriptor extends Descriptor
 	{
 		return VarDescriptorSymbolTable;
 	}
+	
+	public String toString()
+	{
+		return "\n\tParameters: " + ParameterSymbolTable.toString() + "\n\tVarDescriptor: " + VarDescriptorSymbolTable.toString() + "\n";
+	}
 }
