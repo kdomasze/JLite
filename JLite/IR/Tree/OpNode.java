@@ -4,10 +4,10 @@ public class OpNode extends ExpressionNode
 {
 	private ExpressionNode Operand1;
 	private ExpressionNode Operand2;
-	private ExpressionNode Operator;
+	private Operation Operator;
 
 	// Constructor
-	public OpNode(ExpressionNode left, ExpressionNode right, ExpressionNode operation)
+	public OpNode(ExpressionNode left, ExpressionNode right, Operation operation)
 	{
 		Operand1 = left;
 		Operand2 = right;
@@ -25,7 +25,7 @@ public class OpNode extends ExpressionNode
 		return Operand2;
 	}
 
-	public ExpressionNode getOperator()
+	public Operation getOperator()
 	{
 		return Operator;
 	}
