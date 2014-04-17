@@ -1,7 +1,8 @@
 package IR.Tree;
 
 import IR.*;
-import Parse.*;
+import Parse.ParseNode;
+import Parse.ParseNodeVector;
 
 public class BuildAST
 {
@@ -157,13 +158,30 @@ public class BuildAST
 	
 	public 	BlockStatementNode parseBlockStatementNode(ParseNode node)
 	{
-		return null;
+		if(node.getLabel().equals("ifstatement"))
+		{
+			IfStatementNode ifstatementNode = parseIfStatementNode(node);
+			return ifstatementNode;
+		}
+		else if(node.getLabel().equals("whilestatement"))
+		{
+			WhileStatementNode whilestatementNode = parseWhileStatementNode(node);
+			return whilestatementNode;
+		}
+		else if(node.getLabel().equals("expression"))
+		{
+			ExpressionNode expressionNode = parseExpressionNode(node);
+			return expressionNode;
+		}
+
+		throw new Error();
 
 	}
 	
 	public IfStatementNode parseIfStatementNode(ParseNode node)
 	{
 		ParseNodeVector pnv = node.getChildren();
+<<<<<<< HEAD
 		OpNode opNode = null;
 		BlockNode blockNode = null;
 		
@@ -179,12 +197,28 @@ public class BuildAST
 			}
 		}
 		
+=======
+
+		OpNode opNode = parseOpNode(pnv.elementAt(0).getFirstChild());
+		BlockNode blockNode = parseBlockNode(pnv.elementAt(1).getChild("block_statement_list"));
+
+>>>>>>> 38a31aa7a7d80408fb08f73ce3e76b8162bc4c56
 		return new IfStatementNode(opNode, blockNode);
+	}
+
+	public WhileStatementNode parseWhileStatementNode(ParseNode node)
+	{
+		ParseNodeVector pnv = node.getChildren();
+
+		OpNode opNode = parseOpNode(pnv.elementAt(0).getFirstChild());
+		BlockNode blockNode = parseBlockNode(pnv.elementAt(1).getChild("block_statement_list"));
+
+		return new WhileStatementNode(opNode, blockNode);
 	}
 	
 	public AssignmentNode parseAssignmentNode(ParseNode node)
 	{
-		ParseNodeVector pnv = node.getFirstChild().getChildren();
+		ParseNodeVector pnv = node.getChildren();
 		ExpressionNode lhs = parseNameNode(pnv.elementAt(0));
 		ExpressionNode rhs = parseNameNode(pnv.elementAt(1));
 		
@@ -193,29 +227,118 @@ public class BuildAST
 	
 	public OpNode parseOpNode(ParseNode node)
 	{
-		ExpressionNode lhs = parseExpressionNode(node);
-		ExpressionNode rhs = parseExpressionNode(node);
-		ExpressionNode op  = parseExpressionNode(node);
-		return new OpNode(lhs, rhs, op);
+		String label = node.getLabel();
+		ParseNodeVector pnv = node.getChildren();
+		if (label.equals("add"))
+		{
+			ExpressionNode left = parseExpressionNode(pnv.elementAt(0));
+			ExpressionNode right = parseExpressionNode(pnv.elementAt(1));
+			return new OpNode(left, right, new Operation(Operation.ADD));
+		}
+		else if (label.equals("sub"))
+		{
+			ExpressionNode left = parseExpressionNode(pnv.elementAt(0));
+			ExpressionNode right = parseExpressionNode(pnv.elementAt(1));
+			return new OpNode(left, right, new Operation(Operation.SUB));
+		}
+		else if (label.equals("mult"))
+		{
+			ExpressionNode left = parseExpressionNode(pnv.elementAt(0));
+			ExpressionNode right = parseExpressionNode(pnv.elementAt(1));
+			return new OpNode(left, right, new Operation(Operation.MULT));
+		}
+		else if (label.equals("div"))
+		{
+			ExpressionNode left = parseExpressionNode(pnv.elementAt(0));
+			ExpressionNode right = parseExpressionNode(pnv.elementAt(1));
+			return new OpNode(left, right, new Operation(Operation.DIV));
+		}
+		else if (label.equals("not"))
+		{
+			ExpressionNode left = parseExpressionNode(pnv.elementAt(0));
+			return new OpNode(left, null, new Operation(Operation.NOT));
+		}
+		else if (label.equals("comp_lt"))
+		{
+			ExpressionNode left = parseExpressionNode(pnv.elementAt(0));
+			ExpressionNode right = parseExpressionNode(pnv.elementAt(1));
+			return new OpNode(left, right, new Operation(Operation.LT));
+		}
+		else if (label.equals("comp_gt"))
+		{
+			ExpressionNode left = parseExpressionNode(pnv.elementAt(0));
+			ExpressionNode right = parseExpressionNode(pnv.elementAt(1));
+			return new OpNode(left, right, new Operation(Operation.GT));
+		}
+		else if (label.equals("equal"))
+		{
+			ExpressionNode left = parseExpressionNode(pnv.elementAt(0));
+			ExpressionNode right = parseExpressionNode(pnv.elementAt(1));
+			return new OpNode(left, right, new Operation(Operation.EQ));
+		}
+		else if (label.equals("not_equal"))
+		{
+			ExpressionNode left = parseExpressionNode(pnv.elementAt(0));
+			ExpressionNode right = parseExpressionNode(pnv.elementAt(1));
+			return new OpNode(left, right, new Operation(Operation.NEQ));
+		}
+		else if (label.equals("bitwise_and"))
+		{
+			ExpressionNode left = parseExpressionNode(pnv.elementAt(0));
+			ExpressionNode right = parseExpressionNode(pnv.elementAt(1));
+			return new OpNode(left, right, new Operation(Operation.BIT_AND));
+		}
+		else if (label.equals("bitwise_or"))
+		{
+			ExpressionNode left = parseExpressionNode(pnv.elementAt(0));
+			ExpressionNode right = parseExpressionNode(pnv.elementAt(1));
+			return new OpNode(left, right, new Operation(Operation.BIT_OR));
+		}
+		else if (label.equals("bitwise_xor"))
+		{
+			ExpressionNode left = parseExpressionNode(pnv.elementAt(0));
+			ExpressionNode right = parseExpressionNode(pnv.elementAt(1));
+			return new OpNode(left, right, new Operation(Operation.BIT_XOR));
+		}
+		else if (label.equals("logical_and"))
+		{
+			ExpressionNode left = parseExpressionNode(pnv.elementAt(0));
+			ExpressionNode right = parseExpressionNode(pnv.elementAt(1));
+			return new OpNode(left, right, new Operation(Operation.LOG_AND));
+		}
+		else if (label.equals("logical_or"))
+		{
+			ExpressionNode left = parseExpressionNode(pnv.elementAt(0));
+			ExpressionNode right = parseExpressionNode(pnv.elementAt(1));
+			return new OpNode(left, right, new Operation(Operation.LOG_OR));
+		}
+		else
+		{
+			throw new Error();
+		}
 	}
 	
-	public ExpressionNode parseExpressionNode(ParseNode node) 
+	public ExpressionNode parseExpressionNode(ParseNode node)
 	{
 		if(node.getLabel().equals("local_variable_declaration"))
 		{
 			TypeNode typeNode = parseTypeNode(node.getChild("type"));
 			return typeNode;
 		}
-		else if(node.getLabel().equals("ifstatement"))
+		else if(node.getLabel().equals("assignment"))
 		{
+<<<<<<< HEAD
 			IfStatementNode ifstatementNode = parseIfStatementNode(node);
 			return ifstatementNode;
 		}
 		else if(node.getLabel().equals("assignment"))
 		{
+=======
+>>>>>>> 38a31aa7a7d80408fb08f73ce3e76b8162bc4c56
 			AssignmentNode assignmentNode = parseAssignmentNode(node.getChild("args"));
 			return assignmentNode;
 		}
+
 		throw new Error();
 	}
 

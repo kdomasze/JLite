@@ -2,7 +2,7 @@ package IR.Tree;
 
 import java.util.Vector;
 
-public class BlockNode extends ExpressionNode
+public class BlockNode extends TreeNode
 {
 	private BlockStatementNode statement;
 	private Vector<BlockStatementNode> blockStatementVector = new Vector<BlockStatementNode>(1,1);
