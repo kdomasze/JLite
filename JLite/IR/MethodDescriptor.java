@@ -18,10 +18,28 @@ public class MethodDescriptor extends Descriptor
 		VarDescriptorSymbolTable = new SymbolTable(parent);
 	}
 	
+	// set methods
+	public void setType(TypeDescriptor type)
+	{
+		ReturnType = type;
+	}
+	
+	
+	
 	// put methods	
 	public void createASTTree(TreeNode AST)
 	{
 		ASTTree = AST;
+	}
+	
+	public void addParameter(FieldDescriptor field)
+	{
+		ParameterSymbolTable.add(field);
+	}
+	
+	public void addVarDescriptor(VarDescriptor var)
+	{
+		VarDescriptorSymbolTable.add(var);
 	}
 	
 	// get methods
@@ -47,6 +65,6 @@ public class MethodDescriptor extends Descriptor
 	
 	public String toString()
 	{
-		return "\n\tParameters: " + ParameterSymbolTable.toString() + "\n\tVarDescriptor: " + VarDescriptorSymbolTable.toString() + "\n";
+		return ReturnType.toString() + "]" + "\n\t\tParameters: " + ParameterSymbolTable.toString() + "\n\t\tVarDescriptor: " + VarDescriptorSymbolTable.toString() + "\n";
 	}
 }
