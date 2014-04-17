@@ -146,48 +146,42 @@ public class BuildAST
 	
 	public 	BlockStatementNode parseBlockStatementNode(ParseNode node)
 	{
-		return new BlockStatementNode();
+		if(node.getLabel().equals("ifstatement"))
+		{
+			IfStatementNode ifstatementNode = parseIfStatementNode(node);
+			return ifstatementNode;
+		}
+		else if(node.getLabel().equals("whilestatement"))
+		{
+			WhileStatementNode whilestatementNode = parseWhileStatementNode(node);
+			return whilestatementNode;
+		}
+		else if(node.getLabel().equals("expression"))
+		{
+			ExpressionNode expressionNode = parseExpressionNode(node);
+			return expressionNode;
+		}
+
+		throw new Error();
 
 	}
 	
 	public IfStatementNode parseIfStatementNode(ParseNode node)
 	{
 		ParseNodeVector pnv = node.getChildren();
-		OpNode opNode;
-		BlockNode blockNode;
-		
-		for(int i = 0; i < pnv.size(); i++)
-		{
-			if(pnv.elementAt(i).getLabel().equals("condition"))
-			{
-				opNode = parseOpNode(pnv.elementAt(i));
-			}
-			else if(pnv.elementAt(i).getLabel().equals("statement"))
-			{
-				blockNode = parseBlockNode(pnv.elementAt(i).getChild("block_statement_list"));
-			}
-		}
-		
+
+		OpNode opNode = parseOpNode(pnv.elementAt(0).getFirstChild());
+		BlockNode blockNode = parseBlockNode(pnv.elementAt(1).getChild("block_statement_list"));
+
 		return new IfStatementNode(opNode, blockNode);
 	}
 
 	public WhileStatementNode parseWhileStatementNode(ParseNode node)
 	{
 		ParseNodeVector pnv = node.getChildren();
-		OpNode opNode;
-		BlockNode blockNode;
 
-		for(int i = 0; i < pnv.size(); i++)
-		{
-			if(pnv.elementAt(i).getLabel().equals("condition"))
-			{
-				opNode = parseOpNode(pnv.elementAt(i));
-			}
-			else if(pnv.elementAt(i).getLabel().equals("statement"))
-			{
-				blockNode = parseBlockNode(pnv.elementAt(i).getChild("block_statement_list"));
-			}
-		}
+		OpNode opNode = parseOpNode(pnv.elementAt(0).getFirstChild());
+		BlockNode blockNode = parseBlockNode(pnv.elementAt(1).getChild("block_statement_list"));
 
 		return new WhileStatementNode(opNode, blockNode);
 	}
