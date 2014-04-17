@@ -16,9 +16,11 @@ public class BuildAST
 
 	public Program parse(ParseNode pn)
 	{
-		ParseNode node = pn.getFirstChild().getFirstChild();
-
-		parseClassDeclaration(node);
+		ParseNodeVector pnv = pn.getFirstChild().getChildren();
+		for(int i = 0; i < pnv.size(); i++)
+		{
+			parseClassDeclaration(pnv.elementAt(i));
+		}
 
 		return program;
 	}
@@ -78,9 +80,9 @@ public class BuildAST
 	
 	public TypeNode parseTypeNode(ParseNode node)
 	{
-		//ParseNode pn = node.getFirstChild();
+		ParseNode pn = node.getFirstChild();
 		
-		return new TypeNode(node.getFirstChild().getLabel());
+		return new TypeNode(pn.getFirstChild().getLabel());
 	}
 	
 	public VarNode parseVarNode(ParseNode node)
@@ -103,7 +105,7 @@ public class BuildAST
 		TypeNode typeNode = new TypeNode("void");
 		BlockNode blockNode;
 		TypeDescriptor test = new TypeDescriptor(s,typeNode);
-		MethodDescriptor method = null;// = new MethodDescriptor(s,null,null);
+		MethodDescriptor method = null;
 		ParseNode mhn = pn.getChild("method_header");
 		ParseNodeVector pnv = mhn.getChildren();
 		ParseNode bn = pn.getChild("body");
@@ -113,7 +115,6 @@ public class BuildAST
 			if(pnv.elementAt(i).getLabel().equals("returntype"))
 			{
 				typeNode = new TypeNode(pnv.elementAt(i).getLabel());
-				//method.setType(type);
 			}
 			else if(pnv.elementAt(i).getLabel().equals("method_declarator"))
 			{
@@ -121,7 +122,7 @@ public class BuildAST
 				TypeDescriptor type = new TypeDescriptor(s, typeNode);
 				method = new MethodDescriptor(s,type,null);
 				ParseNode parn = pnv.elementAt(i).getChild("parameters");
-				ParseNodeVector pnc = parn.getChildren();
+				ParseNodeVector pnc = parn.getFirstChild().getChildren();
 				for(int j = 0; j < pnc.size(); j++)
 				{
 					FieldDescriptor field = parseParameters(pnc.elementAt(j));
@@ -134,12 +135,12 @@ public class BuildAST
 	
 	public FieldDescriptor parseParameters(ParseNode node)
 	{
-		ParseNode pn = node.getFirstChild();
-		TypeNode typeNode = parseTypeNode(pn.getChild("type"));
+		ParseNode pn = node.getChild("type");
+		TypeNode typeNode =  parseTypeNode(node);
 		
 		TypeDescriptor type = new TypeDescriptor(null, typeNode);
 		
-		return new FieldDescriptor(pn.getChild("single").getLabel(), type);
+		return new FieldDescriptor(node.getChild("single").getFirstChild().getLabel(), type);
 	}
 	
 	public BlockNode parseBlockNode(ParseNode node)
@@ -181,28 +182,9 @@ public class BuildAST
 	public IfStatementNode parseIfStatementNode(ParseNode node)
 	{
 		ParseNodeVector pnv = node.getChildren();
-<<<<<<< HEAD
-		OpNode opNode = null;
-		BlockNode blockNode = null;
-		
-		for(int i = 0; i < pnv.size(); i++)
-		{
-			if(pnv.elementAt(i).getLabel().equals("condition"))
-			{
-				opNode = parseOpNode(pnv.elementAt(i));
-			}
-			else if(pnv.elementAt(i).getLabel().equals("statement"))
-			{
-				blockNode = parseBlockNode(pnv.elementAt(i).getChild("block_statement_list"));
-			}
-		}
-		
-=======
-
 		OpNode opNode = parseOpNode(pnv.elementAt(0).getFirstChild());
 		BlockNode blockNode = parseBlockNode(pnv.elementAt(1).getChild("block_statement_list"));
 
->>>>>>> 38a31aa7a7d80408fb08f73ce3e76b8162bc4c56
 		return new IfStatementNode(opNode, blockNode);
 	}
 
@@ -327,14 +309,6 @@ public class BuildAST
 		}
 		else if(node.getLabel().equals("assignment"))
 		{
-<<<<<<< HEAD
-			IfStatementNode ifstatementNode = parseIfStatementNode(node);
-			return ifstatementNode;
-		}
-		else if(node.getLabel().equals("assignment"))
-		{
-=======
->>>>>>> 38a31aa7a7d80408fb08f73ce3e76b8162bc4c56
 			AssignmentNode assignmentNode = parseAssignmentNode(node.getChild("args"));
 			return assignmentNode;
 		}
