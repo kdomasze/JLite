@@ -1,6 +1,6 @@
 package IR.Tree;
 
-public class ExpressionNode extends TreeNode
+public class ExpressionNode extends BlockStatementNode
 {
 	
 }
