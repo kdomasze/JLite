@@ -58,7 +58,7 @@ public class BuildAST
 			}
 			else if(pnv.elementAt(i).getLabel().equals("method"))
 			{
-				MethodDescriptor m = ParseMethod(pnv.elementAt(i));
+				MethodDescriptor m = parseMethod(pnv.elementAt(i));
 				Class.addMethodDescriptor(m);
 			}
 		}
@@ -95,7 +95,7 @@ public class BuildAST
 		return new VarNode(null, null);
 	}
 	
-	public MethodDescriptor ParseMethod(ParseNode node)
+	public MethodDescriptor parseMethod(ParseNode node)
 	{
 		ParseNode pn = node.getFirstChild();
 		ParseNodeVector pnv = pn.getChildren();
@@ -120,7 +120,7 @@ public class BuildAST
 			}
 			else if(pnv.elementAt(i).getLabel().equals("body"))
 			{
-				BlockNode blockNode = ParseBlockNode(pnv.elementAt(i).getChild("block_statement_list"));
+				BlockNode blockNode = parseBlockNode(pnv.elementAt(i).getChild("block_statement_list"));
 			}
 		}
 		
@@ -129,13 +129,84 @@ public class BuildAST
 		return new MethodDescriptor(s, type, null);
 	}
 	
-	public BlockNode ParseBlockNode(ParseNode node)
+	public BlockNode parseBlockNode(ParseNode node)
 	{
-		return new BlockNode(null);
+		ParseNodeVector pnv = node.getChildren();
+		BlockStatementNode s = new 	BlockStatementNode();
+		for(int i = 0; i < pnv.size(); i++)
+		{
+			s = parseBlockStatementNode(pnv.elementAt(i));
+		}
+		
+		BlockNode blockNode = new BlockNode(s);
+
+		return blockNode;
 	}
 	
+	public 	BlockStatementNode parseBlockStatementNode(ParseNode node)
+	{
+		return null;
+
+	}
 	
+	public IfStatementNode ParseIfStatementNode(ParseNode node)
+	{
+		ParseNodeVector pnv = node.getChildren();
+		OpNode opNode = null;
+		BlockNode blockNode = null;
+		
+		for(int i = 0; i < pnv.size(); i++)
+		{
+			if(pnv.elementAt(i).getLabel().equals("condition"))
+			{
+				opNode = ParseOpNode(pnv.elementAt(i));
+			}
+			else if(pnv.elementAt(i).getLabel().equals("statement"))
+			{
+				blockNode = parseBlockNode(pnv.elementAt(i).getChild("block_statement_list"));
+			}
+		}
+		
+		return new IfStatementNode(opNode, blockNode);
+	}
 	
+	public AssignmentNode parseAssignmentNode(ParseNode node)
+	{
+		ParseNodeVector pnv = node.getFirstChild().getChildren();
+		ExpressionNode lhs = parseNameNode(pnv.elementAt(0));
+		ExpressionNode rhs = parseNameNode(pnv.elementAt(1));
+		
+		return new AssignmentNode(lhs, rhs);		
+	}
+	
+	public OpNode ParseOpNode(ParseNode node)
+	{
+		ExpressionNode lhs = parseExpressionNode(node);
+		ExpressionNode rhs = parseExpressionNode(node);
+		ExpressionNode op  = parseExpressionNode(node);
+		return new OpNode(lhs, rhs, op);
+	}
+	
+	public ExpressionNode parseExpressionNode(ParseNode node) 
+	{
+		if(node.getLabel().equals("local_variable_declaration"))
+		{
+			TypeNode typeNode = parseTypeNode(node.getChild("type"));
+			return typeNode;
+		}
+		else if(node.getLabel().equals("ifstatement"))
+		{
+			IfStatementNode ifstatementNode = ParseIfStatementNode(node);
+			return ifstatementNode;
+		}
+		else if(node.getLabel().equals("expression"))
+		{
+			AssignmentNode assignmentNode = parseAssignmentNode(node.getChild("assignment"));
+			return assignmentNode;
+		}
+		throw new Error();
+	}
+
 	public String toString()
 	{
 		return program.toString();
