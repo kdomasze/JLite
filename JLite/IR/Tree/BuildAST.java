@@ -171,6 +171,12 @@ public class BuildAST
 			WhileStatementNode whilestatementNode = parseWhileStatementNode(node);
 			return whilestatementNode;
 		}
+		/*else if(node.getLabel().equals("local_variable_declaration"))
+		{
+			TypeNode typeNode = parseTypeNode(node.getChild("type"));
+			VarNode varNode = parseVarNode(node.getChild("variable_declarator"));
+			return 0;
+		}*/
 		else if(node.getLabel().equals("expression"))
 		{
 			ExpressionNode expressionNode = parseExpressionNode(node);
@@ -203,12 +209,23 @@ public class BuildAST
 	public AssignmentNode parseAssignmentNode(ParseNode node)
 	{
 		ParseNodeVector pnv = node.getChildren();
-		ExpressionNode lhs = parseNameNode(pnv.elementAt(0));
-		ExpressionNode rhs = parseNameNode(pnv.elementAt(1));
+		ExpressionNode lhs = parseNameNode(pnv.elementAt(0).getFirstChild());
+		ExpressionNode rhs = parseNameNode(pnv.elementAt(1).getFirstChild());
 		
-		return new AssignmentNode(lhs, rhs);		
+		return new AssignmentNode(lhs, rhs);	
 	}
 	
+	public VarNode parseVariableDeclarator(ParseNode node)
+	{
+		if (node.getLabel().equals("variable_declarator"))
+		{
+			String name = pnv.elementAt(0).getFirstChild().getLabel();
+			LiteralNode((int) pnv.elementAt(1)
+					.getFirstChild().getLiteral());
+			return new DeclarationNode(name, null, expression);
+		}
+	}
+
 	public OpNode parseOpNode(ParseNode node)
 	{
 		String label = node.getLabel();
@@ -304,14 +321,9 @@ public class BuildAST
 	
 	public ExpressionNode parseExpressionNode(ParseNode node)
 	{
-		if(node.getLabel().equals("local_variable_declaration"))
+		if(node.getFirstChild().getLabel().equals("assignment"))
 		{
-			TypeNode typeNode = parseTypeNode(node.getChild("type"));
-			return typeNode;
-		}
-		else if(node.getFirstChild().getLabel().equals("assignment"))
-		{
-			AssignmentNode assignmentNode = parseAssignmentNode(node.getFirstChild().getChild("args"));
+			AssignmentNode assignmentNode = parseAssignmentNode(node.getFirstChild());
 			return assignmentNode;
 		}
 
