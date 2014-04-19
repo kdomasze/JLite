@@ -39,7 +39,14 @@ public class BuildAST
 	
 	public NameNode parseNameNode(ParseNode node)
 	{
-		return new NameNode(node.getFirstChild().getLabel());
+		if(node.getChildren().size()==0)
+		{
+			return new NameNode(node.getLabel());
+		}
+		else
+		{
+			return parseNameNode(node.getFirstChild());
+		}
 	}
 	
 	public NameNode parseSuperClass(ParseNode node)
@@ -80,9 +87,17 @@ public class BuildAST
 	
 	public TypeNode parseTypeNode(ParseNode node)
 	{
-		ParseNode pn = node.getFirstChild();
+		if(node.getChildren().size() == 0)
+		{
+			return new TypeNode(node.getLabel());
+		}
+		else
+		{
+			return parseTypeNode(node.getFirstChild());
+		}
+		/*ParseNode pn = node.getFirstChild();
 		
-		return new TypeNode(pn.getFirstChild().getLabel());
+		return new TypeNode(pn.getFirstChild().getLabel());*/
 	}
 	
 	public VarNode parseVarNode(ParseNode node)
@@ -114,7 +129,8 @@ public class BuildAST
 		{
 			if(pnv.elementAt(i).getLabel().equals("returntype"))
 			{
-				typeNode = new TypeNode(pnv.elementAt(i).getFirstChild().getFirstChild().getFirstChild().getFirstChild().getFirstChild().getLabel());
+				typeNode = parseTypeNode(pnv.elementAt(i));
+				//typeNode = new TypeNode(pnv.elementAt(i).getFirstChild().getFirstChild().getFirstChild().getFirstChild().getFirstChild().getLabel());
 			}
 			else if(pnv.elementAt(i).getLabel().equals("method_declarator"))
 			{
