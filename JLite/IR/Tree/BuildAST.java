@@ -192,6 +192,11 @@ public class BuildAST
 			ExpressionNode expressionNode = parseExpressionNode(node);
 			return expressionNode;
 		}
+		else if(node.getLabel().equals("return"))
+		{
+			ReturnNode returnNode = parseReturnNode(node);
+			return returnNode;
+		}
 
 		throw new Error();
 
@@ -351,23 +356,37 @@ public class BuildAST
 		for(int i = 0; i < pnv.size(); i++)
 		{
 			TreeNode n = parseNode(pnv.elementAt(i));
-			min.setArgumentSet(n);
+			//min.setArgumentSet(n);
 		}
 		
 		return min;
 	}
 	
-	public TreeNode parseNode(ParseNode node)
+	public ExpressionNode parseNode(ParseNode node)
 	{
 		if(node.getLabel().equals("name"))
 		{
 			return parseNameNode(node);
 		}
-		else if(node.getLabel().equals("none"))
+		else if(node.getLabel().equals("literal"))
 		{
-			return null;
+			return parseLiteralNode(node);
 		}
 		return null;
+	}
+	
+	public LiteralNode parseLiteralNode(ParseNode node)
+	{
+		//return null;
+		return new LiteralNode((int)node.getFirstChild().getLiteral());
+	}
+	
+	public ReturnNode parseReturnNode(ParseNode node)
+	{
+		ParseNode pn = node.getFirstChild();
+		ExpressionNode tNode = parseNode(pn);
+		
+		return new ReturnNode(tNode);
 	}
 
 	public String toString()
