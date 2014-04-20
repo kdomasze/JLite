@@ -8,9 +8,8 @@ public class BlockNode extends TreeNode
 	private Vector<BlockStatementNode> blockStatementVector = new Vector<BlockStatementNode>(1,1);
 	
 	//constructor:
-	public BlockNode(BlockStatementNode s)
+	public BlockNode()
 	{
-		statement = s;
 	}
 	
 	public void addblockStatement(BlockStatementNode s)
@@ -31,6 +30,6 @@ public class BlockNode extends TreeNode
 	
 	public String toString()
 	{
-		return "[Block: " + statement + "]";
+		return "[Block: " + blockStatementVector +  "]";
 	}
 }
