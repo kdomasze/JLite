@@ -1,5 +1,7 @@
 package IR.Tree;
 
+import java.util.Vector;
+
 import IR.*;
 import Parse.ParseNode;
 import Parse.ParseNodeVector;
@@ -175,13 +177,12 @@ public class BuildAST
 	public BlockNode parseBlockNode(ParseNode node)
 	{
 		ParseNodeVector pnv = node.getFirstChild().getChildren();
-		BlockStatementNode s = new 	BlockStatementNode();
+		BlockNode blockNode = new BlockNode();
 		for(int i = 0; i < pnv.size(); i++)
 		{
-			s = parseBlockStatementNode(pnv.elementAt(i));
+			BlockStatementNode s = parseBlockStatementNode(pnv.elementAt(i));
+			blockNode.addblockStatement(s);
 		}
-		
-		BlockNode blockNode = new BlockNode(s);
 
 		return blockNode;
 	}
@@ -189,7 +190,12 @@ public class BuildAST
 	// parses starting from " "
 	public 	BlockStatementNode parseBlockStatementNode(ParseNode node)
 	{
-		if(node.getLabel().equals("ifstatement"))
+		if(node.getLabel().equals("type"))
+		{
+			TypeNode typeNode = parseTypeNode(node);
+			return typeNode;
+		}
+		else if(node.getLabel().equals("ifstatement"))
 		{
 			IfStatementNode ifstatementNode = parseIfStatementNode(node);
 			return ifstatementNode;
@@ -213,6 +219,13 @@ public class BuildAST
 		{
 			ReturnNode returnNode = parseReturnNode(node);
 			return returnNode;
+		}
+		else if(node.getLabel().equals("variable_declarator"))
+		{
+			NameNode nameNode = parseNameNode(node.getChild("single"));
+			ExpressionNode expressionNode = parseExpressionNode(node.getChild("initializer").getFirstChild());
+			return new AssignmentNode(nameNode, expressionNode);
+
 		}
 		else if(node.getLabel().equals("local_variable_declaration"))
 		{
@@ -409,7 +422,7 @@ public class BuildAST
 		for(int i = 0; i < pnv.size(); i++)
 		{
 			TreeNode n = parseNode(pnv.elementAt(i));
-			min.setArgumentSet(n);
+			//min.setArgumentSet(n);
 		}
 		
 		return min;
