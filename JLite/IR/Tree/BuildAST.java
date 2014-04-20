@@ -396,7 +396,7 @@ public class BuildAST
 	
 	public LiteralNode parseLiteralNode(ParseNode node)
 	{
-		return new LiteralNode((int) node.getLiteral());
+		return new LiteralNode((Integer) node.getLiteral());
 	}
 	
 	// parses starting from " "

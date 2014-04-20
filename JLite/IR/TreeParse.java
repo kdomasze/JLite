@@ -1,6 +1,6 @@
 package IR;
 
-import com.sun.org.apache.xpath.internal.ExpressionNode;
+import IR.Tree.ExpressionNode;
 
 import IR.Tree.*;
 import Parse.ParseNode;
@@ -110,7 +110,7 @@ public class TreeParse
 	{
 		TypeNode varType = new TypeNode(node.getChild("type").getFirstChild().getLabel());
 		NameNode varName = new NameNode(node.getChild("variable_declarator").getChild("single").getFirstChild().getLabel());
-		LiteralNode varValue = new LiteralNode((int)node.getChild("variable_declarator").getChild("initializer").getChild("literal").getFirstChild().getLiteral());
+		LiteralNode varValue = new LiteralNode((Integer)node.getChild("variable_declarator").getChild("initializer").getChild("literal").getFirstChild().getLiteral());
 		
 		TypeDescriptor varTypeDesc = new TypeDescriptor("type", varType);
 		
