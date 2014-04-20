@@ -2,9 +2,7 @@ package IR;
 
 import com.sun.org.apache.xpath.internal.ExpressionNode;
 
-import IR.Tree.LiteralNode;
-import IR.Tree.NameNode;
-import IR.Tree.TypeNode;
+import IR.Tree.*;
 import Parse.ParseNode;
 import Parse.ParseNodeVector;
 

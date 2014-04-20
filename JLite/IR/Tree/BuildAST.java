@@ -1,5 +1,7 @@
 package IR.Tree;
 
+import java.util.Vector;
+
 import IR.*;
 import Parse.ParseNode;
 import Parse.ParseNodeVector;
@@ -8,12 +10,13 @@ public class BuildAST
 {
 	Program program;
 
+	// constructor
 	public BuildAST()
 	{
 		program = new Program();
-
 	}
 
+	// build the AST tree for the program
 	public Program parse(ParseNode pn)
 	{
 		ParseNodeVector pnv = pn.getFirstChild().getChildren();
@@ -25,6 +28,7 @@ public class BuildAST
 		return program;
 	}
 
+	// parses starting from "class_declaration"
 	public void parseClassDeclaration(ParseNode node)
 	{
 		NameNode name = parseNameNode(node.getChild("name"));
@@ -37,6 +41,7 @@ public class BuildAST
 		program.addClass(Class);
 	}
 	
+	// parses starting from "name" or "single"
 	public NameNode parseNameNode(ParseNode node)
 	{
 		if(node.getChildren().size()==0)
@@ -49,11 +54,13 @@ public class BuildAST
 		}
 	}
 	
+	// parses starting from "super"
 	public NameNode parseSuperClass(ParseNode node)
 	{
 		return new NameNode(node.getFirstChild().getLabel());
 	}
 	
+	// parses starting from "classbody"
 	public void parseClassBody(ClassDescriptor Class, ParseNode node)
 	{
 		ParseNode pn = node.getFirstChild();
@@ -74,6 +81,7 @@ public class BuildAST
 		}
 	}
 	
+	// parses starting from "field"
 	public FieldDescriptor ParseField(ParseNode node)
 	{
 		ParseNode pn = node.getFirstChild();
@@ -85,6 +93,7 @@ public class BuildAST
 		return new FieldDescriptor(varNode.getName().getName(), type);
 	}
 	
+	// parses starting from "type"
 	public TypeNode parseTypeNode(ParseNode node)
 	{
 		if(node.getChildren().size() == 0)
@@ -100,9 +109,10 @@ public class BuildAST
 		return new TypeNode(pn.getFirstChild().getLabel());*/
 	}
 	
+	// parses starting from "variables"
 	public VarNode parseVarNode(ParseNode node)
 	{
-		if(node.getLabel().equals("variables"))
+		if(node.getLabel().equals("variables")) // for fields
 		{
 			ParseNode pn = node.getFirstChild().getFirstChild();
 			NameNode name = parseNameNode(pn);
@@ -113,6 +123,7 @@ public class BuildAST
 		return new VarNode(null, null);
 	}
 	
+	// parses starting from "method"
 	public MethodDescriptor parseMethod(ParseNode node)
 	{
 		ParseNode pn = node.getFirstChild();
@@ -151,6 +162,7 @@ public class BuildAST
 		return method;
 	}
 	
+	// parses starting from "parameters"
 	public FieldDescriptor parseParameters(ParseNode node)
 	{
 		ParseNode pn = node.getChild("type");
@@ -161,23 +173,29 @@ public class BuildAST
 		return new FieldDescriptor(node.getChild("single").getFirstChild().getLabel(), type);
 	}
 	
+	// parses starting from " "
 	public BlockNode parseBlockNode(ParseNode node)
 	{
 		ParseNodeVector pnv = node.getFirstChild().getChildren();
-		BlockStatementNode s = new 	BlockStatementNode();
+		BlockNode blockNode = new BlockNode();
 		for(int i = 0; i < pnv.size(); i++)
 		{
-			s = parseBlockStatementNode(pnv.elementAt(i));
+			BlockStatementNode s = parseBlockStatementNode(pnv.elementAt(i));
+			blockNode.addblockStatement(s);
 		}
-		
-		BlockNode blockNode = new BlockNode(s);
 
 		return blockNode;
 	}
 	
+	// parses starting from " "
 	public 	BlockStatementNode parseBlockStatementNode(ParseNode node)
 	{
-		if(node.getLabel().equals("ifstatement"))
+		if(node.getLabel().equals("type"))
+		{
+			TypeNode typeNode = parseTypeNode(node);
+			return typeNode;
+		}
+		else if(node.getLabel().equals("ifstatement"))
 		{
 			IfStatementNode ifstatementNode = parseIfStatementNode(node);
 			return ifstatementNode;
@@ -186,6 +204,11 @@ public class BuildAST
 		{
 			WhileStatementNode whilestatementNode = parseWhileStatementNode(node);
 			return whilestatementNode;
+		}
+		else if(node.getLabel().equals("assignment"))
+		{
+			AssignmentNode assignmentNode = parseAssignmentNode(node);
+			return assignmentNode;
 		}
 		else if(node.getLabel().equals("expression"))
 		{
@@ -197,11 +220,28 @@ public class BuildAST
 			ReturnNode returnNode = parseReturnNode(node);
 			return returnNode;
 		}
+<<<<<<< HEAD
+=======
+		else if(node.getLabel().equals("variable_declarator"))
+		{
+			NameNode nameNode = parseNameNode(node.getChild("single"));
+			ExpressionNode expressionNode = parseExpressionNode(node.getChild("initializer").getFirstChild());
+			return new AssignmentNode(nameNode, expressionNode);
+>>>>>>> 949b968f23d39e1592c48eacf8c8d9fad151f709
 
+		}
+		else if(node.getLabel().equals("local_variable_declaration"))
+		{
+			NameNode nameNode = parseNameNode(node.getChild("variable_declarator").getChild("single"));
+			TypeNode typeNode = parseTypeNode(node.getChild("type"));
+			ExpressionNode expressionNode = parseExpressionNode(node.getChild("variable_declarator").getChild("initializer").getFirstChild());
+			return new DeclarationNode(nameNode.getName(), typeNode, expressionNode);
+		}
 		throw new Error();
 
 	}
 	
+	// parses starting from "ifstatement"
 	public IfStatementNode parseIfStatementNode(ParseNode node)
 	{
 		ParseNodeVector pnv = node.getChildren();
@@ -211,6 +251,7 @@ public class BuildAST
 		return new IfStatementNode(opNode, blockNode);
 	}
 
+	// parses starting from "whilestatement"
 	public WhileStatementNode parseWhileStatementNode(ParseNode node)
 	{
 		ParseNodeVector pnv = node.getChildren();
@@ -221,15 +262,25 @@ public class BuildAST
 		return new WhileStatementNode(opNode, blockNode);
 	}
 	
+	// parses starting from " "
 	public AssignmentNode parseAssignmentNode(ParseNode node)
 	{
-		ParseNodeVector pnv = node.getChildren();
-		ExpressionNode lhs = parseNameNode(pnv.elementAt(0));
-		ExpressionNode rhs = parseNameNode(pnv.elementAt(1));
+		ParseNodeVector pnv = node.getFirstChild().getChildren();
 		
-		return new AssignmentNode(lhs, rhs);		
+		ExpressionNode lhs = parseExpressionNode(pnv.elementAt(0));
+		ExpressionNode rhs = parseExpressionNode(pnv.elementAt(1));
+		
+		return new AssignmentNode(lhs, rhs);
+		
+	}
+
+	public ReturnNode parseReturnNode(ParseNode node)
+	{
+		ExpressionNode expressionNode = parseExpressionNode(node);
+		return new ReturnNode(expressionNode);
 	}
 	
+	// parses starting from " "
 	public OpNode parseOpNode(ParseNode node)
 	{
 		String label = node.getLabel();
@@ -323,18 +374,36 @@ public class BuildAST
 		}
 	}
 	
+	public LiteralNode parseLiteralNode(ParseNode node)
+	{
+		return new LiteralNode((int) node.getLiteral());
+	}
+	
+	// parses starting from " "
 	public ExpressionNode parseExpressionNode(ParseNode node)
 	{
-		if(node.getLabel().equals("local_variable_declaration"))
+		String label = node.getLabel();
+		if (node.getLabel().equals("literal"))
 		{
-			TypeNode typeNode = parseTypeNode(node.getChild("type"));
-			return typeNode;
+			LiteralNode literalNode = parseLiteralNode(node.getFirstChild());
+			return literalNode;
+		}
+		if (node.getLabel().equals("name"))
+		{
+			NameNode nameNode = parseNameNode(node.getFirstChild());
+			return nameNode;
 		}
 		else if(node.getFirstChild().getLabel().equals("assignment"))
 		{
-			AssignmentNode assignmentNode = parseAssignmentNode(node.getFirstChild().getChild("args"));
+			AssignmentNode assignmentNode = parseAssignmentNode(node.getFirstChild());
 			return assignmentNode;
 		}
+		else if (label.equals("add") || label.equals("sub") || label.equals("mult") || label.equals("div") || label.equals("not") || label.equals("comp_lt") || label.equals("comp_gt" ) || label.equals("comp_lt") || label.equals("equal") || label.equals("not_equal") || label.equals("bitwise_and") || label.equals("bitwise_or") || label.equals("bitwise_xor") || label.equals("logical_or") || label.equals("logical_and"))
+		{
+			OpNode opNode = parseOpNode(node);
+			return opNode;
+		}
+
 		else if(node.getFirstChild().getLabel().equals("methodinvoke1"))
 		{
 			MethodInvokeNode invokeNode = parseMethodInvokeNode(node.getFirstChild());
