@@ -231,7 +231,7 @@ public class BuildAST
 		{
 			NameNode nameNode = parseNameNode(node.getChild("variable_declarator").getChild("single"));
 			TypeNode typeNode = parseTypeNode(node.getChild("type"));
-			ExpressionNode expressionNode = parseExpressionNode(node.getChild("variable_declarator").getChild("initializer"));
+			ExpressionNode expressionNode = parseExpressionNode(node.getChild("variable_declarator").getChild("initializer").getFirstChild());
 			return new DeclarationNode(nameNode.getName(), typeNode, expressionNode);
 		}
 		throw new Error();
