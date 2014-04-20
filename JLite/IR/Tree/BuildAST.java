@@ -119,6 +119,20 @@ public class BuildAST
 			
 			return new VarNode(name, null);
 		}
+		if(node.getLabel().equals("return")) // for return
+		{
+			ParseNode pn = node.getFirstChild();
+			if (pn.getLabel().equals("empty"))
+			{
+				return new VarNode(null, null);
+			}
+			else if (pn.getLabel().equals("name"))
+			{
+				NameNode name = parseNameNode(pn);
+				return new VarNode(name, null);
+			}
+
+		}
 		
 		return new VarNode(null, null);
 	}
@@ -212,7 +226,7 @@ public class BuildAST
 		}
 		else if(node.getLabel().equals("expression"))
 		{
-			ExpressionNode expressionNode = parseExpressionNode(node);
+			ExpressionNode expressionNode = parseExpressionNode(node.getFirstChild());
 			return expressionNode;
 		}
 		else if(node.getLabel().equals("return"))
@@ -273,8 +287,18 @@ public class BuildAST
 
 	public ReturnNode parseReturnNode(ParseNode node)
 	{
-		ExpressionNode expressionNode = parseExpressionNode(node);
-		return new ReturnNode(expressionNode);
+		
+		if (node.getFirstChild().getLabel().equals("empty"))
+		{
+			ExpressionNode expressionNode = new NameNode(node.getFirstChild().getLabel());
+			return new ReturnNode(expressionNode);
+		}
+		else
+		{
+			ExpressionNode expressionNode = parseExpressionNode(node.getFirstChild());
+			return new ReturnNode(expressionNode);
+		}
+	
 	}
 	
 	// parses starting from " "
@@ -379,20 +403,21 @@ public class BuildAST
 	// parses starting from " "
 	public ExpressionNode parseExpressionNode(ParseNode node)
 	{
+
 		String label = node.getLabel();
 		if (node.getLabel().equals("literal"))
 		{
 			LiteralNode literalNode = parseLiteralNode(node.getFirstChild());
 			return literalNode;
 		}
-		if (node.getLabel().equals("name"))
+		else if (node.getLabel().equals("name"))
 		{
 			NameNode nameNode = parseNameNode(node.getFirstChild());
 			return nameNode;
 		}
-		else if(node.getFirstChild().getLabel().equals("assignment"))
+		else if(node.getLabel().equals("assignment"))
 		{
-			AssignmentNode assignmentNode = parseAssignmentNode(node.getFirstChild());
+			AssignmentNode assignmentNode = parseAssignmentNode(node);
 			return assignmentNode;
 		}
 		else if (label.equals("add") || label.equals("sub") || label.equals("mult") || label.equals("div") || label.equals("not") || label.equals("comp_lt") || label.equals("comp_gt" ) || label.equals("comp_lt") || label.equals("equal") || label.equals("not_equal") || label.equals("bitwise_and") || label.equals("bitwise_or") || label.equals("bitwise_xor") || label.equals("logical_or") || label.equals("logical_and"))
@@ -401,11 +426,11 @@ public class BuildAST
 			return opNode;
 		}
 
-		else if(node.getFirstChild().getLabel().equals("methodinvoke1"))
+		/*else if(node.getLabel().equals("methodinvoke1"))
 		{
 			MethodInvokeNode invokeNode = parseMethodInvokeNode(node.getFirstChild());
 			return invokeNode;
-		}
+		}*/
 		else
 		{
 			return new TypeNode("hello");
@@ -413,7 +438,7 @@ public class BuildAST
 		}
 	}
 	
-	public MethodInvokeNode parseMethodInvokeNode(ParseNode node)
+	/*public MethodInvokeNode parseMethodInvokeNode(ParseNode node)
 	{
 		NameNode name = parseNameNode(node.getChild("name"));
 		ParseNodeVector pnv = node.getChild("argument_list").getChildren();
@@ -426,7 +451,7 @@ public class BuildAST
 		}
 		
 		return min;
-	}
+	}*/
 	
 	public TreeNode parseNode(ParseNode node)
 	{
