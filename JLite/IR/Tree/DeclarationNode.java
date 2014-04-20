@@ -4,10 +4,10 @@ public class DeclarationNode extends BlockStatementNode
 {
 	private String name;
 	private TypeNode type;
-	private TreeNode initializer;
+	private ExpressionNode initializer;
 	
 	// constructor
-	public DeclarationNode(String name2, TypeNode t, TreeNode i)
+	public DeclarationNode(String name2, TypeNode t, ExpressionNode i)
 	{
 		name = name2;
 		type = t;
@@ -25,7 +25,7 @@ public class DeclarationNode extends BlockStatementNode
 		return type;
 	}
 	
-	public TreeNode getInitializer()
+	public ExpressionNode getInitializer()
 	{
 		return initializer;
 	}
