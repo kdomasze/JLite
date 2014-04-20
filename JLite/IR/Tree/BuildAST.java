@@ -239,7 +239,6 @@ public class BuildAST
 			NameNode nameNode = parseNameNode(node.getChild("single"));
 			ExpressionNode expressionNode = parseExpressionNode(node.getChild("initializer").getFirstChild());
 			return new AssignmentNode(nameNode, expressionNode);
-
 		}
 		else if(node.getLabel().equals("local_variable_declaration"))
 		{
@@ -453,15 +452,15 @@ public class BuildAST
 		return min;
 	}*/
 	
-	public TreeNode parseNode(ParseNode node)
+	public ExpressionNode parseNode(ParseNode node)
 	{
 		if(node.getLabel().equals("name"))
 		{
 			return parseNameNode(node);
 		}
-		else if(node.getLabel().equals("none"))
+		else if(node.getLabel().equals("literal"))
 		{
-			return null;
+			return parseLiteralNode(node);
 		}
 		return null;
 	}
