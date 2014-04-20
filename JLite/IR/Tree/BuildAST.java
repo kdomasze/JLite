@@ -330,9 +330,44 @@ public class BuildAST
 			AssignmentNode assignmentNode = parseAssignmentNode(node.getFirstChild().getChild("args"));
 			return assignmentNode;
 		}
-
+		else if(node.getFirstChild().getLabel().equals("methodinvoke1"))
+		{
+			MethodInvokeNode invokeNode = parseMethodInvokeNode(node.getFirstChild());
+			return invokeNode;
+		}
+		else
+		{
 			return new TypeNode("hello");
-		//throw new Error();
+			//throw new Error();
+		}
+	}
+	
+	public MethodInvokeNode parseMethodInvokeNode(ParseNode node)
+	{
+		NameNode name = parseNameNode(node.getChild("name"));
+		ParseNodeVector pnv = node.getChild("argument_list").getChildren();
+		MethodInvokeNode min = new MethodInvokeNode(name);
+		
+		for(int i = 0; i < pnv.size(); i++)
+		{
+			TreeNode n = parseNode(pnv.elementAt(i));
+			min.setArgumentSet(n);
+		}
+		
+		return min;
+	}
+	
+	public TreeNode parseNode(ParseNode node)
+	{
+		if(node.getLabel().equals("name"))
+		{
+			return parseNameNode(node);
+		}
+		else if(node.getLabel().equals("none"))
+		{
+			return null;
+		}
+		return null;
 	}
 
 	public String toString()
