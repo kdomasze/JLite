@@ -220,15 +220,11 @@ public class BuildAST
 			ReturnNode returnNode = parseReturnNode(node);
 			return returnNode;
 		}
-<<<<<<< HEAD
-=======
 		else if(node.getLabel().equals("variable_declarator"))
 		{
 			NameNode nameNode = parseNameNode(node.getChild("single"));
 			ExpressionNode expressionNode = parseExpressionNode(node.getChild("initializer").getFirstChild());
 			return new AssignmentNode(nameNode, expressionNode);
->>>>>>> 949b968f23d39e1592c48eacf8c8d9fad151f709
-
 		}
 		else if(node.getLabel().equals("local_variable_declaration"))
 		{
@@ -442,20 +438,6 @@ public class BuildAST
 			return parseLiteralNode(node);
 		}
 		return null;
-	}
-	
-	public LiteralNode parseLiteralNode(ParseNode node)
-	{
-		//return null;
-		return new LiteralNode((int)node.getFirstChild().getLiteral());
-	}
-	
-	public ReturnNode parseReturnNode(ParseNode node)
-	{
-		ParseNode pn = node.getFirstChild();
-		ExpressionNode tNode = parseNode(pn);
-		
-		return new ReturnNode(tNode);
 	}
 
 	public String toString()
