@@ -42,7 +42,14 @@ public class BuildAST
 	// parses starting from "name" or "single"
 	public NameNode parseNameNode(ParseNode node)
 	{
-		return new NameNode(node.getFirstChild().getLabel());
+		if(node.getChildren().size()==0)
+		{
+			return new NameNode(node.getLabel());
+		}
+		else
+		{
+			return parseNameNode(node.getFirstChild());
+		}
 	}
 	
 	// parses starting from "super"
@@ -87,9 +94,17 @@ public class BuildAST
 	// parses starting from "type"
 	public TypeNode parseTypeNode(ParseNode node)
 	{
-		ParseNode pn = node.getFirstChild();
+		if(node.getChildren().size() == 0)
+		{
+			return new TypeNode(node.getLabel());
+		}
+		else
+		{
+			return parseTypeNode(node.getFirstChild());
+		}
+		/*ParseNode pn = node.getFirstChild();
 		
-		return new TypeNode(pn.getFirstChild().getLabel());
+		return new TypeNode(pn.getFirstChild().getLabel());*/
 	}
 	
 	// parses starting from "variables"
@@ -123,7 +138,8 @@ public class BuildAST
 		{
 			if(pnv.elementAt(i).getLabel().equals("returntype"))
 			{
-				typeNode = new TypeNode(pnv.elementAt(i).getLabel());
+				typeNode = parseTypeNode(pnv.elementAt(i));
+				//typeNode = new TypeNode(pnv.elementAt(i).getFirstChild().getFirstChild().getFirstChild().getFirstChild().getFirstChild().getLabel());
 			}
 			else if(pnv.elementAt(i).getLabel().equals("method_declarator"))
 			{
@@ -138,7 +154,9 @@ public class BuildAST
 					method.addParameter(field);
 				}
 			}
-		}	
+		}
+		TreeNode tnode = parseBlockNode(bn);
+		method.setASTTree(tnode);
 		return method;
 	}
 	
@@ -156,7 +174,7 @@ public class BuildAST
 	// parses starting from " "
 	public BlockNode parseBlockNode(ParseNode node)
 	{
-		ParseNodeVector pnv = node.getChildren();
+		ParseNodeVector pnv = node.getFirstChild().getChildren();
 		BlockStatementNode s = new 	BlockStatementNode();
 		for(int i = 0; i < pnv.size(); i++)
 		{
@@ -324,13 +342,49 @@ public class BuildAST
 			TypeNode typeNode = parseTypeNode(node.getChild("type"));
 			return typeNode;
 		}
-		else if(node.getLabel().equals("assignment"))
+		else if(node.getFirstChild().getLabel().equals("assignment"))
 		{
-			AssignmentNode assignmentNode = parseAssignmentNode(node.getChild("args"));
+			AssignmentNode assignmentNode = parseAssignmentNode(node.getFirstChild().getChild("args"));
 			return assignmentNode;
 		}
-
-		throw new Error();
+		else if(node.getFirstChild().getLabel().equals("methodinvoke1"))
+		{
+			MethodInvokeNode invokeNode = parseMethodInvokeNode(node.getFirstChild());
+			return invokeNode;
+		}
+		else
+		{
+			return new TypeNode("hello");
+			//throw new Error();
+		}
+	}
+	
+	public MethodInvokeNode parseMethodInvokeNode(ParseNode node)
+	{
+		NameNode name = parseNameNode(node.getChild("name"));
+		ParseNodeVector pnv = node.getChild("argument_list").getChildren();
+		MethodInvokeNode min = new MethodInvokeNode(name);
+		
+		for(int i = 0; i < pnv.size(); i++)
+		{
+			TreeNode n = parseNode(pnv.elementAt(i));
+			min.setArgumentSet(n);
+		}
+		
+		return min;
+	}
+	
+	public TreeNode parseNode(ParseNode node)
+	{
+		if(node.getLabel().equals("name"))
+		{
+			return parseNameNode(node);
+		}
+		else if(node.getLabel().equals("none"))
+		{
+			return null;
+		}
+		return null;
 	}
 
 	public String toString()

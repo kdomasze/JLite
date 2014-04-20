@@ -13,6 +13,11 @@ public abstract class Descriptor {
     this.name = name;
   }
 
+  public void setName(String n)
+  {
+	  name = n;
+  }
+  
   public String toString() {
     return getSymbol();
   }
@@ -20,4 +25,5 @@ public abstract class Descriptor {
   public String getSymbol() {
     return name;
   }
+  
 }

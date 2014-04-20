@@ -24,7 +24,10 @@ public class MethodDescriptor extends Descriptor
 		ReturnType = type;
 	}
 	
-	
+	public void setASTTree(TreeNode node)
+	{
+		ASTTree = node;
+	}
 	
 	// put methods	
 	public void createASTTree(TreeNode AST)
@@ -65,6 +68,6 @@ public class MethodDescriptor extends Descriptor
 	
 	public String toString()
 	{
-		return ReturnType.toString() + "]" + "\n\t\tParameters: " + ParameterSymbolTable.toString() + "\n\t\tVarDescriptor: " + VarDescriptorSymbolTable.toString() + "\n";
+		return ReturnType.toString() + "]" + "\n\t\tParameters: " + ParameterSymbolTable.toString() + "\n\t\tVarDescriptor: " + VarDescriptorSymbolTable.toString() + "\n\t" + ASTTree.toString();
 	}
 }
