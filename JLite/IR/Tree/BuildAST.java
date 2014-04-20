@@ -365,14 +365,50 @@ public class BuildAST
 			AssignmentNode assignmentNode = parseAssignmentNode(node.getFirstChild());
 			return assignmentNode;
 		}
-		
 		else if (label.equals("add") || label.equals("sub") || label.equals("mult") || label.equals("div") || label.equals("not") || label.equals("comp_lt") || label.equals("comp_gt" ) || label.equals("comp_lt") || label.equals("equal") || label.equals("not_equal") || label.equals("bitwise_and") || label.equals("bitwise_or") || label.equals("bitwise_xor") || label.equals("logical_or") || label.equals("logical_and"))
 		{
 			OpNode opNode = parseOpNode(node);
 			return opNode;
 		}
+
+		else if(node.getFirstChild().getLabel().equals("methodinvoke1"))
+		{
+			MethodInvokeNode invokeNode = parseMethodInvokeNode(node.getFirstChild());
+			return invokeNode;
+		}
+		else
+		{
 			return new TypeNode("hello");
-		//throw new Error();
+			//throw new Error();
+		}
+	}
+	
+	public MethodInvokeNode parseMethodInvokeNode(ParseNode node)
+	{
+		NameNode name = parseNameNode(node.getChild("name"));
+		ParseNodeVector pnv = node.getChild("argument_list").getChildren();
+		MethodInvokeNode min = new MethodInvokeNode(name);
+		
+		for(int i = 0; i < pnv.size(); i++)
+		{
+			TreeNode n = parseNode(pnv.elementAt(i));
+			min.setArgumentSet(n);
+		}
+		
+		return min;
+	}
+	
+	public TreeNode parseNode(ParseNode node)
+	{
+		if(node.getLabel().equals("name"))
+		{
+			return parseNameNode(node);
+		}
+		else if(node.getLabel().equals("none"))
+		{
+			return null;
+		}
+		return null;
 	}
 
 	public String toString()
