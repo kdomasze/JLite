@@ -428,6 +428,11 @@ public class BuildAST
 			OpNode opNode = parseOpNode(node);
 			return opNode;
 		}
+		else if (label.equals("createobject"))
+		{
+			CreateObjectNode createObject = parseCreateObject(node);
+			return createObject;
+		}
 
 		/*else if(node.getLabel().equals("methodinvoke1"))
 		{

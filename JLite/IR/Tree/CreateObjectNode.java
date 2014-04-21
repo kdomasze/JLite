@@ -1,6 +1,6 @@
 package IR.Tree;
 
-public class CreateObjectNode extends BlockStatementNode
+public class CreateObjectNode extends ExpressionNode
 {
 	TypeNode Type;
 
