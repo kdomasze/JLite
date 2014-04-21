@@ -1,23 +1,23 @@
 package IR.Tree;
 
-import java.util.Set;
-
-import IR.Descriptor;
+import IR.FieldDescriptor;
+import IR.SymbolTable;
 
 public class MethodInvokeNode extends ExpressionNode
 {
 	private TreeNode Name;
-	private Set<TreeNode> ArgumentSet;
+	private SymbolTable ArgumentSymbolTable;//SymbolTable for Arguments
 	
 	//constructor
-	public MethodInvokeNode(TreeNode n)
+	public MethodInvokeNode(TreeNode n, SymbolTable parent)
 	{
 		Name = n;
+		ArgumentSymbolTable = new SymbolTable(parent);
 	}
 	
-	public void setArgumentSet(Set<TreeNode> newSet)
+	public void addArgument(FieldDescriptor field)
 	{
-		ArgumentSet = newSet;
+		ArgumentSymbolTable.add(field);
 	}
 	
 	//accessors
@@ -26,13 +26,13 @@ public class MethodInvokeNode extends ExpressionNode
 		return Name;
 	}
 	
-	public Set<TreeNode> getAgruments()
+	public SymbolTable getAgrumentSymbolTable()
 	{
-		return ArgumentSet;
+		return ArgumentSymbolTable;
 	}
 	
 	public String toString()
 	{
-		return "[MethodInvoke: " + Name + ": " + ArgumentSet + "]";
+		return "[MethodInvoke: " + Name + ": " + ArgumentSymbolTable.toString() + "]";
 	}
 }
