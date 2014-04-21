@@ -12,7 +12,7 @@ public class MethodInvokeNode extends ExpressionNode
 	public MethodInvokeNode(TreeNode n, SymbolTable parent)
 	{
 		Name = n;
-		ArgumentSymbolTable = new SymbolTable(parent);
+		ArgumentSymbolTable = new SymbolTable(parent); 
 	}
 	
 	public void addArgument(FieldDescriptor field)
