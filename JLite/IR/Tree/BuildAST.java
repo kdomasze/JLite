@@ -100,6 +100,10 @@ public class BuildAST
 		{
 			return new TypeNode(node.getLabel());
 		}
+		else if(node.getFirstChild().getLabel().equals("class"))
+		{
+			return new TypeNode(node.getChild("class").getChild("name").getChild("identifier").getFirstChild().getLabel());
+		}
 		else
 		{
 			return parseTypeNode(node.getFirstChild());
@@ -435,6 +439,14 @@ public class BuildAST
 			return new TypeNode("hello");
 			//throw new Error();
 		}
+	}
+	
+	// parses starting from "createobject"
+	public CreateObjectNode parseCreateObject(ParseNode node)
+	{
+		TypeNode type = parseTypeNode(node.getFirstChild());
+		return new CreateObjectNode(type);
+		
 	}
 	
 	/*public MethodInvokeNode parseMethodInvokeNode(ParseNode node)
