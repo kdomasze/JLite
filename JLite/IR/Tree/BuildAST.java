@@ -57,7 +57,7 @@ public class BuildAST
 	// parses starting from "super"
 	public NameNode parseSuperClass(ParseNode node)
 	{
-		return new NameNode(node.getFirstChild().getLabel());
+		return  parseNameNode(node.getFirstChild());
 	}
 	
 	// parses starting from "classbody"
