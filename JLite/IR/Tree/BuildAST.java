@@ -289,7 +289,6 @@ public class BuildAST
 		ExpressionNode rhs = parseExpressionNode(pnv.elementAt(1));
 		
 		return new AssignmentNode(lhs, rhs);
-		
 	}
 
 	public ReturnNode parseReturnNode(ParseNode node)
@@ -443,6 +442,11 @@ public class BuildAST
 			MethodInvokeNode invokeNode = parseMethodInvokeNode(node);
 			return invokeNode;
 		}
+		else if(label.equals("cast1") || label.equals("cast2"))
+		{
+			CastNode cast = parseCastNode(node);
+			return cast;
+		}
 		else
 		{
 			return new TypeNode("hello");
@@ -484,6 +488,16 @@ public class BuildAST
 			return parseLiteralNode(node);
 		}
 		return null;
+	} 
+	
+	public CastNode parseCastNode(ParseNode node)
+	{
+		ParseNodeVector pnv = node.getChildren();
+
+		TypeNode type = parseTypeNode(pnv.elementAt(0));
+		ExpressionNode expression = parseExpressionNode(pnv.elementAt(1).getFirstChild());
+		
+		return new CastNode(type, expression);
 	}
 
 	public String toString()
