@@ -9,6 +9,11 @@ public class Program
 		Classes.add(cD);
 	}
 	
+	public SymbolTable getClasses()
+	{
+		return Classes;
+	}
+	
 	public String toString()
 	{
 		return Classes.toString();

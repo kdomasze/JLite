@@ -14,6 +14,7 @@ import java.util.Vector;
 import Parse.*;
 import IR.*;
 import IR.Tree.BuildAST;
+import IR.Tree.SemanticCheck;
 import IR.Tree.TreeNode;
 
 public class Main
@@ -74,6 +75,8 @@ public class Main
                 {
                 	program.parse(pn);
                 	System.out.println(program);
+                	SemanticCheck semanticCheck = new SemanticCheck(program);
+                	semanticCheck.run();
                 }
             } catch (Exception e)
             {
