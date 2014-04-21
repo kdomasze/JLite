@@ -2,18 +2,18 @@ package IR.Tree;
 
 public class IfStatementNode extends BlockStatementNode
 {
-	private OpNode condition;
+	private ExpressionNode condition;
 	private BlockNode block;
 	
 	//Constructor
-	IfStatementNode(OpNode condition2, BlockNode block2)
+	IfStatementNode(ExpressionNode condition2, BlockNode block2)
 	{
 		condition = condition2;
 		block = block2;
 	}
 	
 	//Get methods
-	public OpNode getOperation()
+	public ExpressionNode getOperation()
 	{
 		return condition;
 	}

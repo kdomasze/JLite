@@ -2,23 +2,23 @@ package IR.Tree;
 
 public class WhileStatementNode extends BlockStatementNode
 {
-	private TreeNode condition;
-	private TreeNode block;
+	private ExpressionNode condition;
+	private BlockNode block;
 
 	//Constructor
-	WhileStatementNode(TreeNode condition2, TreeNode block2)
+	WhileStatementNode(ExpressionNode condition2, BlockNode block2)
 	{
 		condition = condition2;
 		block = block2;
 	}
 
 	//Get methods
-	public TreeNode getOperation()
+	public ExpressionNode getOperation()
 	{
 		return condition;
 	}
 
-	public TreeNode getBlock()
+	public BlockNode getBlock()
 	{
 		return block;
 	}

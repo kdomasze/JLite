@@ -263,7 +263,7 @@ public class BuildAST
 	public IfStatementNode parseIfStatementNode(ParseNode node)
 	{
 		ParseNodeVector pnv = node.getChildren();
-		OpNode opNode = parseOpNode(pnv.elementAt(0).getFirstChild());
+		ExpressionNode opNode = parseExpressionNode(pnv.elementAt(0).getFirstChild());
 		BlockNode blockNode = parseBlockNode(pnv.elementAt(1).getChild("block_statement_list"));
 
 		return new IfStatementNode(opNode, blockNode);
@@ -274,7 +274,7 @@ public class BuildAST
 	{
 		ParseNodeVector pnv = node.getChildren();
 
-		OpNode opNode = parseOpNode(pnv.elementAt(0).getFirstChild());
+		ExpressionNode opNode = parseExpressionNode(pnv.elementAt(0).getFirstChild());
 		BlockNode blockNode = parseBlockNode(pnv.elementAt(1).getChild("block_statement_list"));
 
 		return new WhileStatementNode(opNode, blockNode);
