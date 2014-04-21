@@ -1,38 +1,39 @@
 package IR.Tree;
 
+import java.util.Vector;
+
 import IR.FieldDescriptor;
 import IR.SymbolTable;
 
 public class MethodInvokeNode extends ExpressionNode
 {
-	private TreeNode Name;
-	private SymbolTable ArgumentSymbolTable;//SymbolTable for Arguments
+	private ExpressionNode Name;
+	private Vector<ExpressionNode> ArgumentVector = new Vector<ExpressionNode>();//SymbolTable for Arguments
 	
 	//constructor
-	public MethodInvokeNode(TreeNode n, SymbolTable parent)
+	public MethodInvokeNode(ExpressionNode n)
 	{
 		Name = n;
-		ArgumentSymbolTable = new SymbolTable(parent); 
 	}
 	
-	public void addArgument(FieldDescriptor field)
+	public void addArgument(ExpressionNode expression)
 	{
-		ArgumentSymbolTable.add(field);
+		ArgumentVector.add(expression);
 	}
 	
 	//accessors
-	public TreeNode getNameNode()
+	public ExpressionNode getNameNode()
 	{
 		return Name;
 	}
 	
-	public SymbolTable getAgrumentSymbolTable()
+	public Vector<ExpressionNode> getArgumentVector()
 	{
-		return ArgumentSymbolTable;
+		return ArgumentVector;
 	}
 	
 	public String toString()
 	{
-		return "[MethodInvoke: " + Name + ": " + ArgumentSymbolTable.toString() + "]";
+		return "[MethodInvoke: " + Name + ": " + ArgumentVector + "]";
 	}
 }

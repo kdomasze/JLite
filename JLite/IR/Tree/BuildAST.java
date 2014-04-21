@@ -246,9 +246,13 @@ public class BuildAST
 		}
 		else if(node.getLabel().equals("local_variable_declaration"))
 		{
+			ExpressionNode expressionNode  = null;
 			NameNode nameNode = parseNameNode(node.getChild("variable_declarator").getChild("single"));
 			TypeNode typeNode = parseTypeNode(node.getChild("type"));
-			ExpressionNode expressionNode = parseExpressionNode(node.getChild("variable_declarator").getChild("initializer").getFirstChild());
+			if(node.getChild("variable_declarator").getChild("initializer") != null)
+			{
+				expressionNode = parseExpressionNode(node.getChild("variable_declarator").getChild("initializer").getFirstChild());
+			}
 			return new DeclarationNode(nameNode.getName(), typeNode, expressionNode);
 		}
 		throw new Error();
@@ -434,11 +438,11 @@ public class BuildAST
 			return createObject;
 		}
 
-		/*else if(node.getLabel().equals("methodinvoke1"))
+		else if(node.getLabel().equals("methodinvoke1"))
 		{
-			MethodInvokeNode invokeNode = parseMethodInvokeNode(node.getFirstChild());
+			MethodInvokeNode invokeNode = parseMethodInvokeNode(node);
 			return invokeNode;
-		}*/
+		}
 		else
 		{
 			return new TypeNode("hello");
@@ -454,7 +458,7 @@ public class BuildAST
 		
 	}
 	
-	/*public MethodInvokeNode parseMethodInvokeNode(ParseNode node)
+	public MethodInvokeNode parseMethodInvokeNode(ParseNode node)
 	{
 		NameNode name = parseNameNode(node.getChild("name"));
 		ParseNodeVector pnv = node.getChild("argument_list").getChildren();
@@ -462,12 +466,12 @@ public class BuildAST
 		
 		for(int i = 0; i < pnv.size(); i++)
 		{
-			TreeNode n = parseNode(pnv.elementAt(i));
-			//min.setArgumentSet(n);
+			ExpressionNode en = parseExpressionNode(pnv.elementAt(i));
+			min.addArgument(en);
 		}
 		
 		return min;
-	}*/
+	}
 	
 	public ExpressionNode parseNode(ParseNode node)
 	{
