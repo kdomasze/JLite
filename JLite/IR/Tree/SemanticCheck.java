@@ -32,6 +32,11 @@ public class SemanticCheck
 	
 	public void run()
 	{
+		semanticCheck1();
+	}
+	
+	public void semanticCheck1()
+	{
 		// get an array of the class names
 		Object[] tempClassNames = program.program.getClasses().getNamesSet().toArray();
 		String[] classNames = Arrays.copyOf(tempClassNames, tempClassNames.length, String[].class);
