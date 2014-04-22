@@ -33,6 +33,71 @@ public class SemanticCheck
 	public void run()
 	{
 		semanticCheck1();
+		
+		// get an array of the class names
+		Object[] tempClassNames = program.program.getClasses().getNamesSet().toArray();
+		String[] classNames = Arrays.copyOf(tempClassNames, tempClassNames.length, String[].class);
+		SymbolTable classes = program.program.getClasses();
+		
+		// step into each class to check fields and methods
+		for(int i = 0; i < classNames.length; i++)
+		{
+			// get one of the class descriptors
+			ClassDescriptor classDesc = (ClassDescriptor) classes.get(classNames[i]);
+			
+			// get all the names for the method descriptors
+			SymbolTable methods = classDesc.getMethodDescriptorTable();
+			Object[] tempMethodsNames = methods.getNamesSet().toArray();
+			String[] methodNames = Arrays.copyOf(tempMethodsNames, tempMethodsNames.length, String[].class);
+			
+			// step into the body of the methods
+			for(int j = 0; j < methodNames.length; j++)
+			{
+				// check the method body for uninitialized vars.
+				checkVariableScope((MethodDescriptor)methods.get(methodNames[j]), classDesc);
+				//checkIfWhileScope((MethodDescriptor)methods.get(methodNames[j]), null, classDesc, null, null);
+			}
+		}
+		
+	}
+	
+	public void checkVariableScope(MethodDescriptor method, ClassDescriptor classDesc)
+	{
+		SymbolTable tempVarSymbolTable = new SymbolTable();
+		
+		// fill vector with block statement nodes
+		Vector<BlockStatementNode> blockStatementVector = ((BlockNode)method.getASTTree()).getblockStatementVector();
+		
+		for(int i = 0; i < blockStatementVector.size(); i++)
+		{
+			if(blockStatementVector.elementAt(i) instanceof AssignmentNode)
+			{
+				String name = ((NameNode)((AssignmentNode)blockStatementVector.elementAt(i)).getLeftHandSide()).getName();
+
+				tempVarSymbolTable.add(new NameDescriptor(name));
+			}
+		}
+		
+		Object[] tempVarNames = tempVarSymbolTable.getNamesSet().toArray();
+		String[] VarNames = Arrays.copyOf(tempVarNames, tempVarNames.length, String[].class);
+		
+		for(int i = 0; i < VarNames.length; i++)
+		{
+			SymbolTable classSymbolTable = ((SymbolTableDescriptor)nameTable.get(classDesc.getSymbol())).getSymbolTable();
+			SymbolTable methodSymbolTable = ((SymbolTableDescriptor)classSymbolTable.get(method.getSymbol())).getSymbolTable();
+			SymbolTable fieldSymbolTable = ((SymbolTableDescriptor)classSymbolTable.get("Field")).getSymbolTable();
+			SymbolTable varSymbolTable = ((SymbolTableDescriptor)methodSymbolTable.get("Vars")).getSymbolTable();
+			
+			System.out.println(fieldSymbolTable);
+			
+			if(varSymbolTable.get(tempVarSymbolTable.get(VarNames[i]).getSymbol()) == null)
+			{
+				if(fieldSymbolTable.get(tempVarSymbolTable.get(VarNames[i]).getSymbol()) == null)
+				{
+					throw new Error("[ERROR_02] '" + VarNames[i] + "' identifier not declared.");
+				}
+			}
+		}
 	}
 	
 	public void semanticCheck1()
