@@ -61,6 +61,7 @@ public class SemanticCheck
 			{
 				// check the method body for duplicate vars
 				checkVariableNames((MethodDescriptor)methods.get(methodNames[j]), classDesc);
+				checkIfWhileBlocks((MethodDescriptor)methods.get(methodNames[j]), classDesc);
 			}
 		}
 	}
@@ -167,5 +168,101 @@ public class SemanticCheck
 			// add var names to symbol table
 			VarSymbolTable.add(new NameDescriptor(varNames[i]));
 		}
+	}
+	
+	public void checkIfWhileBlocks(MethodDescriptor method, ClassDescriptor classDesc)
+	{
+		// create a new symbol table for all vars
+				SymbolTableDescriptor classSymbolTable = ((SymbolTableDescriptor)nameTable.get(classDesc.getSymbol()));
+				SymbolTableDescriptor methodSymbolTable = ((SymbolTableDescriptor)classSymbolTable.getSymbolTable().get(method.getSymbol()));
+				
+				// fill vector with block statement nodes
+				Vector<BlockStatementNode> blockStatementVector = ((BlockNode)method.getASTTree()).getblockStatementVector();
+				
+				SymbolTable tempVarSymbolTable = new SymbolTable();
+				int ifCount = 0;
+				int whileCount = 0;
+				for(int i = 0; i < blockStatementVector.size(); i++)
+				{
+					if(blockStatementVector.elementAt(i) instanceof IfStatementNode)
+					{
+						methodSymbolTable.addToSymbolTable(new SymbolTableDescriptor("If" + ifCount, methodSymbolTable.getSymbolTable()));
+						checkBlockNode(blockStatementVector.elementAt(i), methodSymbolTable, "If" + ifCount);
+						ifCount++;
+					}
+					else if(blockStatementVector.elementAt(i) instanceof WhileStatementNode)
+					{
+						methodSymbolTable.addToSymbolTable(new SymbolTableDescriptor("While" + whileCount, methodSymbolTable.getSymbolTable()));
+						checkBlockNode(blockStatementVector.elementAt(i), methodSymbolTable, "While" + whileCount);
+						whileCount++;
+					}
+				}
+				
+	}
+	
+	public void checkBlockNode(BlockStatementNode block, SymbolTableDescriptor table, String symbolTableName)
+	{
+		Vector<BlockStatementNode> blockStatementVector = null;
+		if(symbolTableName.startsWith("I"))
+		{
+			blockStatementVector = ((IfStatementNode)block).getBlock().getblockStatementVector();
+		}
+		else if(symbolTableName.startsWith("W"))
+		{
+			blockStatementVector = ((WhileStatementNode)block).getBlock().getblockStatementVector();
+		}
+		else 
+		{
+			throw new Error("You messed up");
+		}
+		SymbolTable tempVarSymbolTable = new SymbolTable();
+		SymbolTable VarSymbolTable = ((SymbolTableDescriptor)table.getSymbolTable().get(symbolTableName)).getSymbolTable();
+		for(int i = 0; i < blockStatementVector.size(); i++)
+		{
+			if(blockStatementVector.elementAt(i) instanceof DeclarationNode)
+			{
+				String name = ((DeclarationNode)blockStatementVector.elementAt(i)).getName();
+				TypeDescriptor type = new TypeDescriptor(null, ((DeclarationNode)blockStatementVector.elementAt(i)).getType());
+				ExpressionNode expression = ((DeclarationNode)blockStatementVector.elementAt(i)).getInitializer();
+				
+				// add vars to temp symbol table
+				tempVarSymbolTable.add(new VarDescriptor(name, type, expression));
+			}
+		}
+		
+		// check vars for duplicates
+		Object[] tempVarNames = tempVarSymbolTable.getNamesSet().toArray();
+		String[] varNames = Arrays.copyOf(tempVarNames, tempVarNames.length, String[].class);
+		
+		for(int i = 0; i < varNames.length; i++)
+		{
+			if(tempVarSymbolTable.getDescriptorsSet(varNames[i]).size() > 1)
+			{
+				throw new Error("[ERROR_01] '" + varNames[i] + "' identifier has duplicate @'" + table.getSymbol() + "'.");
+			}
+			SymbolTable temp = VarSymbolTable.getParent();
+			Set<Descriptor> tempSymbolTableDescriptor = temp.getDescriptorsSet();
+
+			Object[] tempArray = tempSymbolTableDescriptor.toArray();
+			Descriptor[] tempArrayDescriptor = Arrays.copyOf(tempArray, tempArray.length, Descriptor[].class);
+			for(int j = 0; j < tempSymbolTableDescriptor.size() ; j++)
+			{
+				SymbolTable parentSymbolTable = ((SymbolTableDescriptor)tempArrayDescriptor[j]).getSymbolTable();
+				Set<Descriptor> parentSet = parentSymbolTable.getDescriptorsSet();
+				Object[] tempParentArray = parentSet.toArray();
+				Descriptor[] parentArrayDescriptor = Arrays.copyOf(tempParentArray, tempParentArray.length, Descriptor[].class);
+
+				for(int k = 0; k < parentArrayDescriptor.length; k++)
+				{					
+					if(varNames[i].equals(parentArrayDescriptor[k].getSymbol()))
+					{
+						throw new Error("[ERROR_01] '" + varNames[i] + "' identifier has duplicate @'" + table.getSymbol() + "'.");
+					}
+				}
+			}
+			// add var names to symbol table
+			VarSymbolTable.add(new NameDescriptor(varNames[i]));
+		}
+		System.out.println(table);
 	}
 }
