@@ -64,10 +64,12 @@ public class SemanticCheck
 	public void checkVariableScope(MethodDescriptor method, ClassDescriptor classDesc)
 	{
 		SymbolTable tempVarSymbolTable = new SymbolTable();
-		
 		// fill vector with block statement nodes
 		Vector<BlockStatementNode> blockStatementVector = ((BlockNode)method.getASTTree()).getblockStatementVector();
 		
+		/*
+		 * Left Hand Side check
+		 */		
 		for(int i = 0; i < blockStatementVector.size(); i++)
 		{
 			if(blockStatementVector.elementAt(i) instanceof AssignmentNode)
@@ -88,13 +90,129 @@ public class SemanticCheck
 			SymbolTable fieldSymbolTable = ((SymbolTableDescriptor)classSymbolTable.get("Field")).getSymbolTable();
 			SymbolTable varSymbolTable = ((SymbolTableDescriptor)methodSymbolTable.get("Vars")).getSymbolTable();
 			
-			System.out.println(fieldSymbolTable);
+			if(varSymbolTable.get(tempVarSymbolTable.get(VarNames[i]).getSymbol()) == null)
+			{
+				if(fieldSymbolTable.get(tempVarSymbolTable.get(VarNames[i]).getSymbol()) == null)
+				{
+					throw new Error("[ERROR_02] '" + VarNames[i] + "' identifier not declared.");
+				}
+			}
+		}
+		
+		
+		/*
+		 * Right Hand Side check
+		 */
+		for(int i = 0; i < blockStatementVector.size(); i++)
+		{
+			if(blockStatementVector.elementAt(i) instanceof AssignmentNode)
+			{
+				ExpressionNode expression = ((ExpressionNode)((AssignmentNode)blockStatementVector.elementAt(i)).getRightHandSide());
+				
+				getVarFromExpressionNode(expression, tempVarSymbolTable);
+			}
+		}
+		
+		tempVarNames = tempVarSymbolTable.getNamesSet().toArray();
+		VarNames = Arrays.copyOf(tempVarNames, tempVarNames.length, String[].class);
+		
+		for(int i = 0; i < VarNames.length; i++)
+		{
+			SymbolTable classSymbolTable = ((SymbolTableDescriptor)nameTable.get(classDesc.getSymbol())).getSymbolTable();
+			SymbolTable methodSymbolTable = ((SymbolTableDescriptor)classSymbolTable.get(method.getSymbol())).getSymbolTable();
+			SymbolTable fieldSymbolTable = ((SymbolTableDescriptor)classSymbolTable.get("Field")).getSymbolTable();
+			SymbolTable varSymbolTable = ((SymbolTableDescriptor)methodSymbolTable.get("Vars")).getSymbolTable();
 			
 			if(varSymbolTable.get(tempVarSymbolTable.get(VarNames[i]).getSymbol()) == null)
 			{
 				if(fieldSymbolTable.get(tempVarSymbolTable.get(VarNames[i]).getSymbol()) == null)
 				{
 					throw new Error("[ERROR_02] '" + VarNames[i] + "' identifier not declared.");
+				}
+			}
+		}
+		
+		/*
+		 * Declaration Node Check
+		 */
+		for(int i = 0; i < blockStatementVector.size(); i++)
+		{
+			if(blockStatementVector.elementAt(i) instanceof DeclarationNode)
+			{
+				ExpressionNode expression = ((DeclarationNode)blockStatementVector.elementAt(i)).getInitializer();
+				
+				getVarFromExpressionNode(expression, tempVarSymbolTable);
+			}
+		}
+		
+		tempVarNames = tempVarSymbolTable.getNamesSet().toArray();
+		VarNames = Arrays.copyOf(tempVarNames, tempVarNames.length, String[].class);
+		
+		for(int i = 0; i < VarNames.length; i++)
+		{
+			SymbolTable classSymbolTable = ((SymbolTableDescriptor)nameTable.get(classDesc.getSymbol())).getSymbolTable();
+			SymbolTable methodSymbolTable = ((SymbolTableDescriptor)classSymbolTable.get(method.getSymbol())).getSymbolTable();
+			SymbolTable fieldSymbolTable = ((SymbolTableDescriptor)classSymbolTable.get("Field")).getSymbolTable();
+			SymbolTable varSymbolTable = ((SymbolTableDescriptor)methodSymbolTable.get("Vars")).getSymbolTable();
+			
+			if(varSymbolTable.get(tempVarSymbolTable.get(VarNames[i]).getSymbol()) == null)
+			{
+				if(fieldSymbolTable.get(tempVarSymbolTable.get(VarNames[i]).getSymbol()) == null)
+				{
+					throw new Error("[ERROR_02] '" + VarNames[i] + "' identifier not declared.");
+				}
+			}
+		}
+	}
+	
+	// given an expression node, this method will fill a symbolTable with all var names inside of expressions
+	public void getVarFromExpressionNode(ExpressionNode expression, SymbolTable table)
+	{
+		if(expression instanceof OpNode)
+		{
+			// check operand 1
+			if(((OpNode)expression).getOperand1() instanceof NameNode)
+			{
+				String name = ((NameNode)((OpNode)expression).getOperand1()).getName();
+				table.add(new NameDescriptor(name));
+			}
+			else if(((OpNode)expression).getOperand1() instanceof OpNode)
+			{
+				ExpressionNode expressionSend = ((OpNode)expression).getOperand1();
+				getVarFromExpressionNode(expressionSend, table);
+			}
+			
+			// check operand 2
+			if(((OpNode)expression).getOperand2() instanceof NameNode)
+			{
+				String name = ((NameNode)((OpNode)expression).getOperand2()).getName();
+				table.add(new NameDescriptor(name));
+			}
+			else if(((OpNode)expression).getOperand2() instanceof OpNode)
+			{
+				ExpressionNode expressionSend = ((OpNode)expression).getOperand2();
+				getVarFromExpressionNode(expressionSend, table);
+			}
+		}
+		
+		// check methodInvokeNode
+		if(expression instanceof MethodInvokeNode)
+		{
+			Vector<ExpressionNode> argumentVector = ((MethodInvokeNode)expression).getArgumentVector();
+			for(ExpressionNode expr : argumentVector)
+			{
+				if(expr instanceof OpNode)
+				{
+					getVarFromExpressionNode((OpNode)expr, table);
+				}
+				else if(expr instanceof MethodInvokeNode)
+				{
+					getVarFromExpressionNode((MethodInvokeNode)expr, table);
+				}
+				else if(expr instanceof NameNode)
+				{
+					String name = ((NameNode)expr).getName();
+					table.add(new NameDescriptor(name));
 				}
 			}
 		}
