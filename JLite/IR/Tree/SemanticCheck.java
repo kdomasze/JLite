@@ -106,6 +106,11 @@ public class SemanticCheck
 			Vector<BlockStatementNode> ifBodyVector = ((IfStatementNode)blockStatement).getBlock().getblockStatementVector();
 			Vector<BlockStatementNode> elseBodyVector = ((IfStatementNode)blockStatement).getBlocke().getblockStatementVector();
 			checkBlockStatementVector(ifBodyVector);
+			
+			if(((IfStatementNode)blockStatement).getBlocke() != null)
+			{
+				checkBlockStatementVector(elseBodyVector);
+			}
 		}
 		else
 		{
