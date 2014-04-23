@@ -32,6 +32,6 @@ public class IfStatementNode extends BlockStatementNode
 	
 	public String toString()
 	{
-		return "[If: " + condition + " -> " + block + "else" + blocke + "]";
+		return "[If: " + condition + " -> " + block + "] Else: -> " + blocke + "]";
 	}
 }
