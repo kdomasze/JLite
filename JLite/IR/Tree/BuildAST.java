@@ -265,8 +265,13 @@ public class BuildAST
 		ParseNodeVector pnv = node.getChildren();
 		ExpressionNode opNode = parseExpressionNode(pnv.elementAt(0).getFirstChild());
 		BlockNode blockNode = parseBlockNode(pnv.elementAt(1));
+		if(pnv.size() == 3)
+		{
+			BlockNode blockNode2 = parseBlockNode(pnv.elementAt(2));
+			return new IfStatementNode(opNode, blockNode, blockNode2);
+		}
 
-		return new IfStatementNode(opNode, blockNode);
+		return new IfStatementNode(opNode, blockNode, null);
 	}
 
 	// parses starting from "whilestatement"
