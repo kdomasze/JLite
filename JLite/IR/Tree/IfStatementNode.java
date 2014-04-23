@@ -4,12 +4,14 @@ public class IfStatementNode extends BlockStatementNode
 {
 	private ExpressionNode condition;
 	private BlockNode block;
+	private BlockNode blocke;
 	
 	//Constructor
-	IfStatementNode(ExpressionNode condition2, BlockNode block2)
+	IfStatementNode(ExpressionNode condition2, BlockNode block2, BlockNode blocke2)
 	{
 		condition = condition2;
 		block = block2;
+		blocke = blocke2;
 	}
 	
 	//Get methods
@@ -23,8 +25,13 @@ public class IfStatementNode extends BlockStatementNode
 		return block;
 	}
 	
+	public BlockNode getBlocke()
+	{
+		return blocke;
+	}
+	
 	public String toString()
 	{
-		return "[If: " + condition + " -> " + block + "]";
+		return "[If: " + condition + " -> " + block + "] Else: -> " + blocke + "]";
 	}
 }
