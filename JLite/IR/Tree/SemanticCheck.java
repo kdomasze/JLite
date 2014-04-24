@@ -70,13 +70,13 @@ public class SemanticCheck
 		}
 		
 		/*
-		 * Semantic Check 1: Methods
+		 * Semantic Check 14: Methods
 		 */
 		for(String methodName : methodNames)
 		{
 			if(methods.getDescriptorsSet(methodName).size() > 1)
 			{
-				throw new Error("[ERROR_01] '" + methodName + "' identifier has duplicate @'" + classDesc.getSymbol() + "'.");
+				throw new Error("[ERROR_14] '" + methodName + "' is being overloaded @'" + classDesc.getSymbol() + "'.");
 			}
 			nametable.add(methods.get(methodName));
 		}
@@ -168,7 +168,7 @@ public class SemanticCheck
 			ExpressionNode expression = ((DeclarationNode)blockStatement).getInitializer();
 			
 			/*
-			 * Semantic Check 1: Method Params
+			 * Semantic Check 1: var declaration
 			 */
 			if((nametable.get(name) != null && !(nametable.get(name) instanceof FieldDescriptor)))
 			{
@@ -197,6 +197,9 @@ public class SemanticCheck
 			// check operand 1
 			if(((OpNode)expression).getOperand1() instanceof NameNode)
 			{
+				/*
+				 * Semantic Check 2: expression
+				 */
 				String name = ((NameNode)((OpNode)expression).getOperand1()).getName();
 				if(nametable.get(name) == null)
 				{
@@ -217,6 +220,9 @@ public class SemanticCheck
 			// check operand 2
 			if(((OpNode)expression).getOperand2() instanceof NameNode)
 			{
+				/*
+				 * Semantic Check 2: expression
+				 */
 				String name = ((NameNode)((OpNode)expression).getOperand2()).getName();
 				if(nametable.get(name) == null)
 				{
@@ -238,6 +244,9 @@ public class SemanticCheck
 		// check methodInvokeNode
 		else if(expression instanceof MethodInvokeNode)
 		{
+			/*
+			 * Semantic Check 2: method invoke
+			 */
 			if((nametable.get(((NameNode)((MethodInvokeNode)expression).getNameNode()).getName())) == null)
 			{
 				throw new Error("[ERROR_02] '" + ((NameNode)((MethodInvokeNode)expression).getNameNode()).getName() + "' identifier not declared.");
@@ -260,6 +269,9 @@ public class SemanticCheck
 				}
 				else if(expr instanceof NameNode)
 				{
+					/*
+					 * Semantic Check 2: method invoke param
+					 */
 					String name = ((NameNode)expr).getName();
 					if(nametable.get(name) == null)
 					{
@@ -272,6 +284,9 @@ public class SemanticCheck
 		// check namenodes
 		else if(expression instanceof NameNode)
 		{
+			/*
+			 * Semantic Check 2: single names
+			 */
 			if(nametable.get(((NameNode)expression).getName()) == null)
 			{
 				throw new Error("[ERROR_02] '" + ((NameNode)expression).getName() + "' identifier not declared.");
