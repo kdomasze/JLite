@@ -7,6 +7,11 @@ public class IfStatementNode extends BlockStatementNode
 	private BlockNode blocke;
 	
 	//Constructor
+	IfStatementNode(ExpressionNode condition2, BlockNode block2)
+	{
+		condition = condition2;
+		block = block2;
+	}
 	IfStatementNode(ExpressionNode condition2, BlockNode block2, BlockNode blocke2)
 	{
 		condition = condition2;

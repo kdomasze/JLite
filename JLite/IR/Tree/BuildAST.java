@@ -271,7 +271,7 @@ public class BuildAST
 			return new IfStatementNode(opNode, blockNode, blockNode2);
 		}
 
-		return new IfStatementNode(opNode, blockNode, null);
+		return new IfStatementNode(opNode, blockNode);
 	}
 
 	// parses starting from "whilestatement"

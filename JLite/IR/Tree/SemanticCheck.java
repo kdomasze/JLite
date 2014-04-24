@@ -216,6 +216,20 @@ public class SemanticCheck
 				{
 					throw new Error("[ERROR_02] '" + name + "' identifier not declared.");
 				}
+				if(nametable.get(name) instanceof FieldDescriptor)
+				{
+					if(!((FieldDescriptor)nametable.get(name)).getFieldType().getType().equals("int"))
+					{
+						throw new Error("[ERROR_10] '" + name + "' not of type int.");
+					}
+				}
+				if(nametable.get(name) instanceof VarDescriptor)
+				{
+					if(!((VarDescriptor)nametable.get(name)).getType().getType().equals("int"))
+					{
+						throw new Error("[ERROR_10] '" + name + "' not of type int.");
+					}
+				}
 			}
 			else if(((OpNode)expression).getOperand1() instanceof OpNode)
 			{
@@ -238,6 +252,20 @@ public class SemanticCheck
 				if(nametable.get(name) == null)
 				{
 					throw new Error("[ERROR_02] '" + name + "' identifier not declared.");
+				}
+				if(nametable.get(name) instanceof FieldDescriptor)
+				{
+					if(!((FieldDescriptor)nametable.get(name)).getFieldType().getType().equals("int"))
+					{
+						throw new Error("[ERROR_10] '" + name + "' not of type int.");
+					}
+				}
+				if(nametable.get(name) instanceof VarDescriptor)
+				{
+					if(!((VarDescriptor)nametable.get(name)).getType().getType().equals("int"))
+					{
+						throw new Error("[ERROR_10] '" + name + "' not of type int.");
+					}
 				}
 			}
 			else if(((OpNode)expression).getOperand2() instanceof OpNode)
@@ -330,6 +358,18 @@ public class SemanticCheck
 			if(nametable.get(((NameNode)expression).getName()) == null)
 			{
 				throw new Error("[ERROR_02] '" + ((NameNode)expression).getName() + "' identifier not declared.");
+			}
+			if(nametable.get(((NameNode)expression).getName()) instanceof FieldDescriptor)
+			{	if(((FieldDescriptor)nametable.get(((NameNode)expression).getName())).getFieldType().equals("int"))
+				{	
+					throw new Error("[ERROR_10] '" + nametable.get(((NameNode)expression).getName()) + "' not of type int.");
+				}
+			}
+			if(nametable.get(((NameNode)expression).getName()) instanceof VarDescriptor)
+			{	if(((VarDescriptor)nametable.get(((NameNode)expression).getName())).getType().equals("int"))
+				{	
+					throw new Error("[ERROR_10] '" + nametable.get(((NameNode)expression).getName()) + "' not of type int.");
+				}
 			}
 		}
 	}
