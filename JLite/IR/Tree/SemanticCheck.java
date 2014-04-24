@@ -188,6 +188,31 @@ public class SemanticCheck
 			VarDescriptor tempVar = new VarDescriptor(name, new TypeDescriptor(null, type), expression);
 			nametable.add(tempVar);
 			
+			if(expression instanceof MethodInvokeNode)
+			{
+				/*
+				 * Semantic Check 5
+				 */
+				String methodName = ((NameNode)((MethodInvokeNode)expression).getNameNode()).getName();
+				
+				Vector<BlockStatementNode> methodBlockVector = ((BlockNode)((MethodDescriptor)nametable.get(methodName)).getASTTree()).getblockStatementVector();
+				
+				boolean noReturn = true;
+				
+				for(BlockStatementNode statement : methodBlockVector)
+				{
+					if(statement instanceof ReturnNode)
+					{
+						noReturn = false;
+					}
+				}
+				
+				if(noReturn)
+				{
+					throw new Error("[ERROR_05] '" + methodName + "' has no return.");
+				}
+			}
+			
 			checkExpression(expression, nametable, method);
 		}
 		else if(blockStatement instanceof AssignmentNode)
@@ -239,6 +264,29 @@ public class SemanticCheck
 			else if(((OpNode)expression).getOperand1() instanceof MethodInvokeNode)
 			{
 				ExpressionNode expressionSend = ((OpNode)expression).getOperand1();
+				
+				/*
+				 * Semantic Check 5
+				 */
+				String methodName = ((NameNode)((MethodInvokeNode)expressionSend).getNameNode()).getName();
+				
+				Vector<BlockStatementNode> methodBlockVector = ((BlockNode)((MethodDescriptor)nametable.get(methodName)).getASTTree()).getblockStatementVector();
+				
+				boolean noReturn = true;
+				
+				for(BlockStatementNode statement : methodBlockVector)
+				{
+					if(statement instanceof ReturnNode)
+					{
+						noReturn = false;
+					}
+				}
+				
+				if(noReturn)
+				{
+					throw new Error("[ERROR_05] '" + methodName + "' has no return.");
+				}
+				
 				checkExpression(expressionSend, nametable, method);
 			}
 			
@@ -276,6 +324,29 @@ public class SemanticCheck
 			else if(((OpNode)expression).getOperand2() instanceof MethodInvokeNode)
 			{
 				ExpressionNode expressionSend = ((OpNode)expression).getOperand2();
+				
+				/*
+				 * Semantic Check 5
+				 */
+				String methodName = ((NameNode)((MethodInvokeNode)expressionSend).getNameNode()).getName();
+				
+				Vector<BlockStatementNode> methodBlockVector = ((BlockNode)((MethodDescriptor)nametable.get(methodName)).getASTTree()).getblockStatementVector();
+				
+				boolean noReturn = true;
+				
+				for(BlockStatementNode statement : methodBlockVector)
+				{
+					if(statement instanceof ReturnNode)
+					{
+						noReturn = false;
+					}
+				}
+				
+				if(noReturn)
+				{
+					throw new Error("[ERROR_05] '" + methodName + "' has no return.");
+				}
+				
 				checkExpression(expressionSend, nametable, method);
 			}
 		}
