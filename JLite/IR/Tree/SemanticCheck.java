@@ -27,11 +27,23 @@ public class SemanticCheck
 		 *  main loop over the AST Tree
 		 */
 		
-		Set<Descriptor> classes = program.program.getClasses().getDescriptorsSet();
-		Set<String> classNames = program.program.getClasses().getNamesSet(); // class names for checking for duplicate names
+		SymbolTable classes = program.program.getClasses();
+		Set<Descriptor> classSet = classes.getDescriptorsSet();
+		Set<String> classNames = classes.getNamesSet(); // class names for checking for duplicate names
+		
+		/*
+		 * Semantic Check 1: Classes
+		 */
+		for(String className : classNames)
+		{
+			if(classes.getDescriptorsSet(className).size() > 1)
+			{
+				throw new Error("[ERROR_01] '" + className + "' identifier has duplicate.");
+			}
+		}
 		
 		// loop over all classes in the program
-		for(Descriptor classInProgam : classes)
+		for(Descriptor classInProgam : classSet)
 		{
 			// confirms if they are classes
 			if(classInProgam instanceof ClassDescriptor)
@@ -42,7 +54,6 @@ public class SemanticCheck
 				checkClassDescriptor((ClassDescriptor)classInProgam, nametable);
 			}
 		}
-		
 	}
 	
 	// checks all of the elements inside of the class
@@ -256,6 +267,35 @@ public class SemanticCheck
 				throw new Error("[ERROR_02] '" + ((NameNode)((MethodInvokeNode)expression).getNameNode()).getName() + "' identifier not declared.");
 			}
 			
+			/*
+			 * Semantic Check 4: method invoke params
+			 */
+			Vector<ExpressionNode> methodParamVector = ((MethodInvokeNode)expression).getArgumentVector();
+			String methodInvokeName = ((NameNode)((MethodInvokeNode)expression).getNameNode()).getName();
+			Set<Descriptor> paramSet = ((MethodDescriptor)nametable.get(methodInvokeName)).getParameterTable().getDescriptorsSet();
+			Object[] paramObjectArray = paramSet.toArray();
+			
+			FieldDescriptor[] paramArray = Arrays.copyOf(paramObjectArray, paramObjectArray.length, FieldDescriptor[].class);
+			
+			if(paramSet.size() != methodParamVector.size())
+			{
+				throw new Error("[ERROR_04] '" + methodInvokeName + "' invoke arguments do not match method declaration.");
+			}
+			else
+			{
+				int i = 0;
+				for(ExpressionNode arg : methodParamVector)
+				{
+					TypeNode type = getArgumentType(arg, nametable);
+					if(!paramArray[i].getFieldType().getType().equals(type.getType()))
+					{
+						throw new Error("[ERROR_04] '" + methodInvokeName + "' invoke arguments do not match method declaration.");
+					}
+					
+					i++;
+				}
+			}
+				
 			Vector<ExpressionNode> argumentVector = ((MethodInvokeNode)expression).getArgumentVector();
 			for(ExpressionNode expr : argumentVector)
 			{
@@ -292,6 +332,92 @@ public class SemanticCheck
 				throw new Error("[ERROR_02] '" + ((NameNode)expression).getName() + "' identifier not declared.");
 			}
 		}
+	}
+	
+	private TypeNode getArgumentType(ExpressionNode arg, SymbolTable nametable)
+	{
+		if(arg instanceof OpNode)
+		{
+			// check operand 1
+			if(((OpNode)arg).getOperand1() instanceof NameNode)
+			{
+				String name = ((NameNode)((OpNode)arg).getOperand1()).getName();
+				
+				if(nametable.get(name) instanceof FieldDescriptor)
+				{
+					return new TypeNode(((FieldDescriptor)nametable.get(name)).getFieldType().getType());
+				}
+				else if(nametable.get(name) instanceof VarDescriptor)
+				{
+					return new TypeNode(((VarDescriptor)nametable.get(name)).getType().getType());
+				}
+			}
+			else if(((OpNode)arg).getOperand1() instanceof OpNode)
+			{
+				ExpressionNode expressionSend = ((OpNode)arg).getOperand1();
+				return getArgumentType(expressionSend, nametable);
+			}
+			else if(((OpNode)arg).getOperand1() instanceof MethodInvokeNode)
+			{
+				ExpressionNode expressionSend = ((OpNode)arg).getOperand1();
+				MethodDescriptor methodDesc = ((MethodDescriptor)nametable.get(((NameNode)((MethodInvokeNode)expressionSend).getNameNode()).getName()));
+				
+				return new TypeNode(methodDesc.getReturnType().getType());
+			}
+			
+			// check operand 2
+			if(((OpNode)arg).getOperand2() instanceof NameNode)
+			{
+				String name = ((NameNode)((OpNode)arg).getOperand2()).getName();
+				
+				if(nametable.get(name) instanceof FieldDescriptor)
+				{
+					return new TypeNode(((FieldDescriptor)nametable.get(name)).getFieldType().getType());
+				}
+				else if(nametable.get(name) instanceof VarDescriptor)
+				{
+					return new TypeNode(((VarDescriptor)nametable.get(name)).getType().getType());
+				}
+			}
+			else if(((OpNode)arg).getOperand2() instanceof OpNode)
+			{
+				ExpressionNode expressionSend = ((OpNode)arg).getOperand2();
+				return getArgumentType(expressionSend, nametable);
+			}
+			else if(((OpNode)arg).getOperand2() instanceof MethodInvokeNode)
+			{
+				MethodInvokeNode expressionSend = ((MethodInvokeNode)((OpNode)arg).getOperand2());
+				MethodDescriptor methodDesc = ((MethodDescriptor)nametable.get(((NameNode)((MethodInvokeNode)expressionSend).getNameNode()).getName()));
+				
+				return new TypeNode(methodDesc.getReturnType().getType());
+			}
+		}
+		
+		// check methodInvokeNode
+		else if(arg instanceof MethodInvokeNode)
+		{			
+			MethodInvokeNode expressionSend = (MethodInvokeNode)arg;
+			MethodDescriptor methodDesc = ((MethodDescriptor)nametable.get(((NameNode)((MethodInvokeNode)expressionSend).getNameNode()).getName()));
+			
+			return new TypeNode(methodDesc.getReturnType().getType());
+		}
+		
+		else if(arg instanceof NameNode)
+		{
+			String name = ((NameNode)arg).getName();
+			
+			if(nametable.get(name) instanceof FieldDescriptor)
+			{
+				return new TypeNode(((FieldDescriptor)nametable.get(name)).getFieldType().getType());
+			}
+			else if(nametable.get(name) instanceof VarDescriptor)
+			{
+				return new TypeNode(((VarDescriptor)nametable.get(name)).getType().getType());
+			}
+		}
+		return new TypeNode("NULL");
+		
+		
 	}
 	
 	// checks conditions
