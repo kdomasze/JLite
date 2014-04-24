@@ -242,6 +242,10 @@ public class SemanticCheck
 			{
 				throw new Error("[ERROR_02] '" + ((NameNode)((MethodInvokeNode)expression).getNameNode()).getName() + "' identifier not declared.");
 			}
+			else if((nametable.get(((NameNode)((MethodInvokeNode)expression).getNameNode()).getName())) != null && !((nametable.get(((NameNode)((MethodInvokeNode)expression).getNameNode()).getName())) instanceof MethodDescriptor))
+			{
+				throw new Error("[ERROR_02] '" + ((NameNode)((MethodInvokeNode)expression).getNameNode()).getName() + "' identifier not declared.");
+			}
 			
 			Vector<ExpressionNode> argumentVector = ((MethodInvokeNode)expression).getArgumentVector();
 			for(ExpressionNode expr : argumentVector)
