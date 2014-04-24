@@ -136,11 +136,11 @@ public class SemanticCheck
 		}
 		
 		/*
-		 * Semantic Check 6
+		 * Semantic Check 6 & 7
 		 */
 		String methodName = methodDesc.getSymbol();
 		String type = methodDesc.getReturnType().getType();
-		
+		String returnStatementType = "__";
 		Vector<BlockStatementNode> methodBlockVector = ((BlockNode)((MethodDescriptor)nametable.get(methodName)).getASTTree()).getblockStatementVector();
 		
 		boolean noReturn = true;
@@ -157,12 +157,18 @@ public class SemanticCheck
 				{
 					noReturn = false;
 				}
+				returnStatementType = getArgumentType(((ReturnNode)statement).getReturnStatement(), nametable).getType();
 			}
 		}
 		
 		if(noReturn && !type.equals("void"))
 		{
 			throw new Error("[ERROR_06] '" + methodName + "' has no return.");
+		}
+		
+		if(!returnStatementType.equals(type) && !type.equals("void"))
+		{
+			throw new Error("[ERROR_07] '" + methodName + "' return type does not match returned value.");
 		}
 	}
 	
