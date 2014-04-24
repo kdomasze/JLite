@@ -20,4 +20,9 @@ public class VarNode extends ExpressionNode
 	{
 		return literal;
 	}
+	
+	public String toString()
+	{
+		return name.toString() + literal;
+	}
 }
