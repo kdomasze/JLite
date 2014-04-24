@@ -134,6 +134,36 @@ public class SemanticCheck
 			FieldDescriptor tempVar = new FieldDescriptor(params.get(fieldName).getSymbol(), ((FieldDescriptor)params.get(fieldName)).getFieldType());
 			nametable.add(tempVar);
 		}
+		
+		/*
+		 * Semantic Check 6
+		 */
+		String methodName = methodDesc.getSymbol();
+		String type = methodDesc.getReturnType().getType();
+		
+		Vector<BlockStatementNode> methodBlockVector = ((BlockNode)((MethodDescriptor)nametable.get(methodName)).getASTTree()).getblockStatementVector();
+		
+		boolean noReturn = true;
+		
+		for(BlockStatementNode statement : methodBlockVector)
+		{
+			if(statement instanceof ReturnNode)
+			{
+				if(type.equals("void"))
+				{
+					throw new Error("[ERROR_06] '" + methodName + "' has return with void type.");
+				}
+				else
+				{
+					noReturn = false;
+				}
+			}
+		}
+		
+		if(noReturn && !type.equals("void"))
+		{
+			throw new Error("[ERROR_06] '" + methodName + "' has no return.");
+		}
 	}
 	
 	// iterates over the block vector to check each block statement
