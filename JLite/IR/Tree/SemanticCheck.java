@@ -49,8 +49,9 @@ public class SemanticCheck
 	private void checkClassDescriptor(ClassDescriptor classDesc, SymbolTable nametable)
 	{
 
-		Set<Descriptor> methods = classDesc.getMethodDescriptorTable().getDescriptorsSet();
-		Set<String> methodNames = classDesc.getFieldDescriptorTable().getNamesSet(); // method names for checking for duplicate names
+		SymbolTable methods = classDesc.getMethodDescriptorTable();
+		Set<Descriptor> methodSet = methods.getDescriptorsSet();
+		Set<String> methodNames = classDesc.getMethodDescriptorTable().getNamesSet(); // method names for checking for duplicate names
 		
 		SymbolTable fields = classDesc.getFieldDescriptorTable();
 		Set<Descriptor> fieldSet = fields.getDescriptorsSet();
@@ -68,8 +69,20 @@ public class SemanticCheck
 			nametable.add(fields.get(fieldName));
 		}
 		
+		/*
+		 * Semantic Check 1: Methods
+		 */
+		for(String methodName : methodNames)
+		{
+			if(methods.getDescriptorsSet(methodName).size() > 1)
+			{
+				throw new Error("[ERROR_01] '" + methodName + "' identifier has duplicate @'" + classDesc.getSymbol() + "'.");
+			}
+			nametable.add(methods.get(methodName));
+		}
+		
 		// loop over all methods in the class
-		for(Descriptor methodInClass : methods)
+		for(Descriptor methodInClass : methodSet)
 		{
 			// confirms if they are methods
 			if(methodInClass instanceof MethodDescriptor)
@@ -130,14 +143,14 @@ public class SemanticCheck
 		// if the statement is a while statement, we need to check the condition and body
 		if(blockStatement instanceof WhileStatementNode)
 		{
-			checkConditions(((WhileStatementNode)blockStatement).getOperation(), nametable);
+			checkConditions(((WhileStatementNode)blockStatement).getOperation(), nametable, method);
 			Vector<BlockStatementNode> whileBodyVector = ((WhileStatementNode)blockStatement).getBlock().getblockStatementVector();
 			checkBlockStatementVector(whileBodyVector, nametable, method);
 		}
 		// if the statement is an if statement, we need to check the condition, body, and else body.
 		else if(blockStatement instanceof IfStatementNode)
 		{
-			checkConditions(((IfStatementNode)blockStatement).getOperation(), nametable);
+			checkConditions(((IfStatementNode)blockStatement).getOperation(), nametable, method);
 			Vector<BlockStatementNode> ifBodyVector = ((IfStatementNode)blockStatement).getBlock().getblockStatementVector();
 
 			checkBlockStatementVector(ifBodyVector, nametable, method);
@@ -163,12 +176,108 @@ public class SemanticCheck
 			}
 			VarDescriptor tempVar = new VarDescriptor(name, new TypeDescriptor(null, type), expression);
 			nametable.add(tempVar);
+			
+			checkExpression(expression, nametable, method);
+		}
+		else if(blockStatement instanceof AssignmentNode)
+		{
+			ExpressionNode lhs = ((AssignmentNode)blockStatement).getLeftHandSide();
+			ExpressionNode rhs = ((AssignmentNode)blockStatement).getRightHandSide();
+			
+			checkExpression(lhs, nametable, method);
+			checkExpression(rhs, nametable, method);
+		}
+	}
+	
+	private void checkExpression(ExpressionNode expression, SymbolTable nametable, MethodDescriptor method)
+	{
+		
+		if(expression instanceof OpNode)
+		{
+			// check operand 1
+			if(((OpNode)expression).getOperand1() instanceof NameNode)
+			{
+				String name = ((NameNode)((OpNode)expression).getOperand1()).getName();
+				if(nametable.get(name) == null)
+				{
+					throw new Error("[ERROR_02] '" + name + "' identifier not declared.");
+				}
+			}
+			else if(((OpNode)expression).getOperand1() instanceof OpNode)
+			{
+				ExpressionNode expressionSend = ((OpNode)expression).getOperand1();
+				checkExpression(expressionSend, nametable, method);
+			}
+			else if(((OpNode)expression).getOperand1() instanceof MethodInvokeNode)
+			{
+				ExpressionNode expressionSend = ((OpNode)expression).getOperand1();
+				checkExpression(expressionSend, nametable, method);
+			}
+			
+			// check operand 2
+			if(((OpNode)expression).getOperand2() instanceof NameNode)
+			{
+				String name = ((NameNode)((OpNode)expression).getOperand2()).getName();
+				if(nametable.get(name) == null)
+				{
+					throw new Error("[ERROR_02] '" + name + "' identifier not declared.");
+				}
+			}
+			else if(((OpNode)expression).getOperand2() instanceof OpNode)
+			{
+				ExpressionNode expressionSend = ((OpNode)expression).getOperand2();
+				checkExpression(expressionSend, nametable, method);
+			}
+			else if(((OpNode)expression).getOperand2() instanceof MethodInvokeNode)
+			{
+				ExpressionNode expressionSend = ((OpNode)expression).getOperand2();
+				checkExpression(expressionSend, nametable, method);
+			}
+		}
+		
+		// check methodInvokeNode
+		else if(expression instanceof MethodInvokeNode)
+		{
+			if((nametable.get(((NameNode)((MethodInvokeNode)expression).getNameNode()).getName())) == null)
+			{
+				throw new Error("[ERROR_02] '" + ((NameNode)((MethodInvokeNode)expression).getNameNode()).getName() + "' identifier not declared.");
+			}
+			
+			Vector<ExpressionNode> argumentVector = ((MethodInvokeNode)expression).getArgumentVector();
+			for(ExpressionNode expr : argumentVector)
+			{
+				if(expr instanceof OpNode)
+				{
+					checkExpression((OpNode)expr, nametable, method);
+				}
+				else if(expr instanceof MethodInvokeNode)
+				{
+					checkExpression((MethodInvokeNode)expr, nametable, method);
+				}
+				else if(expr instanceof NameNode)
+				{
+					String name = ((NameNode)expr).getName();
+					if(nametable.get(name) == null)
+					{
+						throw new Error("[ERROR_02] '" + name + "' identifier not declared.");
+					}
+				}
+			}
+		}
+		
+		// check namenodes
+		else if(expression instanceof NameNode)
+		{
+			if(nametable.get(((NameNode)expression).getName()) == null)
+			{
+				throw new Error("[ERROR_02] '" + ((NameNode)expression).getName() + "' identifier not declared.");
+			}
 		}
 	}
 	
 	// checks conditions
-	private void checkConditions(ExpressionNode expression, SymbolTable nametable)
+	private void checkConditions(ExpressionNode expression, SymbolTable nametable, MethodDescriptor method)
 	{
-		
+		checkExpression(expression, nametable, method);
 	}
 }
