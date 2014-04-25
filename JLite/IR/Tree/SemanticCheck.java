@@ -273,7 +273,16 @@ public class SemanticCheck
 	
 	private void checkExpression(ExpressionNode expression, SymbolTable nametable, MethodDescriptor method)
 	{
-		
+		if(expression instanceof CreateObjectNode)
+		{
+			String className = (((CreateObjectNode)expression).getType()).getType();
+			if (!(((ClassDescriptor)nametable.get(className)).getSymbol().equals("int")))
+			{
+				throw new Error("[ERROR_08] '" + className + "' return type not of type int.");
+			}
+			
+		}
+			
 		if(expression instanceof OpNode)
 		{
 			// check operand 1
