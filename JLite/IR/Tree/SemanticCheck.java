@@ -579,6 +579,10 @@ public class SemanticCheck
 				return new TypeNode(((VarDescriptor)nametable.get(name)).getType().getType());
 			}
 		}
+		else if(arg instanceof LiteralNode)
+		{
+			return new TypeNode("int");
+		}
 		return new TypeNode("NULL");
 		
 		
