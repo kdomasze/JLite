@@ -9,6 +9,11 @@ public class CreateObjectNode extends ExpressionNode
 	{
 		Type = T;
 	}
+	
+	public TypeNode getType()
+	{
+		return Type;
+	}
 
 	public String toString()
 	{

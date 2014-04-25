@@ -31,6 +31,8 @@ public class SemanticCheck
 		Set<Descriptor> classSet = classes.getDescriptorsSet();
 		Set<String> classNames = classes.getNamesSet(); // class names for checking for duplicate names
 		
+		
+		SymbolTable nametable = new SymbolTable(null);
 		/*
 		 * Semantic Check 1: Classes
 		 */
@@ -40,6 +42,7 @@ public class SemanticCheck
 			{
 				throw new Error("[ERROR_01] '" + className + "' identifier has duplicate.");
 			}
+			nametable.add(classes.get(className));
 		}
 		
 		// loop over all classes in the program
@@ -48,8 +51,6 @@ public class SemanticCheck
 			// confirms if they are classes
 			if(classInProgam instanceof ClassDescriptor)
 			{
-				SymbolTable nametable = new SymbolTable(null);
-				
 				// if they are, we run a check on the things inside of the class
 				checkClassDescriptor((ClassDescriptor)classInProgam, nametable);
 			}
@@ -246,6 +247,15 @@ public class SemanticCheck
 				if(noReturn)
 				{
 					throw new Error("[ERROR_05] '" + methodName + "' has no return.");
+				}
+			}
+
+			if(expression instanceof CreateObjectNode)
+			{
+				String className = ((TypeNode)((CreateObjectNode)expression).getType()).getType();
+				if((nametable.get(className) == null || !(nametable.get(className) instanceof ClassDescriptor)))
+				{
+					throw new Error("[ERROR_02] '" + className + "' not declared.");
 				}
 			}
 			
@@ -565,6 +575,10 @@ public class SemanticCheck
 		else if(arg instanceof LiteralNode)
 		{
 			return new TypeNode("int");
+		}
+		else if(arg instanceof CreateObjectNode)
+		{
+			return ((CreateObjectNode)arg).getType();
 		}
 		return new TypeNode("NULL");
 		
