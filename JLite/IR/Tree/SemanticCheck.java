@@ -301,6 +301,7 @@ public class SemanticCheck
 						throw new Error("[ERROR_10] '" + name + "' not of type int.");
 					}
 				}
+
 			}
 			else if(((OpNode)expression).getOperand1() instanceof OpNode)
 			{
@@ -326,6 +327,11 @@ public class SemanticCheck
 					{
 						noReturn = false;
 					}
+				}
+				
+				if (!(((MethodDescriptor)nametable.get(methodName)).getReturnType().getType().equals("int")))
+				{
+					throw new Error("[ERROR_08] '" + methodName + "' method return type not of type int.");
 				}
 				
 				if(noReturn)
@@ -361,6 +367,7 @@ public class SemanticCheck
 						throw new Error("[ERROR_10] '" + name + "' not of type int.");
 					}
 				}
+
 			}
 			else if(((OpNode)expression).getOperand2() instanceof OpNode)
 			{
@@ -386,6 +393,11 @@ public class SemanticCheck
 					{
 						noReturn = false;
 					}
+				}
+				
+				if (!(((MethodDescriptor)nametable.get(methodName)).getReturnType().getType().equals("int")))
+				{
+					throw new Error("[ERROR_08] '" + methodName + "' method return type not of type int.");
 				}
 				
 				if(noReturn)
@@ -464,6 +476,11 @@ public class SemanticCheck
 					}
 				}
 			}
+			if (!(((MethodDescriptor)nametable.get(methodInvokeName)).getReturnType().getType().equals("int")))
+			{
+				throw new Error("[ERROR_08] '" + methodInvokeName + "' method return type not of type int.");
+			}
+
 		}
 		
 		// check namenodes
