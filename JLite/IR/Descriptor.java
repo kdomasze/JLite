@@ -13,17 +13,15 @@ public abstract class Descriptor {
     this.name = name;
   }
 
-  public void setName(String n)
-  {
-	  name = n;
+  protected Descriptor(String name, String safename) {
+    this.name = name;
   }
-  
+
   public String toString() {
-    return getSymbol();
+    return name;
   }
 
   public String getSymbol() {
     return name;
   }
-  
 }

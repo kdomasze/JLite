@@ -1,22 +1,27 @@
 package IR.Tree;
+import java.util.Vector;
+import IR.TypeDescriptor;
+import IR.MethodDescriptor;
+import IR.Tree.ExpressionNode;
 
-public class CreateObjectNode extends ExpressionNode
-{
-	TypeNode Type;
+public class CreateObjectNode extends ExpressionNode {
+  TypeDescriptor td;
+  
+  public CreateObjectNode(TypeDescriptor type) {
+    td=type;
+  }
 
-	//constructor
-	public CreateObjectNode(TypeNode T)
-	{
-		Type = T;
-	}
-	
-	public TypeNode getType()
-	{
-		return Type;
-	}
+  public TypeDescriptor getType() {
+    return td;
+  }
 
-	public String toString()
-	{
-		return Type.toString();
-	}	
+  public String printNode(int indent) {
+    String st="new "+td.toString()+"()";
+    return st;
+  }
+
+  public int kind() {
+    return Kind.CreateObjectNode;
+  }
 }
+

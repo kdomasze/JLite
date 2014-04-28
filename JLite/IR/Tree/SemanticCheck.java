@@ -1,619 +1,466 @@
 package IR.Tree;
 
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.Vector;
-
+import java.util.*;
 import IR.*;
 
-/***
- * Implement the check function for each type of AST Node
- * 
- */
-public class SemanticCheck
-{
-	private BuildAST program;
-	
-	public SemanticCheck(BuildAST p)
-	{
-		program = p;
-	}
-	
-	public void run()
-	{
-		/*
-		 *  main loop over the AST Tree
-		 */
-		
-		SymbolTable classes = program.program.getClasses();
-		Set<Descriptor> classSet = classes.getDescriptorsSet();
-		Set<String> classNames = classes.getNamesSet(); // class names for checking for duplicate names
-		
-		
-		SymbolTable nametable = new SymbolTable(null);
-		/*
-		 * Semantic Check 1: Classes
-		 */
-		for(String className : classNames)
-		{
-			if(classes.getDescriptorsSet(className).size() > 1)
-			{
-				throw new Error("[ERROR_01] '" + className + "' identifier has duplicate.");
-			}
-			nametable.add(classes.get(className));
-		}
-		
-		// loop over all classes in the program
-		for(Descriptor classInProgam : classSet)
-		{
-			// confirms if they are classes
-			if(classInProgam instanceof ClassDescriptor)
-			{
-				// if they are, we run a check on the things inside of the class
-				checkClassDescriptor((ClassDescriptor)classInProgam, nametable);
-			}
-		}
-	}
-	
-	// checks all of the elements inside of the class
-	private void checkClassDescriptor(ClassDescriptor classDesc, SymbolTable nametable)
-	{
+public class SemanticCheck {
+  State state;
+  TypeUtil typeutil;
 
-		SymbolTable methods = classDesc.getMethodDescriptorTable();
-		Set<Descriptor> methodSet = methods.getDescriptorsSet();
-		Set<String> methodNames = classDesc.getMethodDescriptorTable().getNamesSet(); // method names for checking for duplicate names
-		
-		SymbolTable fields = classDesc.getFieldDescriptorTable();
-		Set<Descriptor> fieldSet = fields.getDescriptorsSet();
-		Set<String> fieldNames = classDesc.getFieldDescriptorTable().getNamesSet(); // method names for checking for duplicate names
-		
-		/*
-		 * Semantic Check 1: Fields
-		 */
-		for(String fieldName : fieldNames)
-		{
-			if(fields.getDescriptorsSet(fieldName).size() > 1)
-			{
-				throw new Error("[ERROR_01] '" + fieldName + "' identifier has duplicate @'" + classDesc.getSymbol() + "'.");
-			}
-			nametable.add(fields.get(fieldName));
-		}
-		
-		/*
-		 * Semantic Check 14: Methods
-		 */
-		for(String methodName : methodNames)
-		{
-			if(methods.getDescriptorsSet(methodName).size() > 1)
-			{
-				throw new Error("[ERROR_14] '" + methodName + "' is being overloaded @'" + classDesc.getSymbol() + "'.");
-			}
-			nametable.add(methods.get(methodName));
-		}
-		
-		// loop over all methods in the class
-		for(Descriptor methodInClass : methodSet)
-		{
-			// confirms if they are methods
-			if(methodInClass instanceof MethodDescriptor)
-			{
-				SymbolTable newnametable = new SymbolTable(nametable);
-				// check the header of the method
-				checkMethodHeader((MethodDescriptor)methodInClass, newnametable);
-				
-				// get the tree elements of the method body
-				TreeNode methodBody = ((MethodDescriptor)methodInClass).getASTTree();
-				
-				// "convert" the methodBody tree into a vector
-				Vector<BlockStatementNode> methodBodyVector = ((BlockNode)methodBody).getblockStatementVector();
-				
-				// check the method body
-				checkBlockStatementVector(methodBodyVector, newnametable, (MethodDescriptor)methodInClass);
-			}
-		}
-	}
-	
-	// checks the elements in the method header
-	private void checkMethodHeader(MethodDescriptor methodDesc, SymbolTable nametable)
-	{
-		
-		SymbolTable params = methodDesc.getParameterTable();
-		Set<Descriptor> paramSet = params.getDescriptorsSet();
-		Set<String> paramNames = params.getNamesSet(); // names for checking for duplicate names
-		
-		/*
-		 * Semantic Check 1: Method Params
-		 */
-		for(String fieldName : paramNames)
-		{
-			if(params.getDescriptorsSet(fieldName).size() > 1 || (nametable.get(fieldName) != null && !(nametable.get(fieldName) instanceof FieldDescriptor)))
-			{
-				throw new Error("[ERROR_01] '" + fieldName + "' identifier has duplicate @'" + methodDesc.getSymbol() + "'.");
-			}
-			FieldDescriptor tempVar = new FieldDescriptor(params.get(fieldName).getSymbol(), ((FieldDescriptor)params.get(fieldName)).getFieldType());
-			nametable.add(tempVar);
-		}
-		
-		/*
-		 * Semantic Check 6 & 7
-		 */
-		String methodName = methodDesc.getSymbol();
-		String type = methodDesc.getReturnType().getType();
-		String returnStatementType = "__";
-		Vector<BlockStatementNode> methodBlockVector = ((BlockNode)((MethodDescriptor)nametable.get(methodName)).getASTTree()).getblockStatementVector();
-		
-		boolean noReturn = true;
-		
-		for(BlockStatementNode statement : methodBlockVector)
-		{
-			if(statement instanceof ReturnNode)
-			{
-				if(type.equals("void"))
-				{
-					throw new Error("[ERROR_06] '" + methodName + "' has return with void type.");
-				}
-				else
-				{
-					noReturn = false;
-				}
-				returnStatementType = getArgumentType(((ReturnNode)statement).getReturnStatement(), nametable).getType();
-			}
-		}
-		
-		if(noReturn && !type.equals("void"))
-		{
-			throw new Error("[ERROR_06] '" + methodName + "' has no return.");
-		}
-		
-		if(!returnStatementType.equals(type) && !type.equals("void"))
-		{
-			throw new Error("[ERROR_07] '" + methodName + "' return type does not match returned value.");
-		}
-	}
-	
-	// iterates over the block vector to check each block statement
-	private void checkBlockStatementVector(Vector<BlockStatementNode> bodyVector, SymbolTable nametable, MethodDescriptor method)
-	{
-		SymbolTable newnametable = new SymbolTable(nametable);
-		// loop over all block statements in the block vector
-		for(BlockStatementNode blockStatement : bodyVector)
-		{
-			// check the block statement
-			checkBlockStatement(blockStatement, newnametable, method);
-		}
-	}
-	
-	// checks all the different possible block statements in the block bodies
-	private void checkBlockStatement(BlockStatementNode blockStatement, SymbolTable nametable, MethodDescriptor method)
-	{
-		// if the statement is a while statement, we need to check the condition and body
-		if(blockStatement instanceof WhileStatementNode)
-		{
-			checkConditions(((WhileStatementNode)blockStatement).getOperation(), nametable, method);
-			Vector<BlockStatementNode> whileBodyVector = ((WhileStatementNode)blockStatement).getBlock().getblockStatementVector();
-			checkBlockStatementVector(whileBodyVector, nametable, method);
-		}
-		// if the statement is an if statement, we need to check the condition, body, and else body.
-		else if(blockStatement instanceof IfStatementNode)
-		{
-			checkConditions(((IfStatementNode)blockStatement).getOperation(), nametable, method);
-			Vector<BlockStatementNode> ifBodyVector = ((IfStatementNode)blockStatement).getBlock().getblockStatementVector();
+  public SemanticCheck(State state, TypeUtil tu) {
+    this.state=state;
+    this.typeutil=tu;
+  }
 
-			checkBlockStatementVector(ifBodyVector, nametable, method);
-			
-			if(((IfStatementNode)blockStatement).getBlocke() != null)
-			{
-				Vector<BlockStatementNode> elseBodyVector = ((IfStatementNode)blockStatement).getBlocke().getblockStatementVector();
-				checkBlockStatementVector(elseBodyVector, nametable, method);
-			}
-		}
-		else if(blockStatement instanceof DeclarationNode)
-		{
-			String name = ((DeclarationNode)blockStatement).getName();
-			TypeNode type = ((DeclarationNode)blockStatement).getType();
-			ExpressionNode expression = ((DeclarationNode)blockStatement).getInitializer();
-			
-			/*
-			 * Semantic Check 1: var declaration
-			 */
-			if((nametable.get(name) != null && !(nametable.get(name) instanceof FieldDescriptor)))
-			{
-				throw new Error("[ERROR_01] '" + name + "' identifier has duplicate @'" + method.getSymbol() + "'.");
-			}
-			VarDescriptor tempVar = new VarDescriptor(name, new TypeDescriptor(null, type), expression);
-			nametable.add(tempVar);
-			
-			if(expression instanceof MethodInvokeNode)
-			{
-				/*
-				 * Semantic Check 5
-				 */
-				String methodName = ((NameNode)((MethodInvokeNode)expression).getNameNode()).getName();
-				
-				Vector<BlockStatementNode> methodBlockVector = ((BlockNode)((MethodDescriptor)nametable.get(methodName)).getASTTree()).getblockStatementVector();
-				
-				boolean noReturn = true;
-				
-				for(BlockStatementNode statement : methodBlockVector)
-				{
-					if(statement instanceof ReturnNode)
-					{
-						noReturn = false;
-					}
-				}
-				
-				if(noReturn)
-				{
-					throw new Error("[ERROR_05] '" + methodName + "' has no return.");
-				}
-			}
+  public void semanticCheck() {
+    SymbolTable classtable=state.getClassSymbolTable();
+    Iterator it=classtable.getDescriptorsIterator();
+    // Do descriptors first
+    while(it.hasNext()) {
+      ClassDescriptor cd=(ClassDescriptor)it.next();
 
-			if(expression instanceof CreateObjectNode)
-			{
-				String className = ((TypeNode)((CreateObjectNode)expression).getType()).getType();
-				if((nametable.get(className) == null || !(nametable.get(className) instanceof ClassDescriptor)))
-				{
-					throw new Error("[ERROR_02] '" + className + "' not declared.");
-				}
-			}
-			
-			checkExpression(expression, nametable, method);
-		}
-		else if(blockStatement instanceof AssignmentNode)
-		{
-			ExpressionNode lhs = ((AssignmentNode)blockStatement).getLeftHandSide();
-			ExpressionNode rhs = ((AssignmentNode)blockStatement).getRightHandSide();
-			
-			checkExpression(lhs, nametable, method);
-			checkExpression(rhs, nametable, method);
-		}
-	}
-	
-	private void checkExpression(ExpressionNode expression, SymbolTable nametable, MethodDescriptor method)
-	{
-		if(expression instanceof CreateObjectNode)
-		{
-			String className = (((CreateObjectNode)expression).getType()).getType();
-			if (!(((ClassDescriptor)nametable.get(className)).getSymbol().equals("int")))
-			{
-				throw new Error("[ERROR_08] '" + className + "' return type not of type int.");
-			}
-			
-		}
-			
-		if(expression instanceof OpNode)
-		{
-			// check operand 1
-			if(((OpNode)expression).getOperand1() instanceof NameNode)
-			{
-				/*
-				 * Semantic Check 2: expression
-				 */
-				String name = ((NameNode)((OpNode)expression).getOperand1()).getName();
-				if(nametable.get(name) == null)
-				{
-					throw new Error("[ERROR_02] '" + name + "' identifier not declared.");
-				}
-				if(nametable.get(name) instanceof FieldDescriptor)
-				{
-					if(!((FieldDescriptor)nametable.get(name)).getFieldType().getType().equals("int"))
-					{
-						throw new Error("[ERROR_10] '" + name + "' not of type int.");
-					}
-				}
-				if(nametable.get(name) instanceof VarDescriptor)
-				{
-					if(!((VarDescriptor)nametable.get(name)).getType().getType().equals("int"))
-					{
-						throw new Error("[ERROR_10] '" + name + "' not of type int.");
-					}
-				}
+      if (cd.getSuper()!=null) {
+        cd.setSuperDesc(typeutil.getClass(cd.getSuper()));
+        cd.getFieldTable().setParent(cd.getSuperDesc().getFieldTable());
+        cd.getMethodTable().setParent(cd.getSuperDesc().getMethodTable());
+      }
 
-			}
-			else if(((OpNode)expression).getOperand1() instanceof OpNode)
-			{
-				ExpressionNode expressionSend = ((OpNode)expression).getOperand1();
-				checkExpression(expressionSend, nametable, method);
-			}
-			else if(((OpNode)expression).getOperand1() instanceof MethodInvokeNode)
-			{
-				ExpressionNode expressionSend = ((OpNode)expression).getOperand1();
-				
-				/*
-				 * Semantic Check 5
-				 */
-				String methodName = ((NameNode)((MethodInvokeNode)expressionSend).getNameNode()).getName();
-				
-				Vector<BlockStatementNode> methodBlockVector = ((BlockNode)((MethodDescriptor)nametable.get(methodName)).getASTTree()).getblockStatementVector();
-				
-				boolean noReturn = true;
-				
-				for(BlockStatementNode statement : methodBlockVector)
-				{
-					if(statement instanceof ReturnNode)
-					{
-						noReturn = false;
-					}
-				}
-				
-				if (!(((MethodDescriptor)nametable.get(methodName)).getReturnType().getType().equals("int")))
-				{
-					throw new Error("[ERROR_08] '" + methodName + "' method return type not of type int.");
-				}
-				
-				if(noReturn)
-				{
-					throw new Error("[ERROR_05] '" + methodName + "' has no return.");
-				}
-				
-				checkExpression(expressionSend, nametable, method);
-			}
-			
-			// check operand 2
-			if(((OpNode)expression).getOperand2() instanceof NameNode)
-			{
-				/*
-				 * Semantic Check 2: expression
-				 */
-				String name = ((NameNode)((OpNode)expression).getOperand2()).getName();
-				if(nametable.get(name) == null)
-				{
-					throw new Error("[ERROR_02] '" + name + "' identifier not declared.");
-				}
-				if(nametable.get(name) instanceof FieldDescriptor)
-				{
-					if(!((FieldDescriptor)nametable.get(name)).getFieldType().getType().equals("int"))
-					{
-						throw new Error("[ERROR_10] '" + name + "' not of type int.");
-					}
-				}
-				if(nametable.get(name) instanceof VarDescriptor)
-				{
-					if(!((VarDescriptor)nametable.get(name)).getType().getType().equals("int"))
-					{
-						throw new Error("[ERROR_10] '" + name + "' not of type int.");
-					}
-				}
+      /* Check to see that fields are well typed */
+      for(Iterator field_it=cd.getFields(); field_it.hasNext();) {
+        FieldDescriptor fd=(FieldDescriptor)field_it.next();
+        //System.out.println("Checking field: "+fd);
+        checkField(cd,fd);
+      }
+      
+      for(Iterator method_it=cd.getMethods(); method_it.hasNext();) {
+        MethodDescriptor md=(MethodDescriptor)method_it.next();
+        checkMethod(cd,md);
+      }
+    }
+    
+    it=classtable.getDescriptorsIterator();
+    // Do descriptors first
+    while(it.hasNext()) {
+      ClassDescriptor cd=(ClassDescriptor)it.next();
+      for(Iterator method_it=cd.getMethods(); method_it.hasNext();) {
+        MethodDescriptor md=(MethodDescriptor)method_it.next();
+        checkMethodBody(cd,md);
+      }
+    }
+  }
+  
+  public void checkTypeDescriptor(TypeDescriptor td) {
+    if (td.isInt())
+      return;       /* Done */
+    else if (td.isClass()) {
+      String name=td.toString();
+      ClassDescriptor field_cd=(ClassDescriptor)state.getClassSymbolTable().get(name);
+      if (field_cd==null)
+        throw new Error("Undefined class "+name);
+      td.setClassDescriptor(field_cd);
+      return;
+    } else
+      throw new Error();
+  }
 
-			}
-			else if(((OpNode)expression).getOperand2() instanceof OpNode)
-			{
-				ExpressionNode expressionSend = ((OpNode)expression).getOperand2();
-				checkExpression(expressionSend, nametable, method);
-			}
-			else if(((OpNode)expression).getOperand2() instanceof MethodInvokeNode)
-			{
-				ExpressionNode expressionSend = ((OpNode)expression).getOperand2();
-				
-				/*
-				 * Semantic Check 5
-				 */
-				String methodName = ((NameNode)((MethodInvokeNode)expressionSend).getNameNode()).getName();
-				
-				Vector<BlockStatementNode> methodBlockVector = ((BlockNode)((MethodDescriptor)nametable.get(methodName)).getASTTree()).getblockStatementVector();
-				
-				boolean noReturn = true;
-				
-				for(BlockStatementNode statement : methodBlockVector)
-				{
-					if(statement instanceof ReturnNode)
-					{
-						noReturn = false;
-					}
-				}
-				
-				if (!(((MethodDescriptor)nametable.get(methodName)).getReturnType().getType().equals("int")))
-				{
-					throw new Error("[ERROR_08] '" + methodName + "' method return type not of type int.");
-				}
-				
-				if(noReturn)
-				{
-					throw new Error("[ERROR_05] '" + methodName + "' has no return.");
-				}
-				
-				checkExpression(expressionSend, nametable, method);
-			}
-		}
-		
-		// check methodInvokeNode
-		else if(expression instanceof MethodInvokeNode)
-		{
-			/*
-			 * Semantic Check 2: method invoke
-			 */
-			if((nametable.get(((NameNode)((MethodInvokeNode)expression).getNameNode()).getName())) == null)
-			{
-				throw new Error("[ERROR_02] '" + ((NameNode)((MethodInvokeNode)expression).getNameNode()).getName() + "' identifier not declared.");
-			}
-			else if((nametable.get(((NameNode)((MethodInvokeNode)expression).getNameNode()).getName())) != null && !((nametable.get(((NameNode)((MethodInvokeNode)expression).getNameNode()).getName())) instanceof MethodDescriptor))
-			{
-				throw new Error("[ERROR_02] '" + ((NameNode)((MethodInvokeNode)expression).getNameNode()).getName() + "' identifier not declared.");
-			}
-			
-			/*
-			 * Semantic Check 4: method invoke params
-			 */
-			Vector<ExpressionNode> methodParamVector = ((MethodInvokeNode)expression).getArgumentVector();
-			String methodInvokeName = ((NameNode)((MethodInvokeNode)expression).getNameNode()).getName();
-			Set<Descriptor> paramSet = ((MethodDescriptor)nametable.get(methodInvokeName)).getParameterTable().getDescriptorsSet();
-			Object[] paramObjectArray = paramSet.toArray();
-			
-			FieldDescriptor[] paramArray = Arrays.copyOf(paramObjectArray, paramObjectArray.length, FieldDescriptor[].class);
-			
-			if(paramSet.size() != methodParamVector.size())
-			{
-				throw new Error("[ERROR_04] '" + methodInvokeName + "' invoke arguments do not match method declaration.");
-			}
-			else
-			{
-				int i = 0;
-				for(ExpressionNode arg : methodParamVector)
-				{
-					TypeNode type = getArgumentType(arg, nametable);
-					if(!paramArray[i].getFieldType().getType().equals(type.getType()))
-					{
-						throw new Error("[ERROR_04] '" + methodInvokeName + "' invoke arguments do not match method declaration.");
-					}
-					
-					i++;
-				}
-			}
-				
-			Vector<ExpressionNode> argumentVector = ((MethodInvokeNode)expression).getArgumentVector();
-			for(ExpressionNode expr : argumentVector)
-			{
-				if(expr instanceof OpNode)
-				{
-					checkExpression((OpNode)expr, nametable, method);
-				}
-				else if(expr instanceof MethodInvokeNode)
-				{
-					checkExpression((MethodInvokeNode)expr, nametable, method);
-				}
-				else if(expr instanceof NameNode)
-				{
-					/*
-					 * Semantic Check 2: method invoke param
-					 */
-					String name = ((NameNode)expr).getName();
-					if(nametable.get(name) == null)
-					{
-						throw new Error("[ERROR_02] '" + name + "' identifier not declared.");
-					}
-				}
-			}
-			if (!(((MethodDescriptor)nametable.get(methodInvokeName)).getReturnType().getType().equals("int")))
-			{
-				throw new Error("[ERROR_08] '" + methodInvokeName + "' method return type not of type int.");
-			}
+  public void checkField(ClassDescriptor cd, FieldDescriptor fd) {
+    checkTypeDescriptor(fd.getType());
+  }
 
-		}
-		
-		// check namenodes
-		else if(expression instanceof NameNode)
-		{
-			/*
-			 * Semantic Check 2: single names
-			 */
-			if(nametable.get(((NameNode)expression).getName()) == null)
-			{
-				throw new Error("[ERROR_02] '" + ((NameNode)expression).getName() + "' identifier not declared.");
-			}
-			if(nametable.get(((NameNode)expression).getName()) instanceof FieldDescriptor)
-			{	if(((FieldDescriptor)nametable.get(((NameNode)expression).getName())).getFieldType().equals("int"))
-				{	
-					throw new Error("[ERROR_10] '" + nametable.get(((NameNode)expression).getName()) + "' not of type int.");
-				}
-			}
-			if(nametable.get(((NameNode)expression).getName()) instanceof VarDescriptor)
-			{	if(((VarDescriptor)nametable.get(((NameNode)expression).getName())).getType().equals("int"))
-				{	
-					throw new Error("[ERROR_10] '" + nametable.get(((NameNode)expression).getName()) + "' not of type int.");
-				}
-			}
-		}
-	}
-	
-	private TypeNode getArgumentType(ExpressionNode arg, SymbolTable nametable)
-	{
-		if(arg instanceof OpNode)
-		{
-			// check operand 1
-			if(((OpNode)arg).getOperand1() instanceof NameNode)
-			{
-				String name = ((NameNode)((OpNode)arg).getOperand1()).getName();
-				
-				if(nametable.get(name) instanceof FieldDescriptor)
-				{
-					return new TypeNode(((FieldDescriptor)nametable.get(name)).getFieldType().getType());
-				}
-				else if(nametable.get(name) instanceof VarDescriptor)
-				{
-					return new TypeNode(((VarDescriptor)nametable.get(name)).getType().getType());
-				}
-			}
-			else if(((OpNode)arg).getOperand1() instanceof OpNode)
-			{
-				ExpressionNode expressionSend = ((OpNode)arg).getOperand1();
-				return getArgumentType(expressionSend, nametable);
-			}
-			else if(((OpNode)arg).getOperand1() instanceof MethodInvokeNode)
-			{
-				ExpressionNode expressionSend = ((OpNode)arg).getOperand1();
-				MethodDescriptor methodDesc = ((MethodDescriptor)nametable.get(((NameNode)((MethodInvokeNode)expressionSend).getNameNode()).getName()));
-				
-				return new TypeNode(methodDesc.getReturnType().getType());
-			}
-			
-			// check operand 2
-			if(((OpNode)arg).getOperand2() instanceof NameNode)
-			{
-				String name = ((NameNode)((OpNode)arg).getOperand2()).getName();
-				
-				if(nametable.get(name) instanceof FieldDescriptor)
-				{
-					return new TypeNode(((FieldDescriptor)nametable.get(name)).getFieldType().getType());
-				}
-				else if(nametable.get(name) instanceof VarDescriptor)
-				{
-					return new TypeNode(((VarDescriptor)nametable.get(name)).getType().getType());
-				}
-			}
-			else if(((OpNode)arg).getOperand2() instanceof OpNode)
-			{
-				ExpressionNode expressionSend = ((OpNode)arg).getOperand2();
-				return getArgumentType(expressionSend, nametable);
-			}
-			else if(((OpNode)arg).getOperand2() instanceof MethodInvokeNode)
-			{
-				MethodInvokeNode expressionSend = ((MethodInvokeNode)((OpNode)arg).getOperand2());
-				MethodDescriptor methodDesc = ((MethodDescriptor)nametable.get(((NameNode)((MethodInvokeNode)expressionSend).getNameNode()).getName()));
-				
-				return new TypeNode(methodDesc.getReturnType().getType());
-			}
-		}
-		
-		// check methodInvokeNode
-		else if(arg instanceof MethodInvokeNode)
-		{			
-			MethodInvokeNode expressionSend = (MethodInvokeNode)arg;
-			MethodDescriptor methodDesc = ((MethodDescriptor)nametable.get(((NameNode)((MethodInvokeNode)expressionSend).getNameNode()).getName()));
-			
-			return new TypeNode(methodDesc.getReturnType().getType());
-		}
-		
-		else if(arg instanceof NameNode)
-		{
-			String name = ((NameNode)arg).getName();
-			
-			if(nametable.get(name) instanceof FieldDescriptor)
-			{
-				return new TypeNode(((FieldDescriptor)nametable.get(name)).getFieldType().getType());
-			}
-			else if(nametable.get(name) instanceof VarDescriptor)
-			{
-				return new TypeNode(((VarDescriptor)nametable.get(name)).getType().getType());
-			}
-		}
-		else if(arg instanceof LiteralNode)
-		{
-			return new TypeNode("int");
-		}
-		else if(arg instanceof CreateObjectNode)
-		{
-			return ((CreateObjectNode)arg).getType();
-		}
-		return new TypeNode("NULL");
-		
-		
-	}
-	
-	// checks conditions
-	private void checkConditions(ExpressionNode expression, SymbolTable nametable, MethodDescriptor method)
-	{
-		checkExpression(expression, nametable, method);
-	}
+  public void checkMethod(ClassDescriptor cd, MethodDescriptor md) {
+    /* Check return type */
+    if (!md.getReturnType().isVoid())
+      checkTypeDescriptor(md.getReturnType());
+    
+    for(int i=0; i<md.numParameters(); i++) {
+      TypeDescriptor param_type=md.getParamType(i);
+      checkTypeDescriptor(param_type);
+    }
+    /* Link the naming environments */
+    md.getParameterTable().setParent(cd.getFieldTable());
+    md.setClassDesc(cd);
+    VarDescriptor thisvd=new VarDescriptor(new TypeDescriptor(cd),"this");
+    md.setThis(thisvd);
+  }
+
+  public void checkMethodBody(ClassDescriptor cd, MethodDescriptor md) {
+    ClassDescriptor superdesc=cd.getSuperDesc();
+    if (superdesc!=null) {
+      Set possiblematches=superdesc.getMethodTable().getSet(md.getSymbol());
+      for(Iterator methodit=possiblematches.iterator(); methodit.hasNext();) {
+        MethodDescriptor matchmd=(MethodDescriptor)methodit.next();
+      }
+    }
+    BlockNode bn=state.getMethodBody(md);
+    checkBlockNode(md, md.getParameterTable(),bn);
+  }
+
+  public void checkBlockNode(Descriptor md, SymbolTable nametable, BlockNode bn) {
+    /* Link in the naming environment */
+    bn.getVarTable().setParent(nametable);
+    for(int i=0; i<bn.size(); i++) {
+      BlockStatementNode bsn=bn.get(i);
+      checkBlockStatementNode(md, bn.getVarTable(),bsn);
+    }
+  }
+  
+  public void checkBlockStatementNode(Descriptor md, SymbolTable nametable, BlockStatementNode bsn) {
+    switch(bsn.kind()) {
+    case Kind.BlockExpressionNode:
+      checkBlockExpressionNode(md, nametable,(BlockExpressionNode)bsn);
+      return;
+
+    case Kind.DeclarationNode:
+      checkDeclarationNode(md, nametable, (DeclarationNode)bsn);
+      return;
+
+    case Kind.IfStatementNode:
+      checkIfStatementNode(md, nametable, (IfStatementNode)bsn);
+      return;
+
+    case Kind.LoopNode:
+      checkLoopNode(md, nametable, (LoopNode)bsn);
+      return;
+
+    case Kind.ReturnNode:
+      checkReturnNode(md, nametable, (ReturnNode)bsn);
+      return;
+
+    case Kind.SubBlockNode:
+      checkSubBlockNode(md, nametable, (SubBlockNode)bsn);
+      return;
+    }
+    throw new Error();
+  }
+
+  void checkBlockExpressionNode(Descriptor md, SymbolTable nametable, BlockExpressionNode ben) {
+    checkExpressionNode(md, nametable, ben.getExpression(), null);
+  }
+
+  void checkDeclarationNode(Descriptor md, SymbolTable nametable,  DeclarationNode dn) {
+    VarDescriptor vd=dn.getVarDescriptor();
+    checkTypeDescriptor(vd.getType());
+    Descriptor d=nametable.get(vd.getSymbol());
+    if ((d==null)||
+        (d instanceof FieldDescriptor)) {
+      nametable.add(vd);
+    } else
+      throw new Error(vd.getSymbol()+" in "+md+" defined a second time");
+    if (dn.getExpression()!=null)
+      checkExpressionNode(md, nametable, dn.getExpression(), vd.getType());
+  }
+
+  void checkSubBlockNode(Descriptor md, SymbolTable nametable, SubBlockNode sbn) {
+    checkBlockNode(md, nametable, sbn.getBlockNode());
+  }
+
+  void checkReturnNode(Descriptor d, SymbolTable nametable, ReturnNode rn) {
+    MethodDescriptor md=(MethodDescriptor)d;
+    if (rn.getReturnExpression()!=null)
+      if (md.getReturnType()==null)
+        throw new Error("Constructor can't return something.");
+      else if (md.getReturnType().isVoid())
+        throw new Error(md+" is void");
+      else
+        checkExpressionNode(md, nametable, rn.getReturnExpression(), md.getReturnType());
+    else
+      if (md.getReturnType()!=null&&!md.getReturnType().isVoid())
+        throw new Error("Need to return something for "+md);
+  }
+
+  void checkIfStatementNode(Descriptor md, SymbolTable nametable, IfStatementNode isn) {
+    checkExpressionNode(md, nametable, isn.getCondition(), new TypeDescriptor(TypeDescriptor.INT));
+    checkBlockNode(md, nametable, isn.getTrueBlock());
+    if (isn.getFalseBlock()!=null)
+      checkBlockNode(md, nametable, isn.getFalseBlock());
+  }
+
+  void checkExpressionNode(Descriptor md, SymbolTable nametable, ExpressionNode en, TypeDescriptor td) {
+    switch(en.kind()) {
+    case Kind.AssignmentNode:
+      checkAssignmentNode(md,nametable,(AssignmentNode)en,td);
+      return;
+
+    case Kind.CastNode:
+      checkCastNode(md,nametable,(CastNode)en,td);
+      return;
+
+    case Kind.CreateObjectNode:
+      checkCreateObjectNode(md,nametable,(CreateObjectNode)en,td);
+      return;
+
+    case Kind.FieldAccessNode:
+      checkFieldAccessNode(md,nametable,(FieldAccessNode)en,td);
+      return;
+
+    case Kind.LiteralNode:
+      checkLiteralNode(md,nametable,(LiteralNode)en,td);
+      return;
+
+    case Kind.MethodInvokeNode:
+      checkMethodInvokeNode(md,nametable,(MethodInvokeNode)en,td);
+      return;
+
+    case Kind.NameNode:
+      checkNameNode(md,nametable,(NameNode)en,td);
+      return;
+
+    case Kind.OpNode:
+      checkOpNode(md,nametable,(OpNode)en,td);
+      return;
+    }
+    throw new Error();
+  }
+
+  void checkCastNode(Descriptor md, SymbolTable nametable, CastNode cn, TypeDescriptor td) {
+    /* Get type descriptor */
+    if (cn.getType()==null) {
+      NameDescriptor typenamed=cn.getTypeName().getName();
+      String typename=typenamed.toString();
+      TypeDescriptor ntd=new TypeDescriptor(typeutil.getClass(typename));
+      cn.setType(ntd);
+    }
+
+    /* Check the type descriptor */
+    TypeDescriptor cast_type=cn.getType();
+    checkTypeDescriptor(cast_type);
+
+    /* Type check */
+    if (td!=null) {
+      if (!typeutil.isSuperorType(td,cast_type))
+        throw new Error("Cast node returns "+cast_type+", but need "+td);
+    }
+
+    ExpressionNode en=cn.getExpression();
+    checkExpressionNode(md, nametable, en, null);
+    TypeDescriptor etd=en.getType();
+    if (typeutil.isSuperorType(cast_type,etd))     /* Cast trivially succeeds */
+      return;
+
+    if (typeutil.isSuperorType(etd,cast_type))     /* Cast may succeed */
+      return;
+    if (typeutil.isCastable(etd, cast_type))
+      return;
+
+    /* Different branches */
+    /* TODO: change if add interfaces */
+    throw new Error("Cast will always fail\n"+cn.printNode(0));
+  }
+
+  void checkFieldAccessNode(Descriptor md, SymbolTable nametable, FieldAccessNode fan, TypeDescriptor td) {
+    ExpressionNode left=fan.getExpression();
+    checkExpressionNode(md,nametable,left,null);
+    TypeDescriptor ltd=left.getType();
+    String fieldname=fan.getFieldName();
+    
+    FieldDescriptor fd=(FieldDescriptor) ltd.getClassDesc().getFieldTable().get(fieldname);
+    if (fd==null)
+      throw new Error("Unknown field "+fieldname + " in "+fan.printNode(0)+" in "+md);
+    fan.setField(fd);
+    if (td!=null)
+      if (!typeutil.isSuperorType(td,fan.getType()))
+        throw new Error("Field node returns "+fan.getType()+", but need "+td);
+  }
+
+  void checkLiteralNode(Descriptor md, SymbolTable nametable, LiteralNode ln, TypeDescriptor td) {
+    /* Resolve the type */
+    Object o=ln.getValue();
+    if (ln.getTypeString().equals("null")) {
+      ln.setType(new TypeDescriptor(TypeDescriptor.NULL));
+    } else if (o instanceof Integer) {
+      ln.setType(new TypeDescriptor(TypeDescriptor.INT));
+    }
+
+    if (td!=null)
+      if (!typeutil.isSuperorType(td,ln.getType()))
+        throw new Error("Field node returns "+ln.getType()+", but need "+td);
+  }
+
+  void checkNameNode(Descriptor md, SymbolTable nametable, NameNode nn, TypeDescriptor td) {
+    NameDescriptor nd=nn.getName();
+    if (nd.getBase()!=null) {
+      /* Big hack */
+      /* Rewrite NameNode */
+      ExpressionNode en=translateNameDescriptorintoExpression(nd);
+      nn.setExpression(en);
+      checkExpressionNode(md,nametable,en,td);
+    } else {
+      String varname=nd.toString();
+      Descriptor d=(Descriptor)nametable.get(varname);
+      if (d==null) {
+        throw new Error("Name "+varname+" undefined in: "+md);
+      }
+      if (d instanceof VarDescriptor) {
+        nn.setVar(d);
+      } else if (d instanceof FieldDescriptor) {
+        nn.setField((FieldDescriptor)d);
+        nn.setVar((VarDescriptor)nametable.get("this"));        /* Need a pointer to this */
+      } else throw new Error("Wrong type of descriptor");
+      if (td!=null)
+        if (!typeutil.isSuperorType(td,nn.getType()))
+          throw new Error("Field node returns "+nn.getType()+", but need "+td);
+    }
+  }
+
+  void checkAssignmentNode(Descriptor md, SymbolTable nametable, AssignmentNode an, TypeDescriptor td) {
+    checkExpressionNode(md, nametable, an.getSrc(),td);
+    //TODO: Need check on validity of operation here
+    if (!((an.getDest() instanceof FieldAccessNode)||
+          (an.getDest() instanceof NameNode)))
+      throw new Error("Bad lside in "+an.printNode(0));
+    checkExpressionNode(md, nametable, an.getDest(), null);
+    
+    if (!typeutil.isSuperorType(an.getDest().getType(),an.getSrc().getType())) {
+      throw new Error("Type of rside ("+an.getSrc().getType()+") not compatible with type of lside ("+an.getDest().getType()+")"+an.printNode(0));
+    }
+  }
+
+  void checkLoopNode(Descriptor md, SymbolTable nametable, LoopNode ln) {
+    checkExpressionNode(md, nametable, ln.getCondition(), new TypeDescriptor(TypeDescriptor.INT));
+    checkBlockNode(md, nametable, ln.getBody());
+  }
+
+  void checkCreateObjectNode(Descriptor md, SymbolTable nametable, CreateObjectNode con, TypeDescriptor td) {
+    TypeDescriptor typetolookin=con.getType();
+    checkTypeDescriptor(typetolookin);
+
+    if (td!=null&&!typeutil.isSuperorType(td, typetolookin))
+      throw new Error(typetolookin + " isn't a "+td);
+
+    if ((!typetolookin.isClass()))
+      throw new Error("Can't allocate primitive type:"+con.printNode(0));
+  }
+
+  /** Check to see if md1 is the same specificity as md2.*/
+
+  boolean match(MethodDescriptor md1, MethodDescriptor md2) {
+    /* Checks if md1 is more specific than md2 */
+    if (md1.numParameters()!=md2.numParameters())
+      throw new Error();
+    for(int i=0; i<md1.numParameters(); i++) {
+      if (!md2.getParamType(i).equals(md1.getParamType(i)))
+        return false;
+    }
+    if (!md2.getReturnType().equals(md1.getReturnType()))
+      return false;
+    
+    if (!md2.getClassDesc().equals(md1.getClassDesc()))
+      return false;
+    
+    return true;
+  }
+
+  ExpressionNode translateNameDescriptorintoExpression(NameDescriptor nd) {
+    String id=nd.getIdentifier();
+    NameDescriptor base=nd.getBase();
+    if (base==null)
+      return new NameNode(nd);
+    else
+      return new FieldAccessNode(translateNameDescriptorintoExpression(base),id);
+  }
+
+  void checkMethodInvokeNode(Descriptor md, SymbolTable nametable, MethodInvokeNode min, TypeDescriptor td) {
+    /*Typecheck subexpressions
+       and get types for expressions*/
+
+    TypeDescriptor[] tdarray=new TypeDescriptor[min.numArgs()];
+    for(int i=0; i<min.numArgs(); i++) {
+      ExpressionNode en=min.getArg(i);
+      checkExpressionNode(md,nametable,en,null);
+      tdarray[i]=en.getType();
+    }
+    TypeDescriptor typetolookin=null;
+    if (min.getExpression()!=null) {
+      checkExpressionNode(md,nametable,min.getExpression(),null);
+      typetolookin=min.getExpression().getType();
+    } else if (min.getBaseName()!=null) {
+      String rootname=min.getBaseName().getRoot();
+      if (nametable.get(rootname)!=null) {
+        //we have an expression
+        min.setExpression(translateNameDescriptorintoExpression(min.getBaseName()));
+        checkExpressionNode(md, nametable, min.getExpression(), null);
+        typetolookin=min.getExpression().getType();
+      }
+    } else {
+      typetolookin=new TypeDescriptor(((MethodDescriptor)md).getClassDesc());
+    }
+    if (!typetolookin.isClass())
+      throw new Error("Error with method call to "+min.getMethodName());
+    ClassDescriptor classtolookin=typetolookin.getClassDesc();
+    
+    Set methoddescriptorset=classtolookin.getMethodTable().getSet(min.getMethodName());
+    MethodDescriptor bestmd=null;
+    NextMethod:
+    for(Iterator methodit=methoddescriptorset.iterator(); methodit.hasNext();) {
+      MethodDescriptor currmd=(MethodDescriptor)methodit.next();
+      /* Need correct number of parameters */
+      if (min.numArgs()!=currmd.numParameters())
+        continue;
+      for(int i=0; i<min.numArgs(); i++) {
+        if (!typeutil.isSuperorType(currmd.getParamType(i),tdarray[i]))
+          continue NextMethod;
+      }
+      /* Method okay so far */
+      if (bestmd==null)
+        bestmd=currmd;
+      else {
+        throw new Error("Multiple methods work -- no overloading allowed");
+        /* Is this more specific than bestmd */
+      }
+    }
+    if (bestmd==null)
+      throw new Error("No method found for :"+min.printNode(0)+" in class: " + classtolookin+" in "+md);
+    min.setMethod(bestmd);
+    
+    if ((td!=null)&&(min.getType()!=null)&&!typeutil.isSuperorType(td,  min.getType()))
+      throw new Error(min.getType()+ " is not equal to or a subclass of "+td);
+    /* Check whether we need to set this parameter to implied this */
+    if (min.getExpression()==null) {
+      ExpressionNode en=new NameNode(new NameDescriptor("this"));
+      min.setExpression(en);
+      checkExpressionNode(md, nametable, min.getExpression(), null);
+    }
+  }
+
+
+  void checkOpNode(Descriptor md, SymbolTable nametable, OpNode on, TypeDescriptor td) {
+    checkExpressionNode(md, nametable, on.getLeft(), null);
+    if (on.getRight()!=null)
+      checkExpressionNode(md, nametable, on.getRight(), null);
+    TypeDescriptor ltd=on.getLeft().getType();
+    TypeDescriptor rtd=on.getRight()!=null ? on.getRight().getType() : null;
+    TypeDescriptor lefttype=null;
+    TypeDescriptor righttype=null;
+    Operation op=on.getOp();
+
+    switch(op.getOp()) {
+    case Operation.LOGIC_NOT:
+    case Operation.BIT_OR:
+    case Operation.BIT_XOR:
+    case Operation.BIT_AND:
+    case Operation.EQUAL:
+    case Operation.NOTEQUAL:
+    case Operation.ADD:
+    case Operation.LT:
+    case Operation.GT:
+    case Operation.SUB:
+    case Operation.MULT:
+    case Operation.DIV:
+      righttype=lefttype=new TypeDescriptor(TypeDescriptor.INT);
+      on.setLeftType(lefttype);
+      on.setRightType(righttype);
+      on.setType(new TypeDescriptor(TypeDescriptor.INT));
+      break;
+
+    default:
+      throw new Error(op.toString());
+    }
+    
+    if (td!=null)
+      if (!typeutil.isSuperorType(td, on.getType())) {
+        System.out.println(td);
+        System.out.println(on.getType());
+        throw new Error("Type of rside not compatible with type of lside"+on.printNode(0));
+      }
+  }
 }

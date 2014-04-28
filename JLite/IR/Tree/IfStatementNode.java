@@ -1,42 +1,35 @@
 package IR.Tree;
 
-public class IfStatementNode extends BlockStatementNode
-{
-	private ExpressionNode condition;
-	private BlockNode block;
-	private BlockNode blocke;
-	
-	//Constructor
-	IfStatementNode(ExpressionNode condition2, BlockNode block2)
-	{
-		condition = condition2;
-		block = block2;
-	}
-	IfStatementNode(ExpressionNode condition2, BlockNode block2, BlockNode blocke2)
-	{
-		condition = condition2;
-		block = block2;
-		blocke = blocke2;
-	}
-	
-	//Get methods
-	public ExpressionNode getOperation()
-	{
-		return condition;
-	}
-	
-	public BlockNode getBlock()
-	{
-		return block;
-	}
-	
-	public BlockNode getBlocke()
-	{
-		return blocke;
-	}
-	
-	public String toString()
-	{
-		return "[If: " + condition + " -> " + block + "] Else: -> " + blocke + "]";
-	}
+public class IfStatementNode extends BlockStatementNode {
+  ExpressionNode cond;
+  BlockNode true_st;
+  BlockNode else_st;
+
+  public IfStatementNode(ExpressionNode cond, BlockNode true_st, BlockNode else_st) {
+    this.cond=cond;
+    this.true_st=true_st;
+    this.else_st=else_st;
+  }
+
+  public ExpressionNode getCondition() {
+    return cond;
+  }
+
+  public BlockNode getTrueBlock() {
+    return true_st;
+  }
+
+  public BlockNode getFalseBlock() {
+    return else_st;
+  }
+
+  public String printNode(int indent) {
+    if (else_st==null)
+      return "if("+cond.printNode(indent)+") "+true_st.printNode(indent);
+    else
+      return "if("+cond.printNode(indent)+") "+true_st.printNode(indent)+" else "+   else_st.printNode(indent);
+  }
+  public int kind() {
+    return Kind.IfStatementNode;
+  }
 }
