@@ -1,6 +1,10 @@
 class System {
-  int input();
-  void output(int out);
+  int input() {
+	  return 1;
+  }
+  void output(int out) {
+	  
+  }
   void printInt(int x) {
     if (x==0)
       output('0');

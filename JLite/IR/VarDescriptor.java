@@ -1,29 +1,31 @@
 package IR;
-
 import IR.Tree.ExpressionNode;
 
-public class VarDescriptor extends Descriptor
-{
-	private TypeDescriptor type;
-	private ExpressionNode value;
-	
-	//constructor:
-	public VarDescriptor(String name, TypeDescriptor T, ExpressionNode V)
-	{
-		super(name);
-		type = T;
-		value = V;
-	}
-	
-	//getMethods
-	
-	public TypeDescriptor getType()
-	{
-		return type;
-	}
-	
-	public ExpressionNode getValueNode()
-	{
-		return value;
-	}
+/**
+ * Descriptor
+ *
+ * represents a symbol in the language (var name, function name, etc).
+ */
+
+public class VarDescriptor extends Descriptor {
+  protected TypeDescriptor td;
+  protected String identifier;
+
+  public VarDescriptor(TypeDescriptor t, String identifier) {
+    super(identifier);
+    this.td=t;
+    this.identifier=identifier;
+  }
+
+  public String getName() {
+    return identifier;
+  }
+
+  public TypeDescriptor getType() {
+    return td;
+  }
+
+  public String toString() {
+    return td.toString()+" "+identifier;
+  }
 }

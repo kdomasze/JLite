@@ -3,17 +3,18 @@ package IR;
 import java.util.*;
 
 public class SymbolTable {
-  private HashMap<String, HashSet<Descriptor>> table;
+  private Hashtable table;
   private SymbolTable parent;
-  private HashSet<Descriptor> valueset;
+  private HashSet valueset;
 
   public SymbolTable() {
-    table = new HashMap();
-    valueset = new HashSet<Descriptor>();
+    table = new Hashtable();
+    valueset = new HashSet();
+    parent = null;
   }
 
   public SymbolTable(SymbolTable parent) {
-    this();
+    table = new Hashtable();
     this.parent = parent;
   }
 
@@ -21,40 +22,38 @@ public class SymbolTable {
     add(d.getSymbol(), d);
   }
 
-  private void add(String name, Descriptor d) {
+  public void add(String name, Descriptor d) {
     if (!table.containsKey(name))
-      table.put(name, new HashSet<Descriptor>());
-    HashSet<Descriptor> hs=table.get(name);
+      table.put(name, new HashSet());
+    HashSet hs=(HashSet)table.get(name);
     hs.add(d);
     valueset.add(d);
   }
 
-  /** getAllDescriptorSet returns all descriptors that match name
-   * including from parent scopes.*/
+  public Set getSet(String name) {
+    return getPSet(name);
+  }
 
-  public Set<Descriptor> getDescriptorsSet(String name) {
-    Set<Descriptor> hs=(parent!=null)?parent.getDescriptorsSet(name):new HashSet<Descriptor>();
+  private HashSet getPSet(String name) {
+    HashSet hs=(parent!=null)?parent.getPSet(name):new HashSet();
 
     if (table.containsKey(name)) {
-      hs.addAll(table.get(name));
+      hs.addAll((HashSet)table.get(name));
     }
     return hs;
   }
 
-  /** getSetFromSameScope returns only descriptors that match name
-   * from the same scope.*/
-
   public Set getSetFromSameScope(String name) {
-    if (table.containsKey(name)) {
-      HashSet<Descriptor> hs=table.get(name);
-      return hs;
-    } else
-      return new HashSet<Descriptor>();
+    return getPSetFromSameScope(name);
   }
 
-
-  /** get looks up a name, and if we can't find it, we try the parent
-   * scope. */
+  private HashSet getPSetFromSameScope(String name) {
+    if (table.containsKey(name)) {
+      HashSet hs=(HashSet)table.get(name);
+      return hs;
+    } else
+      return new HashSet();
+  }
 
   public Descriptor get(String name) {
     Descriptor d = getFromSameScope(name);
@@ -70,58 +69,59 @@ public class SymbolTable {
     return null;
   }
 
-  /** getFromSameScopeee looks up a name in only the current scope. */
-
   public Descriptor getFromSameScope(String name) {
     if (table.containsKey(name)) {
-      HashSet<Descriptor> hs= table.get(name);
-      return hs.iterator().next();
+      HashSet hs=(HashSet) table.get(name);
+      return (Descriptor) hs.iterator().next();
     } else
       return null;
 
   }
 
-  /** Returns the set of names. */
-
-  public Set<String> getNamesSet() {
-    return table.keySet();
+  public Enumeration getNames() {
+    return table.keys();
   }
 
-  /**Returns the set of descriptors. */
-  public Set<Descriptor> getDescriptorsSet() {
+  public Iterator getNamesIterator() {
+    return table.keySet().iterator();
+  }
+
+  public Set getValueSet() {
     return valueset;
   }
 
-  /** Returns all descriptors from all scopes. */
-  public Set<Descriptor> getAllDescriptorsSet() {
-    Set<Descriptor> hs=null;
+  public Iterator getDescriptorsIterator() {
+    return getValueSet().iterator();
+  }
+
+  public Set getAllValueSet() {
+    HashSet hs=null;
     if (parent!=null)
-      hs=parent.getAllDescriptorsSet();
+      hs=(HashSet) parent.getAllValueSet();
     else
-      hs=new HashSet<Descriptor>();
+      hs=new HashSet();
 
     hs.addAll(valueset);
     return hs;
   }
 
-  /** Returns whether the current scope contains a descriptor with the
-   * given name. */
+  public Iterator getAllDescriptorsIterator() {
+    return getAllValueSet().iterator();
+  }
+
   public boolean contains(String name) {
     return (get(name) != null);
   }
 
-
-  /** Returns the parent SymbolTable. */
   public SymbolTable getParent() {
     return parent;
   }
 
-  /** Sets the parent SymbolTable. */
   public void setParent(SymbolTable parent) {
     this.parent = parent;
   }
 
   public String toString() {
-    return table.toString();
+    return "ST: " + table.toString();
   }
 }

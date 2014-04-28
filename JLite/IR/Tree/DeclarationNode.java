@@ -1,37 +1,29 @@
 package IR.Tree;
+import IR.VarDescriptor;
 
-public class DeclarationNode extends BlockStatementNode
-{
-	private String name;
-	private TypeNode type;
-	private ExpressionNode initializer;
-	
-	// constructor
-	public DeclarationNode(String name2, TypeNode t, ExpressionNode i)
-	{
-		name = name2;
-		type = t;
-		initializer = i;
-	}
-	
-	// get methods
-	public String getName()
-	{
-		return name;
-	}
-	
-	public TypeNode getType()
-	{
-		return type;
-	}
-	
-	public ExpressionNode getInitializer()
-	{
-		return initializer;
-	}
-	
-	public String toString()
-	{
-		return "[Declaration: " + name + ": " + type + " -> " + initializer + "]";
-	}
+public class DeclarationNode extends BlockStatementNode {
+  VarDescriptor vd;
+  ExpressionNode init_en;
+  public DeclarationNode(VarDescriptor var, ExpressionNode en) {
+    vd=var;
+    init_en=en;
+  }
+
+  public String printNode(int indent) {
+    if (init_en==null)
+      return vd.toString();
+    else return vd.toString()+"="+init_en.printNode(0);
+  }
+
+  public ExpressionNode getExpression() {
+    return init_en;
+  }
+
+  public VarDescriptor getVarDescriptor() {
+    return vd;
+  }
+
+  public int kind() {
+    return Kind.DeclarationNode;
+  }
 }
