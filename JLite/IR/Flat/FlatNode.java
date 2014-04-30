@@ -1,31 +1,48 @@
 package IR.Flat;
+
 import java.util.Vector;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Iterator;
 
-public class FlatNode {
-  protected Vector<FlatNode> next;
-  protected Vector<FlatNode> prev;
+public class FlatNode
+{
+	protected Vector<FlatNode> next;
+	protected Vector<FlatNode> prev;
 
-  public FlatNode() {
-    next=new Vector<FlatNode>();
-    prev=new Vector<FlatNode>();
-  }
+	public FlatNode()
+	{
+		next = new Vector<FlatNode>();
+		prev = new Vector<FlatNode>();
+	}
 
-  public int numNext() {
-    return next.size();
-  }
+	public void addNext(FlatNode fn)
+	{
+		next.add(fn);
+	}
 
-  public FlatNode getNext(int i) {
-    return next.get(i);
-  }
+	public void addPrev(FlatNode fn)
+	{
+		prev.add(fn);
+	}
 
-  public int numPrev() {
-    return prev.size();
-  }
+	public int numNext()
+	{
+		return next.size();
+	}
 
-  public FlatNode getPrev(int i) {
-    return prev.get(i);
-  }
+	public FlatNode getNext(int i)
+	{
+		return next.get(i);
+	}
+
+	public int numPrev()
+	{
+		return prev.size();
+	}
+
+	public FlatNode getPrev(int i)
+	{
+		return prev.get(i);
+	}
 }

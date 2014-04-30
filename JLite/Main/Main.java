@@ -10,7 +10,9 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.Vector;
+
 import IR.*;
+import IR.Flat.BuildFlat;
 import IR.Tree.*;
 import Parse.*;
 
@@ -21,6 +23,7 @@ public class Main {
     State state=new State();
     boolean dumpnodes=false;
     BuildIR bir=new BuildIR(state);
+    BuildFlat bflat = new BuildFlat(state);
     TypeUtil typeutil=new TypeUtil(state, bir);
     SemanticCheck check=new SemanticCheck(state, typeutil);
 
@@ -49,9 +52,12 @@ public class Main {
         ParseNode pn=readSourceFile(state, arg);
         if (dumpnodes)
           System.out.println(pn.PPrint(2,true));
-        /*  Start */
+        /*  Start build AST tree */
         bir.parseFile(pn);
-        /* End */
+        /* End build ASR tree */
+        /* Start build TAC */
+        bflat.flatten();
+        /* End build TAC */
       } catch (Exception e) {
         System.out.println("Error in sourcefile:"+arg);
         e.printStackTrace();
