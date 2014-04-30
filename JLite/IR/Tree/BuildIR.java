@@ -106,6 +106,7 @@ public class BuildIR {
     else if (isNode(pn,"bitwise_or")||isNode(pn,"bitwise_xor")||
              isNode(pn,"bitwise_and")||isNode(pn,"equal")||
              isNode(pn,"not_equal")||isNode(pn,"comp_lt")||
+             isNode(pn,"comp_gt")||
              isNode(pn,"add")||isNode(pn,"mult")||
              isNode(pn,"sub")||isNode(pn,"div")) {
       ParseNodeVector pnv=pn.getChildren();
