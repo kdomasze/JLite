@@ -106,6 +106,42 @@ public class BuildFlat
 		return np;
 	}
 	
+	public NodePair FlattenExpression(TreeNode SubTree, TempDescriptor out)
+	{
+		FlatNode flat = null;
+		
+		if(SubTree instanceof OpNode)
+		{
+			flat = FlattenOpNode(SubTree);
+		}
+		else if(SubTree instanceof AssignmentNode)
+		{
+			flat = FlattenAssignmentNode(SubTree);
+		}
+		else if(SubTree instanceof ReturnNode)
+		{
+			flat = FlattenReturnNode(SubTree);
+		}
+		else if(SubTree instanceof CreateObjectNode)
+		{
+			flat = FlattenCreateObjectNode(SubTree);
+		}
+		else if(SubTree instanceof FieldAccessNode)
+		{
+			flat = FlattenFieldAccessNode(SubTree);
+		}
+		else if(SubTree instanceof MethodInvokeNode)
+		{
+			flat = FlattenMethodInvokeNode(SubTree);
+		}
+		else
+		{
+			flat = FlattenNopNode(SubTree);
+		}
+		
+		
+	}
+	
 	public void Store(Descriptor desc, FlatNode fn)
 	{
 		TAC.put(desc, fn);
