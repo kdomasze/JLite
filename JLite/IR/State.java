@@ -56,4 +56,9 @@ public class State {
   public void addTreeCode(MethodDescriptor md, BlockNode bn) {
     treemethodmap.put(md,bn);
   }
+  
+  public String toString()
+  {
+	  return classes.toString() + treemethodmap.toString() + parsetrees.toString() + numclasses + main;
+  }
 }

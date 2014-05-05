@@ -56,6 +56,13 @@ public class BuildFlat
 		
 		for(int i = 0; i<bn.size(); i++)
 		{
+			if(bn.get(i) instanceof DeclarationNode)
+			{
+				if(((DeclarationNode)(bn.get(i))).getExpression() == null)
+				{
+					continue;
+				}
+			}
 			NodePair np = flattenBlockStatementNode(bn.get(i));
 			FlatNode np_begin = np.getBegin();
 			FlatNode np_end = np.getEnd();
@@ -92,11 +99,19 @@ public class BuildFlat
 		}
 		else if(SubTree instanceof IfStatementNode)
 		{
-			np = FlattenIf(SubTree, out);
+			//np = FlattenIf(SubTree, out);
 		}
 		else if(SubTree instanceof LoopNode)
 		{
-			np = FlattenLoop(SubTree, out);
+			//np = FlattenLoop(SubTree, out);
+		}
+		else if(SubTree instanceof ReturnNode)
+		{
+		
+		}
+		else if(SubTree instanceof DeclarationNode)
+		{
+			np = FlattenDeclarationNode(SubTree, out);
 		}
 		else
 		{
@@ -138,12 +153,66 @@ public class BuildFlat
 		{
 			flat = FlattenNopNode(SubTree);
 		}
+	
+		return new NodePair(null,null);
+		
+	}
+
+	public NodePair FlattenDeclarationNode(TreeNode SubTree, TempDescriptor out)
+	{
+		FlatNode n1;
+		FlatNode n2;
 		
 		
+		
+		return new NodePair(n1, n2);
 	}
 	
 	public void Store(Descriptor desc, FlatNode fn)
 	{
 		TAC.put(desc, fn);
+	}
+	
+	public FlatNode FlattenOpNode(TreeNode SubTree)
+	{
+		FlatNode flat = null;
+		return flat;
+		
+	}
+	
+	public FlatNode FlattenAssignmentNode(TreeNode SubTree)
+	{
+		FlatNode flat = null;
+		return flat;
+	}
+	
+	public FlatNode FlattenCreateObjectNode(TreeNode SubTree)
+	{
+		FlatNode flat = null;
+		return flat;
+	}
+	
+	public FlatNode FlattenReturnNode(TreeNode SubTree)
+	{
+		FlatNode flat = null;
+		return flat;
+	}
+	
+	public FlatNode FlattenFieldAccessNode(TreeNode SubTree)
+	{
+		FlatNode flat = null;
+		return flat;
+	}
+	
+	public FlatNode FlattenMethodInvokeNode(TreeNode SubTree)
+	{
+		FlatNode flat = null;
+		return flat;
+	}
+	
+	public FlatNode FlattenNopNode(TreeNode SubTree)
+	{
+		FlatNode flat = null;
+		return flat;
 	}
 }
