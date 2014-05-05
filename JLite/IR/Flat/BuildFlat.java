@@ -161,10 +161,12 @@ public class BuildFlat
 	public NodePair FlattenDeclarationNode(TreeNode SubTree, TempDescriptor out)
 	{
 		FlatNode n1;
-		FlatNode n2;
-		
-		
-		
+		FlatNode n2 = new FlatNop();
+		DeclarationNode dn = (DeclarationNode)SubTree;
+		NameNode nn = new NameNode(new NameDescriptor(dn.getVarDescriptor().getName()));
+		AssignmentNode as = new AssignmentNode(nn, dn.getExpression());
+		n1 = FlattenAssignmentNode((TreeNode)as);
+				
 		return new NodePair(n1, n2);
 	}
 	
