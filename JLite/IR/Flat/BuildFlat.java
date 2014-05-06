@@ -6,6 +6,7 @@ import java.util.Set;
 import IR.*;
 import IR.Tree.*;
 
+
 public class BuildFlat
 {
 	State state;
@@ -28,12 +29,16 @@ public class BuildFlat
 			// grab symbol table for all methods in Class
 			SymbolTable methods = Class.getMethodTable();
 			Set<MethodDescriptor> methodSet = methods.getAllValueSet();
-			
+			int i = 0;
 			// iterate over methods
 			for(MethodDescriptor Method : methodSet)
 			{
 				BlockNode bn = state.getMethodBody(Method);
-				NodePair np = flattenBlockNode(bn);
+				
+				SymbolTable mdst = Method.getParameterTable();
+				i++;
+				
+				NodePair np = flattenBlockNode(bn, mdst);
 				
 				FlatNode fn = np.getBegin();
 				
@@ -49,10 +54,12 @@ public class BuildFlat
 		}
 	}
 	
-	public NodePair flattenBlockNode(BlockNode bn)
+	public NodePair flattenBlockNode(BlockNode bn, SymbolTable nametable)
 	{
 		FlatNode begin = null;
 		FlatNode end = null;
+		
+		bn.getVarTable().setParent(nametable);
 		
 		for(int i = 0; i<bn.size(); i++)
 		{
@@ -63,7 +70,7 @@ public class BuildFlat
 					continue;
 				}
 			}
-			NodePair np = flattenBlockStatementNode(bn.get(i));
+			NodePair np = flattenBlockStatementNode(bn.get(i), bn.getVarTable());
 			FlatNode np_begin = np.getBegin();
 			FlatNode np_end = np.getEnd();
 			if (begin == null)
@@ -78,7 +85,7 @@ public class BuildFlat
 			{
 				end.addNext(np_begin);
 				end = np_end;
-			}
+			} 
 		}
 		
 		if (begin == null) 
@@ -88,7 +95,7 @@ public class BuildFlat
 		return new NodePair(begin,end);
 	}
 	
-	public NodePair flattenBlockStatementNode(TreeNode SubTree)
+	public NodePair flattenBlockStatementNode(TreeNode SubTree, SymbolTable nametable)
 	{
 		NodePair np = null;
 		TempDescriptor out = null;
