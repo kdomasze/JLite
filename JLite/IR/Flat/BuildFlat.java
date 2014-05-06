@@ -11,6 +11,7 @@ public class BuildFlat
 {
 	State state;
 	HashMap<Descriptor, FlatNode> TAC = new HashMap();
+	int tempDescCount = 0;
 	
 	public BuildFlat(State s)
 	{
@@ -134,11 +135,11 @@ public class BuildFlat
 		
 		if(SubTree instanceof OpNode)
 		{
-			flat = FlattenOpNode(SubTree);
+			flat = FlattenOpNode(SubTree, out);
 		}
 		else if(SubTree instanceof AssignmentNode)
 		{
-			flat = FlattenAssignmentNode(SubTree);
+			flat = FlattenAssignmentNode(SubTree, out);
 		}
 		else if(SubTree instanceof ReturnNode)
 		{
@@ -172,7 +173,7 @@ public class BuildFlat
 		DeclarationNode dn = (DeclarationNode)SubTree;
 		NameNode nn = new NameNode(new NameDescriptor(dn.getVarDescriptor().getName()));
 		AssignmentNode as = new AssignmentNode(nn, dn.getExpression());
-		n1 = FlattenAssignmentNode((TreeNode)as);
+		n1 = FlattenAssignmentNode((TreeNode)as, out);
 				
 		return new NodePair(n1, n2);
 	}
@@ -182,16 +183,46 @@ public class BuildFlat
 		TAC.put(desc, fn);
 	}
 	
-	public FlatNode FlattenOpNode(TreeNode SubTree)
+	public FlatNode FlattenOpNode(TreeNode SubTree, TempDescriptor out)
 	{
-		FlatNode flat = null;
+		FlatNode flat = new FlatNode();
+		
+		
+		
 		return flat;
 		
 	}
 	
-	public FlatNode FlattenAssignmentNode(TreeNode SubTree)
+	public FlatNode FlattenAssignmentNode(TreeNode SubTree, TempDescriptor out)
 	{
 		FlatNode flat = null;
+		
+		AssignmentNode as = ((AssignmentNode)SubTree);
+		
+		if(as.getSrc() instanceof NameNode)
+		{
+			out = new TempDescriptor("t" + tempDescCount, null);
+			tempDescCount++;
+			NameNode nn = ((NameNode)as.getSrc());
+			flat = new FlatOpNode(out, new TempDescriptor(nn.getName().getIdentifier(), new TypeDescriptor(TypeDescriptor.NULL)), null, new Operation(Operation.ASSIGN));
+		}
+		else if(as.getSrc() instanceof LiteralNode)
+		{
+			out = new TempDescriptor("t" + tempDescCount, new TypeDescriptor(TypeDescriptor.INT));
+			tempDescCount++;
+			LiteralNode ln = ((LiteralNode)as.getSrc());
+			flat = new FlatOpNode(out, new TempDescriptor("t" + tempDescCount, new TypeDescriptor(TypeDescriptor.INT), ((int)ln.getValue())), null, new Operation(Operation.ASSIGN));
+		}
+		else if(as.getSrc() instanceof OpNode)
+		{
+			OpNode on = ((OpNode)as.getSrc());
+			flat = FlattenOpNode((TreeNode)on, out);
+		}
+		else
+		{
+			throw new Error("I can't let you do that, Dave.");
+		}
+		
 		return flat;
 	}
 	
@@ -223,5 +254,20 @@ public class BuildFlat
 	{
 		FlatNode flat = null;
 		return flat;
+	}
+	
+	public String toString()
+	{
+		String returnString = "";
+		
+		for(FlatNode flat : TAC.values())
+		{
+			if(flat instanceof FlatMethod)
+			{
+				returnString += ((FlatMethod)flat).printMethod() + "\n";
+			}
+		}
+		
+		return returnString;
 	}
 }

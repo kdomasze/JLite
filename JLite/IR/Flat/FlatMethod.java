@@ -8,14 +8,14 @@ import java.util.*;
 public class FlatMethod extends FlatNode
 {
 	MethodDescriptor method;
-	
+
 	SymbolTable formalParameters = new SymbolTable();
 
 	public FlatMethod(MethodDescriptor md)
 	{
 		method = md;
 	}
-	
+
 	public void addFormalParameter(SymbolTable param)
 	{
 		formalParameters = param;

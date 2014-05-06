@@ -57,6 +57,7 @@ public class Main {
         /* End build ASR tree */
         /* Start build TAC */
         bflat.flatten();
+        System.out.println(bflat);
         /* End build TAC */
       } catch (Exception e) {
         System.out.println("Error in sourcefile:"+arg);
