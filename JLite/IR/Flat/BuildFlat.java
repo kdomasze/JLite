@@ -103,7 +103,7 @@ public class BuildFlat
 		
 		if(SubTree instanceof ExpressionNode)
 		{
-			np = FlattenExpression(SubTree, out);
+			np = FlattenExpression(SubTree, out, nametable);
 		}
 		else if(SubTree instanceof IfStatementNode)
 		{
@@ -119,7 +119,7 @@ public class BuildFlat
 		}
 		else if(SubTree instanceof DeclarationNode)
 		{
-			np = FlattenDeclarationNode(SubTree, out);
+			np = FlattenDeclarationNode(SubTree, out, nametable);
 		}
 		else
 		{
@@ -129,7 +129,7 @@ public class BuildFlat
 		return np;
 	}
 	
-	public NodePair FlattenExpression(TreeNode SubTree, TempDescriptor out)
+	public NodePair FlattenExpression(TreeNode SubTree, TempDescriptor out, SymbolTable nametable)
 	{
 		FlatNode flat = null;
 		
@@ -139,7 +139,7 @@ public class BuildFlat
 		}
 		else if(SubTree instanceof AssignmentNode)
 		{
-			flat = FlattenAssignmentNode(SubTree, out);
+			flat = FlattenAssignmentNode(SubTree, out, nametable);
 		}
 		else if(SubTree instanceof ReturnNode)
 		{
@@ -166,15 +166,15 @@ public class BuildFlat
 		
 	}
 
-	public NodePair FlattenDeclarationNode(TreeNode SubTree, TempDescriptor out)
+	public NodePair FlattenDeclarationNode(TreeNode SubTree, TempDescriptor out, SymbolTable nametable)
 	{
 		FlatNode n1;
 		FlatNode n2 = new FlatNop();
 		DeclarationNode dn = (DeclarationNode)SubTree;
 		NameNode nn = new NameNode(new NameDescriptor(dn.getVarDescriptor().getName()));
 		AssignmentNode as = new AssignmentNode(nn, dn.getExpression());
-		n1 = FlattenAssignmentNode((TreeNode)as, out);
-				
+		n1 = FlattenAssignmentNode((TreeNode)as, out, nametable);
+		nametable.add(dn.getVarDescriptor());
 		return new NodePair(n1, n2);
 	}
 	
@@ -193,7 +193,7 @@ public class BuildFlat
 		
 	}
 	
-	public FlatNode FlattenAssignmentNode(TreeNode SubTree, TempDescriptor out)
+	public FlatNode FlattenAssignmentNode(TreeNode SubTree, TempDescriptor out, SymbolTable nametable)
 	{
 		FlatNode flat = null;
 		
@@ -211,7 +211,7 @@ public class BuildFlat
 			out = new TempDescriptor("t" + tempDescCount, new TypeDescriptor(TypeDescriptor.INT));
 			tempDescCount++;
 			LiteralNode ln = ((LiteralNode)as.getSrc());
-			flat = new FlatOpNode(out, new TempDescriptor("t" + tempDescCount, new TypeDescriptor(TypeDescriptor.INT), ((int)ln.getValue())), null, new Operation(Operation.ASSIGN));
+			flat = new FlatOpNode(out, new TempDescriptor("t" + tempDescCount, new TypeDescriptor(TypeDescriptor.INT), ((Integer)ln.getValue())), null, new Operation(Operation.ASSIGN));
 		}
 		else if(as.getSrc() instanceof OpNode)
 		{
