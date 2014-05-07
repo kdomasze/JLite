@@ -20,4 +20,9 @@ public class NodePair
 	{
 		return end;
 	}
+	
+	public String toString()
+	{
+		return begin + "\n" + end;
+	}
 }

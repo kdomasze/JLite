@@ -63,7 +63,7 @@ public class BuildFlat
 		bn.getVarTable().setParent(nametable);
 		
 		for(int i = 0; i<bn.size(); i++)
-		{
+		{			
 			if(bn.get(i) instanceof DeclarationNode)
 			{
 				if(((DeclarationNode)(bn.get(i))).getExpression() == null)
@@ -135,7 +135,7 @@ public class BuildFlat
 		
 		if(SubTree instanceof OpNode)
 		{
-			flat = FlattenOpNode(SubTree, out);
+			flat = FlattenOpNode(SubTree, out, nametable);
 		}
 		else if(SubTree instanceof AssignmentNode)
 		{
@@ -157,13 +157,19 @@ public class BuildFlat
 		{
 			flat = FlattenMethodInvokeNode(SubTree);
 		}
+		else if(SubTree instanceof LiteralNode)
+		{
+			int val = ((int)((LiteralNode)SubTree).getValue());
+			out = new TempDescriptor("t" + tempDescCount, new TypeDescriptor(TypeDescriptor.INT), val);
+			tempDescCount++;
+			flat = new FlatNew(new TypeDescriptor(TypeDescriptor.INT), out);
+		}
 		else
 		{
 			flat = FlattenNopNode(SubTree);
 		}
-	
-		return new NodePair(null,null);
 		
+		return new NodePair(flat, new FlatNop());
 	}
 
 	public NodePair FlattenDeclarationNode(TreeNode SubTree, TempDescriptor out, SymbolTable nametable)
@@ -171,10 +177,14 @@ public class BuildFlat
 		FlatNode n1;
 		FlatNode n2 = new FlatNop();
 		DeclarationNode dn = (DeclarationNode)SubTree;
+		
 		NameNode nn = new NameNode(new NameDescriptor(dn.getVarDescriptor().getName()));
 		AssignmentNode as = new AssignmentNode(nn, dn.getExpression());
+		
 		n1 = FlattenAssignmentNode((TreeNode)as, out, nametable);
+		
 		nametable.add(dn.getVarDescriptor());
+		
 		return new NodePair(n1, n2);
 	}
 	
@@ -183,14 +193,28 @@ public class BuildFlat
 		TAC.put(desc, fn);
 	}
 	
-	public FlatNode FlattenOpNode(TreeNode SubTree, TempDescriptor out)
+	public FlatNode FlattenOpNode(TreeNode SubTree, TempDescriptor out, SymbolTable nametable)
 	{
-		FlatNode flat = new FlatNode();
+		FlatOpNode flat = null;
+		
+		TempDescriptor left = null;
+		TempDescriptor right = null;
 		
 		
 		
-		return flat;
+		out = new TempDescriptor("t" + tempDescCount, ((OpNode)SubTree).getType());
+		tempDescCount++;
+		Operation op = ((OpNode)SubTree).getOp();
 		
+		NodePair leftNodePair = FlattenExpression(((OpNode)SubTree).getLeft(), left, nametable);
+		NodePair rightNodePair = FlattenExpression(((OpNode)SubTree).getRight(), right, nametable);
+		
+		left = ((FlatNew)leftNodePair.getBegin()).dst;
+		right = ((FlatNew)rightNodePair.getBegin()).dst;
+		
+		flat = new FlatOpNode(out, left, right, op);
+		
+		return flat;	
 	}
 	
 	public FlatNode FlattenAssignmentNode(TreeNode SubTree, TempDescriptor out, SymbolTable nametable)
@@ -198,31 +222,34 @@ public class BuildFlat
 		FlatNode flat = null;
 		
 		AssignmentNode as = ((AssignmentNode)SubTree);
-		
 		if(as.getSrc() instanceof NameNode)
 		{
-			out = new TempDescriptor("t" + tempDescCount, null);
-			tempDescCount++;
 			NameNode nn = ((NameNode)as.getSrc());
-			flat = new FlatOpNode(out, new TempDescriptor(nn.getName().getIdentifier(), new TypeDescriptor(TypeDescriptor.NULL)), null, new Operation(Operation.ASSIGN));
+			TypeDescriptor type = ((VarDescriptor)nametable.get(nn.getName().getSymbol())).getType();
+			
+			out = new TempDescriptor("t" + tempDescCount, type); // need to get actual type
+			tempDescCount++;
+			
+			flat = new FlatOpNode(out, new TempDescriptor(nn.getName().getIdentifier(), type), null, new Operation(Operation.ASSIGN));
 		}
 		else if(as.getSrc() instanceof LiteralNode)
 		{
+			
 			out = new TempDescriptor("t" + tempDescCount, new TypeDescriptor(TypeDescriptor.INT));
 			tempDescCount++;
 			LiteralNode ln = ((LiteralNode)as.getSrc());
 			flat = new FlatOpNode(out, new TempDescriptor("t" + tempDescCount, new TypeDescriptor(TypeDescriptor.INT), ((Integer)ln.getValue())), null, new Operation(Operation.ASSIGN));
+			tempDescCount++;
 		}
 		else if(as.getSrc() instanceof OpNode)
 		{
 			OpNode on = ((OpNode)as.getSrc());
-			flat = FlattenOpNode((TreeNode)on, out);
+			flat = FlattenOpNode((TreeNode)on, out, nametable);
 		}
 		else
 		{
 			throw new Error("I can't let you do that, Dave.");
 		}
-		
 		return flat;
 	}
 	
