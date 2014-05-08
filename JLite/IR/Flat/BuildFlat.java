@@ -177,7 +177,7 @@ public class BuildFlat
 		}
 		else if(SubTree instanceof NameNode)
 		{
-			np = FlattenNameNode(SubTree, nametable);
+			np = FlattenNameNode(SubTree);
 		}
 		else
 		{
@@ -341,9 +341,9 @@ public class BuildFlat
 		return new NodePair(fln, fln, tmp);
 	}
 	
-	public NodePair FlattenNameNode(TreeNode SubTree, SymbolTable nametable)
+	public NodePair FlattenNameNode(TreeNode SubTree)
 	{
-		TypeDescriptor type = ((VarDescriptor)nametable.get(((NameNode)SubTree).getName().getSymbol())).getType();
+		TypeDescriptor type = ((NameNode)SubTree).getType();
 		String name = ((NameNode)SubTree).getName().getSymbol();
 		TempDescriptor tmp = new TempDescriptor(name, type);
 		
