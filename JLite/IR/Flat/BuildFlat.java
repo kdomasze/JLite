@@ -6,10 +6,12 @@ import java.util.Set;
 import IR.*;
 import IR.Tree.*;
 
+
 public class BuildFlat
 {
 	State state;
 	HashMap<Descriptor, FlatNode> TAC = new HashMap();
+	int tempDescCount = 0;
 	
 	public BuildFlat(State s)
 	{
@@ -28,11 +30,12 @@ public class BuildFlat
 			// grab symbol table for all methods in Class
 			SymbolTable methods = Class.getMethodTable();
 			Set<MethodDescriptor> methodSet = methods.getAllValueSet();
-			
+
 			// iterate over methods
 			for(MethodDescriptor Method : methodSet)
 			{
 				BlockNode bn = state.getMethodBody(Method);
+				
 				NodePair np = flattenBlockNode(bn);
 				
 				FlatNode fn = np.getBegin();
@@ -54,8 +57,9 @@ public class BuildFlat
 		FlatNode begin = null;
 		FlatNode end = null;
 		
+		
 		for(int i = 0; i<bn.size(); i++)
-		{
+		{			
 			if(bn.get(i) instanceof DeclarationNode)
 			{
 				if(((DeclarationNode)(bn.get(i))).getExpression() == null)
@@ -64,12 +68,22 @@ public class BuildFlat
 				}
 			}
 			NodePair np = flattenBlockStatementNode(bn.get(i));
-			FlatNode np_begin = np.getBegin();
-			FlatNode np_end = np.getEnd();
+			FlatNode np_begin = null;
+			FlatNode np_end = null;
+			if (np != null)
+			{
+				np_begin = np.getBegin();
+				np_end = np.getEnd();
+			}
 			if (begin == null)
 			{
 				begin = np_begin;
 			}
+			else
+			{
+				begin.addNext(np_begin);
+			}
+			
 			if(end == null)
 			{
 				end = np_end;
@@ -91,11 +105,15 @@ public class BuildFlat
 	public NodePair flattenBlockStatementNode(TreeNode SubTree)
 	{
 		NodePair np = null;
-		TempDescriptor out = null;
-		
+
 		if(SubTree instanceof ExpressionNode)
 		{
-			np = FlattenExpression(SubTree, out);
+			np = FlattenExpression(SubTree);
+		}
+		else if(SubTree instanceof BlockExpressionNode)
+		{
+			ExpressionNode e = ((BlockExpressionNode)SubTree).getExpression();
+			np = FlattenExpression(e);
 		}
 		else if(SubTree instanceof IfStatementNode)
 		{
@@ -107,11 +125,11 @@ public class BuildFlat
 		}
 		else if(SubTree instanceof ReturnNode)
 		{
-		
+			np = FlattenReturnNode(SubTree);
 		}
 		else if(SubTree instanceof DeclarationNode)
 		{
-			np = FlattenDeclarationNode(SubTree, out);
+			np = FlattenDeclarationNode(SubTree);
 		}
 		else
 		{
@@ -121,53 +139,60 @@ public class BuildFlat
 		return np;
 	}
 	
-	public NodePair FlattenExpression(TreeNode SubTree, TempDescriptor out)
+	public NodePair FlattenExpression(TreeNode SubTree)
 	{
-		FlatNode flat = null;
+		NodePair np = null;
 		
 		if(SubTree instanceof OpNode)
 		{
-			flat = FlattenOpNode(SubTree);
+			np = FlattenOpNode(SubTree);
 		}
 		else if(SubTree instanceof AssignmentNode)
 		{
-			flat = FlattenAssignmentNode(SubTree);
+			np = FlattenAssignmentNode(SubTree);
 		}
 		else if(SubTree instanceof ReturnNode)
 		{
-			flat = FlattenReturnNode(SubTree);
+			np = FlattenReturnNode(SubTree);
 		}
 		else if(SubTree instanceof CreateObjectNode)
 		{
-			flat = FlattenCreateObjectNode(SubTree);
+			np = FlattenCreateObjectNode(SubTree);
 		}
 		else if(SubTree instanceof FieldAccessNode)
 		{
-			flat = FlattenFieldAccessNode(SubTree);
+			np = FlattenFieldAccessNode(SubTree);
 		}
 		else if(SubTree instanceof MethodInvokeNode)
 		{
-			flat = FlattenMethodInvokeNode(SubTree);
+			np = FlattenMethodInvokeNode(SubTree);
+		}
+		else if(SubTree instanceof LiteralNode)
+		{
+			np = FlattenLiteralNode(SubTree);
+		}
+		else if(SubTree instanceof NameNode)
+		{
+			np = FlattenNameNode(SubTree);
 		}
 		else
 		{
-			flat = FlattenNopNode(SubTree);
+			np = FlattenNopNode(SubTree);
 		}
-	
-		return new NodePair(null,null);
 		
+		return np;
 	}
 
-	public NodePair FlattenDeclarationNode(TreeNode SubTree, TempDescriptor out)
+	public NodePair FlattenDeclarationNode(TreeNode SubTree)
 	{
-		FlatNode n1;
-		FlatNode n2 = new FlatNop();
 		DeclarationNode dn = (DeclarationNode)SubTree;
+		
 		NameNode nn = new NameNode(new NameDescriptor(dn.getVarDescriptor().getName()));
 		AssignmentNode as = new AssignmentNode(nn, dn.getExpression());
-		n1 = FlattenAssignmentNode((TreeNode)as);
-				
-		return new NodePair(n1, n2);
+		
+		NodePair fanp = FlattenAssignmentNode((TreeNode)as);
+		
+		return fanp;
 	}
 	
 	public void Store(Descriptor desc, FlatNode fn)
@@ -175,46 +200,189 @@ public class BuildFlat
 		TAC.put(desc, fn);
 	}
 	
-	public FlatNode FlattenOpNode(TreeNode SubTree)
+	public NodePair FlattenOpNode(TreeNode SubTree)
 	{
-		FlatNode flat = null;
-		return flat;
+		TempDescriptor tmp = null;
+		Operation op = null;
 		
+		NodePair leftNodePair = null;
+		NodePair rightNodePair = null;
+		
+		ExpressionNode eRight = null;
+		
+		if(!(SubTree instanceof AssignmentNode))
+		{
+			if(SubTree instanceof OpNode)
+			{
+				tmp = getTempDescriptor(((OpNode)SubTree).getType());
+				op = ((OpNode)SubTree).getOp();
+			}
+			else
+			{
+				throw new Error("Live free or die hard.");
+			}
+			
+			leftNodePair = FlattenExpression(((OpNode)SubTree).getLeft());
+			eRight = ((OpNode)SubTree).getRight();
+		}
+		else
+		{
+			if(((AssignmentNode)SubTree).getSrc() instanceof LiteralNode)
+			{
+				AssignmentNode as = ((AssignmentNode)SubTree);
+				tmp = new TempDescriptor(((NameNode)as.getDest()).getName().getSymbol(), (as.getSrc()).getType());
+				op = new Operation(Operation.ASSIGN);
+			}
+			else if(((AssignmentNode)SubTree).getSrc() instanceof NameNode)
+			{
+				AssignmentNode as = ((AssignmentNode)SubTree);
+				NameNode nn = ((NameNode)as.getDest());
+				//TypeDescriptor type = ((VarDescriptor)nametable.get(nn.getName().getSymbol())).getType();
+				TypeDescriptor type = nn.getType();
+				
+				tmp = new TempDescriptor(nn.getName().getSymbol(), type);
+				op = new Operation(Operation.ASSIGN);
+			}
+			else
+			{
+				throw new Error("This is the end of the world as we know it.");
+			}
+			
+			leftNodePair = FlattenExpression(((AssignmentNode)SubTree).getSrc());
+		}
+		
+		FlatNode last = leftNodePair.end;
+		
+		if(eRight != null)
+		{
+			rightNodePair = FlattenExpression(((OpNode)SubTree).getRight());
+			leftNodePair.end.next.add(rightNodePair.begin);
+			rightNodePair.begin.prev.add(leftNodePair.end);
+			last = rightNodePair.end;
+		}
+		
+		FlatOpNode fon = new FlatOpNode(tmp, leftNodePair.tmp, (rightNodePair!=null)?rightNodePair.tmp:null, op);
+		last.next.add(fon);
+		fon.prev.add(last);		
+		
+		return new NodePair(leftNodePair.begin, fon, tmp);	
 	}
 	
-	public FlatNode FlattenAssignmentNode(TreeNode SubTree)
+	public NodePair FlattenAssignmentNode(TreeNode SubTree)
 	{
-		FlatNode flat = null;
-		return flat;
+		AssignmentNode as = ((AssignmentNode)SubTree);
+		if(as.getSrc() instanceof NameNode)
+		{			
+			return FlattenOpNode(SubTree);
+		}
+		else if(as.getSrc() instanceof LiteralNode)
+		{
+			return FlattenOpNode(SubTree);
+		}
+		else if(as.getSrc() instanceof OpNode)
+		{
+			OpNode on = ((OpNode)as.getSrc());
+			
+			return FlattenOpNode((TreeNode)on);
+		}
+		else if(as.getSrc() instanceof CreateObjectNode)
+		{
+			return FlattenCreateObjectNode(SubTree);
+		}
+		else
+		{
+			throw new Error("I can't let you do that, Dave.");
+		}
 	}
 	
-	public FlatNode FlattenCreateObjectNode(TreeNode SubTree)
+	public NodePair FlattenCreateObjectNode(TreeNode SubTree)
 	{
-		FlatNode flat = null;
-		return flat;
+		TypeDescriptor type = ((AssignmentNode)SubTree).getSrc().getType();
+		TempDescriptor tmp = getTempDescriptor(type);
+		
+		FlatNew fn = new FlatNew(type, tmp);
+		
+		return new NodePair (fn, fn, tmp);
 	}
 	
-	public FlatNode FlattenReturnNode(TreeNode SubTree)
+	public NodePair FlattenReturnNode(TreeNode SubTree)
 	{
-		FlatNode flat = null;
-		return flat;
+		ExpressionNode e = ((ReturnNode)SubTree).getReturnExpression();
+		TempDescriptor tmp = (FlattenExpression(e)).tmp;
+		
+		FlatReturnNode frn = new FlatReturnNode(tmp);
+		
+		return new NodePair(frn, frn, tmp);
 	}
 	
-	public FlatNode FlattenFieldAccessNode(TreeNode SubTree)
+	public NodePair FlattenFieldAccessNode(TreeNode SubTree)
 	{
-		FlatNode flat = null;
-		return flat;
+		NodePair np = null;
+		return np;
 	}
 	
-	public FlatNode FlattenMethodInvokeNode(TreeNode SubTree)
+	public NodePair FlattenMethodInvokeNode(TreeNode SubTree)
 	{
-		FlatNode flat = null;
-		return flat;
+		NodePair np = null;
+		return np;
 	}
 	
-	public FlatNode FlattenNopNode(TreeNode SubTree)
+	public NodePair FlattenLiteralNode(TreeNode SubTree)
 	{
-		FlatNode flat = null;
-		return flat;
+		int val = ((Integer)((LiteralNode)SubTree).getValue());
+		TypeDescriptor type = ((LiteralNode)SubTree).getType();
+		TempDescriptor tmp = getTempDescriptor(type);
+		
+		FlatLiteralNode fln = new FlatLiteralNode(type, val, tmp);
+		
+		return new NodePair(fln, fln, tmp);
+	}
+	
+	public NodePair FlattenNameNode(TreeNode SubTree)
+	{
+		TypeDescriptor type = ((NameNode)SubTree).getType();
+		String name = ((NameNode)SubTree).getName().getSymbol();
+		TempDescriptor tmp = new TempDescriptor(name, type);
+		
+		FlatNameNode fnn = new FlatNameNode(type, tmp);
+		
+		return new NodePair(fnn, fnn, tmp);
+	}
+	
+	public NodePair FlattenNopNode(TreeNode SubTree)
+	{
+		FlatNop fn = new FlatNop();
+		return new NodePair(fn, fn);
+	}
+	
+	private TempDescriptor getTempDescriptor(TypeDescriptor type)
+	{
+		tempDescCount++;
+		return new TempDescriptor("t" + tempDescCount, type);
+	}
+	
+	public String toString()
+	{
+		String returnString = "";
+		
+		for(FlatNode flat : TAC.values())
+		{
+			returnString += ((FlatMethod)flat).getMethod().getSymbol() + "()\n{\n";
+			FlatNode f = flat.getNext(0);
+			while(true)
+			{
+				returnString += "\t" + f.toString() + "\n";
+				
+				if(f.next.size()==0)
+				{
+					returnString += "}\n";
+					return returnString;
+				}
+				
+				f = f.next.get(0);
+			}
+		}
+		
+		return returnString;
 	}
 }
