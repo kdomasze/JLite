@@ -174,6 +174,12 @@ public class BuildFlat
 			tempDescCount++;
 			flat = new FlatNew(new TypeDescriptor(TypeDescriptor.INT), out);
 		}
+		else if(SubTree instanceof NameNode)
+		{
+			TypeDescriptor type = ((VarDescriptor)nametable.get(((NameNode)SubTree).getName().getSymbol())).getType();
+			out = new TempDescriptor(((NameNode)SubTree).getName().getSymbol(), type);
+			flat = new FlatNew(type, out);
+		}
 		else
 		{
 			flat = FlattenNopNode(SubTree);
