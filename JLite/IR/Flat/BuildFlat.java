@@ -129,7 +129,7 @@ public class BuildFlat
 		}
 		else if(SubTree instanceof ReturnNode)
 		{
-		
+			np = FlattenReturnNode(SubTree, nametable);
 		}
 		else if(SubTree instanceof DeclarationNode)
 		{
@@ -157,7 +157,7 @@ public class BuildFlat
 		}
 		else if(SubTree instanceof ReturnNode)
 		{
-			np = FlattenReturnNode(SubTree);
+			np = FlattenReturnNode(SubTree, nametable);
 		}
 		else if(SubTree instanceof CreateObjectNode)
 		{
@@ -308,10 +308,14 @@ public class BuildFlat
 		return new NodePair (fn, fn, tmp);
 	}
 	
-	public NodePair FlattenReturnNode(TreeNode SubTree)
+	public NodePair FlattenReturnNode(TreeNode SubTree, SymbolTable nametable)
 	{
-		NodePair np = null;
-		return np;
+		ExpressionNode e = ((ReturnNode)SubTree).getReturnExpression();
+		TempDescriptor tmp = (FlattenExpression(e, nametable)).tmp;
+		
+		FlatReturnNode frn = new FlatReturnNode(tmp);
+		
+		return new NodePair(frn, frn, tmp);
 	}
 	
 	public NodePair FlattenFieldAccessNode(TreeNode SubTree)
