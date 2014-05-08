@@ -100,4 +100,9 @@ public class ClassDescriptor extends Descriptor {
   public String getSuper() {
     return superclass;
   }
+  
+  public String toString()
+  {
+	  return "Methods: " + methods;
+  }
 }

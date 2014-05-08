@@ -68,4 +68,9 @@ public class OpNode extends ExpressionNode {
   public int kind() {
     return Kind.OpNode;
   }
+  
+  public String toString()
+  {
+	  return "left: " + left + ", right: " + right + ", OP: " + op + ", lefttype: " + lefttype + ", righttype: " + righttype;
+  }
 }

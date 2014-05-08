@@ -93,5 +93,10 @@ public class BlockNode extends TreeNode {
   public int kind() {
     return Kind.BlockNode;
   }
+  
+  public String toString()
+  {
+	  return blockstatements.toString();
+  }
 
 }

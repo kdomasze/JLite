@@ -26,4 +26,9 @@ public class DeclarationNode extends BlockStatementNode {
   public int kind() {
     return Kind.DeclarationNode;
   }
+  
+  public String toString()
+  {
+	  return "vd: " + vd + ", init_en: " + init_en;
+  }
 }
