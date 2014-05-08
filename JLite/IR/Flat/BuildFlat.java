@@ -283,6 +283,10 @@ public class BuildFlat
 			
 			return FlattenOpNode((TreeNode)on, nametable);
 		}
+		else if(as.getSrc() instanceof CreateObjectNode)
+		{
+			return FlattenCreateObjectNode(SubTree);
+		}
 		else
 		{
 			throw new Error("I can't let you do that, Dave.");
@@ -291,8 +295,12 @@ public class BuildFlat
 	
 	public NodePair FlattenCreateObjectNode(TreeNode SubTree)
 	{
-		NodePair np = null;
-		return np;
+		TypeDescriptor type = ((AssignmentNode)SubTree).getSrc().getType();
+		TempDescriptor tmp = getTempDescriptor(type);
+		
+		FlatNew fn = new FlatNew(type, tmp);
+		
+		return new NodePair (fn, fn, tmp);
 	}
 	
 	public NodePair FlattenReturnNode(TreeNode SubTree)
