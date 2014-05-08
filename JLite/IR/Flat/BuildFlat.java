@@ -332,7 +332,7 @@ public class BuildFlat
 	
 	public NodePair FlattenLiteralNode(TreeNode SubTree)
 	{
-		int val = ((int)((LiteralNode)SubTree).getValue());
+		int val = ((Integer)((LiteralNode)SubTree).getValue());
 		TypeDescriptor type = ((LiteralNode)SubTree).getType();
 		TempDescriptor tmp = getTempDescriptor(type);
 		
