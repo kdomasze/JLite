@@ -72,8 +72,13 @@ public class BuildFlat
 				}
 			}
 			NodePair np = flattenBlockStatementNode(bn.get(i), bn.getVarTable());
-			FlatNode np_begin = np.getBegin();
-			FlatNode np_end = np.getEnd();
+			FlatNode np_begin = null;
+			FlatNode np_end = null;
+			if (np != null)
+			{
+				np_begin = np.getBegin();
+				np_end = np.getEnd();
+			}
 			if (begin == null)
 			{
 				begin = np_begin;
