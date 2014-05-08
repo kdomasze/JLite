@@ -234,7 +234,7 @@ public class BuildFlat
 			if(((AssignmentNode)SubTree).getSrc() instanceof LiteralNode)
 			{
 				AssignmentNode as = ((AssignmentNode)SubTree);
-				tmp = new TempDescriptor(((NameNode)as.getDest()).getName().getSymbol(), as.getType());
+				tmp = new TempDescriptor(((NameNode)as.getDest()).getName().getSymbol(), (as.getSrc()).getType());
 				op = new Operation(Operation.ASSIGN);
 			}
 			else if(((AssignmentNode)SubTree).getSrc() instanceof NameNode)
