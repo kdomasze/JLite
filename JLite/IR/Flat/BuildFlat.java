@@ -78,6 +78,11 @@ public class BuildFlat
 			{
 				begin = np_begin;
 			}
+			else
+			{
+				begin.addNext(np_begin);
+			}
+			
 			if(end == null)
 			{
 				end = np_end;
@@ -86,7 +91,7 @@ public class BuildFlat
 			{
 				end.addNext(np_begin);
 				end = np_end;
-			} 
+			}
 		}
 		
 		if (begin == null) 
@@ -289,10 +294,13 @@ public class BuildFlat
 		
 		for(FlatNode flat : TAC.values())
 		{
-			if(flat instanceof FlatMethod)
+			returnString += ((FlatMethod)flat).getMethod().getSymbol() + "()\n{\n";
+			returnString += "\t" + flat.getNext(0).toString() + "\n";
+			for(int i = 0; i < flat.getNext(0).next.size(); i++)
 			{
-				returnString += ((FlatMethod)flat).printMethod() + "\n";
+				returnString += "\t" + flat.getNext(0).next.get(i).toString() + "\n";
 			}
+			returnString += "}\n";
 		}
 		
 		return returnString;
