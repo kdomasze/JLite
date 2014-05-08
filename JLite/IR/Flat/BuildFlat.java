@@ -105,10 +105,15 @@ public class BuildFlat
 	{
 		NodePair np = null;
 		TempDescriptor out = null;
-		
+		System.out.println(SubTree.toString() + "   " + SubTree.getClass());
 		if(SubTree instanceof ExpressionNode)
 		{
 			np = FlattenExpression(SubTree, out, nametable);
+		}
+		else if(SubTree instanceof BlockExpressionNode)
+		{
+			ExpressionNode e = ((BlockExpressionNode)SubTree).getExpression();
+			np = FlattenExpression(e, out, nametable);
 		}
 		else if(SubTree instanceof IfStatementNode)
 		{
@@ -140,7 +145,7 @@ public class BuildFlat
 		
 		if(SubTree instanceof OpNode)
 		{
-			flat = FlattenOpNode(SubTree, out, nametable);
+			flat = FlattenOpNode(SubTree, null, out, nametable);
 		}
 		else if(SubTree instanceof AssignmentNode)
 		{
@@ -198,7 +203,7 @@ public class BuildFlat
 		TAC.put(desc, fn);
 	}
 	
-	public FlatNode FlattenOpNode(TreeNode SubTree, TempDescriptor out, SymbolTable nametable)
+	public FlatNode FlattenOpNode(TreeNode SubTree, AssignmentNode as, TempDescriptor out, SymbolTable nametable)
 	{
 		FlatOpNode flat = null;
 		
@@ -206,9 +211,15 @@ public class BuildFlat
 		TempDescriptor right = null;
 		
 		
-		
-		out = new TempDescriptor("t" + tempDescCount, ((OpNode)SubTree).getType());
-		tempDescCount++;
+		if(as != null)
+		{
+			out = new TempDescriptor(((NameNode)as.getDest()).getName().getSymbol(), ((OpNode)SubTree).getType());
+		}
+		else
+		{
+			out = new TempDescriptor("t" + tempDescCount, ((OpNode)SubTree).getType());
+			tempDescCount++;
+		}
 		Operation op = ((OpNode)SubTree).getOp();
 		
 		NodePair leftNodePair = FlattenExpression(((OpNode)SubTree).getLeft(), left, nametable);
@@ -232,16 +243,14 @@ public class BuildFlat
 			NameNode nn = ((NameNode)as.getSrc());
 			TypeDescriptor type = ((VarDescriptor)nametable.get(nn.getName().getSymbol())).getType();
 			
-			out = new TempDescriptor("t" + tempDescCount, type); // need to get actual type
-			tempDescCount++;
+			out = new TempDescriptor(((NameNode)as.getDest()).getName().getSymbol(), type); // need to get actual type
 			
 			flat = new FlatOpNode(out, new TempDescriptor(nn.getName().getIdentifier(), type), null, new Operation(Operation.ASSIGN));
 		}
 		else if(as.getSrc() instanceof LiteralNode)
 		{
 			
-			out = new TempDescriptor("t" + tempDescCount, new TypeDescriptor(TypeDescriptor.INT));
-			tempDescCount++;
+			out = new TempDescriptor(((NameNode)as.getDest()).getName().getSymbol(), new TypeDescriptor(TypeDescriptor.INT));
 			LiteralNode ln = ((LiteralNode)as.getSrc());
 			flat = new FlatOpNode(out, new TempDescriptor("t" + tempDescCount, new TypeDescriptor(TypeDescriptor.INT), ((Integer)ln.getValue())), null, new Operation(Operation.ASSIGN));
 			tempDescCount++;
@@ -249,7 +258,7 @@ public class BuildFlat
 		else if(as.getSrc() instanceof OpNode)
 		{
 			OpNode on = ((OpNode)as.getSrc());
-			flat = FlattenOpNode((TreeNode)on, out, nametable);
+			flat = FlattenOpNode((TreeNode)on, as, out, nametable);
 		}
 		else
 		{
