@@ -241,7 +241,8 @@ public class BuildFlat
 			{
 				AssignmentNode as = ((AssignmentNode)SubTree);
 				NameNode nn = ((NameNode)as.getDest());
-				TypeDescriptor type = ((VarDescriptor)nametable.get(nn.getName().getSymbol())).getType();
+				//TypeDescriptor type = ((VarDescriptor)nametable.get(nn.getName().getSymbol())).getType();
+				TypeDescriptor type = nn.getType();
 				
 				tmp = new TempDescriptor(nn.getName().getSymbol(), type);
 				op = new Operation(Operation.ASSIGN);
