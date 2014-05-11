@@ -1,7 +1,6 @@
 package IR.Flat;
 
-import java.util.HashMap;
-import java.util.Set;
+import java.util.*;
 
 import IR.*;
 import IR.Tree.*;
@@ -291,6 +290,10 @@ public class BuildFlat
 		{
 			return FlattenCreateObjectNode(SubTree);
 		}
+		else if(as.getSrc() instanceof MethodInvokeNode)
+		{
+			return FlattenMethodInvokeNode(as.getSrc());
+		}
 		else
 		{
 			throw new Error("I can't let you do that, Dave.");
@@ -334,10 +337,22 @@ public class BuildFlat
 		return new NodePair(ffn, ffn, dst);
 	}
 	
-	public NodePair FlattenMethodInvokeNode(TreeNode SubTree)
+	public NodePair FlattenMethodInvokeNode(TreeNode SubTree) // ALMOST DONE. MISSING THIS_TEMP
 	{
-		NodePair np = null;
-		return np;
+		MethodInvokeNode min = (MethodInvokeNode)SubTree;
+		
+		MethodDescriptor md = min.getMethod();
+		TempDescriptor[] argArray = new TempDescriptor[min.getArgVector().size()];
+		
+		for(int i = 0; i < min.getArgVector().size(); i++)
+		{
+			argArray[i] = FlattenExpression(min.getArg(i)).tmp;
+		}
+		
+		TempDescriptor tmp = getTempDescriptor(md.getReturnType());
+		FlatCall fc = new FlatCall(md, tmp, null, argArray); // should not be null. Need to fix.
+		
+		return new NodePair(fc, fc, tmp);
 	}
 	
 	public NodePair FlattenLiteralNode(TreeNode SubTree)
@@ -430,8 +445,8 @@ public class BuildFlat
 				
 				if(f.next.size()==0)
 				{
-					returnString += "}\n";
-					return returnString;
+					returnString += "}\n\n";
+					break;
 				}
 				
 				f = f.next.get(0);
