@@ -148,7 +148,7 @@ public class BuildFlat
 		
 		if(SubTree instanceof OpNode)
 		{
-			np = FlattenOpNode(SubTree);
+			np = FlattenOpNode(SubTree, null);
 		}
 		else if(SubTree instanceof AssignmentNode)
 		{
@@ -168,7 +168,7 @@ public class BuildFlat
 		}
 		else if(SubTree instanceof MethodInvokeNode)
 		{
-			np = FlattenMethodInvokeNode(SubTree);
+			np = FlattenMethodInvokeNode(SubTree, null);
 		}
 		else if(SubTree instanceof LiteralNode)
 		{
@@ -203,7 +203,7 @@ public class BuildFlat
 		TAC.put(desc, fn);
 	}
 	
-	public NodePair FlattenOpNode(TreeNode SubTree)
+	public NodePair FlattenOpNode(TreeNode SubTree, TempDescriptor out)
 	{
 		TempDescriptor tmp = null;
 		Operation op = null;
@@ -217,7 +217,14 @@ public class BuildFlat
 		{
 			if(SubTree instanceof OpNode)
 			{
-				tmp = getTempDescriptor(((OpNode)SubTree).getType());
+				if(out == null)
+				{
+					tmp = getTempDescriptor(((OpNode)SubTree).getType());
+				}
+				else
+				{
+					tmp = out;
+				}
 				op = ((OpNode)SubTree).getOp();
 			}
 			else
@@ -233,7 +240,14 @@ public class BuildFlat
 			if(((AssignmentNode)SubTree).getSrc() instanceof LiteralNode)
 			{
 				AssignmentNode as = ((AssignmentNode)SubTree);
-				tmp = new TempDescriptor(((NameNode)as.getDest()).getName().getSymbol(), (as.getSrc()).getType());
+				if(out == null)
+				{
+					tmp = new TempDescriptor(((NameNode)as.getDest()).getName().getSymbol(), (as.getSrc()).getType());
+				}
+				else
+				{
+					tmp = out;
+				}
 				op = new Operation(Operation.ASSIGN);
 			}
 			else if(((AssignmentNode)SubTree).getSrc() instanceof NameNode)
@@ -241,7 +255,14 @@ public class BuildFlat
 				AssignmentNode as = ((AssignmentNode)SubTree);
 				NameNode nn = ((NameNode)as.getDest());
 				TypeDescriptor type = ((AssignmentNode)SubTree).getSrc().getType();
-				tmp = new TempDescriptor(nn.getName().getSymbol(), type);
+				if(out == null)
+				{
+					tmp = new TempDescriptor(nn.getName().getSymbol(), type);
+				}
+				else
+				{
+					tmp = out;
+				}
 				op = new Operation(Operation.ASSIGN);
 			}
 			else
@@ -272,19 +293,28 @@ public class BuildFlat
 	public NodePair FlattenAssignmentNode(TreeNode SubTree)
 	{
 		AssignmentNode as = ((AssignmentNode)SubTree);
+		TempDescriptor out = null;
+		
+		if(as.getDest() instanceof NameNode)
+		{
+			String name = ((NameNode)as.getDest()).getName().getIdentifier();
+			
+			out = new TempDescriptor(name, as.getSrc().getType());
+		}
+		
 		if(as.getSrc() instanceof NameNode)
 		{			
-			return FlattenOpNode(SubTree);
+			return FlattenOpNode(SubTree, out);
 		}
 		else if(as.getSrc() instanceof LiteralNode)
 		{
-			return FlattenOpNode(SubTree);
+			return FlattenOpNode(SubTree, out);
 		}
 		else if(as.getSrc() instanceof OpNode)
 		{
 			OpNode on = ((OpNode)as.getSrc());
 			
-			return FlattenOpNode((TreeNode)on);
+			return FlattenOpNode((TreeNode)on, out);
 		}
 		else if(as.getSrc() instanceof CreateObjectNode)
 		{
@@ -292,7 +322,7 @@ public class BuildFlat
 		}
 		else if(as.getSrc() instanceof MethodInvokeNode)
 		{
-			return FlattenMethodInvokeNode(as.getSrc());
+			return FlattenMethodInvokeNode(as.getSrc(), out);
 		}
 		else
 		{
@@ -313,11 +343,12 @@ public class BuildFlat
 	public NodePair FlattenReturnNode(TreeNode SubTree)
 	{
 		ExpressionNode e = ((ReturnNode)SubTree).getReturnExpression();
-		TempDescriptor tmp = (FlattenExpression(e)).tmp;
+		NodePair np = FlattenExpression(e);
+		TempDescriptor tmp = np.tmp;
 		
 		FlatReturnNode frn = new FlatReturnNode(tmp);
 		
-		return new NodePair(frn, frn, tmp);
+		return new NodePair(frn, np.begin, tmp);
 	}
 	
 	public NodePair FlattenFieldAccessNode(TreeNode SubTree) // MAYBE WORKING
@@ -337,9 +368,11 @@ public class BuildFlat
 		return new NodePair(ffn, ffn, dst);
 	}
 	
-	public NodePair FlattenMethodInvokeNode(TreeNode SubTree) // ALMOST DONE. MISSING THIS_TEMP
+	public NodePair FlattenMethodInvokeNode(TreeNode SubTree, TempDescriptor out) // ALMOST DONE. MISSING THIS_TEMP
 	{
 		MethodInvokeNode min = (MethodInvokeNode)SubTree;
+		
+		TempDescriptor tmp = null;
 		
 		MethodDescriptor md = min.getMethod();
 		TempDescriptor[] argArray = new TempDescriptor[min.getArgVector().size()];
@@ -349,7 +382,14 @@ public class BuildFlat
 			argArray[i] = FlattenExpression(min.getArg(i)).tmp;
 		}
 		
-		TempDescriptor tmp = getTempDescriptor(md.getReturnType());
+		if(out == null)
+		{
+			tmp = getTempDescriptor(md.getReturnType());
+		}
+		else
+		{
+			tmp = out;
+		}
 		FlatCall fc = new FlatCall(md, tmp, null, argArray); // should not be null. Need to fix.
 		
 		return new NodePair(fc, fc, tmp);
