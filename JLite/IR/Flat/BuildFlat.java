@@ -12,6 +12,7 @@ public class BuildFlat
 	State state;
 	HashMap<Descriptor, FlatNode> TAC = new HashMap();
 	int tempDescCount = 0;
+	int labelCount = 0;
 	
 	public BuildFlat(State s)
 	{
@@ -56,7 +57,6 @@ public class BuildFlat
 	{
 		FlatNode begin = null;
 		FlatNode end = null;
-		
 		
 		for(int i = 0; i<bn.size(); i++)
 		{			
@@ -105,7 +105,7 @@ public class BuildFlat
 	public NodePair flattenBlockStatementNode(TreeNode SubTree)
 	{
 		NodePair np = null;
-
+		
 		if(SubTree instanceof ExpressionNode)
 		{
 			np = FlattenExpression(SubTree);
@@ -117,7 +117,7 @@ public class BuildFlat
 		}
 		else if(SubTree instanceof IfStatementNode)
 		{
-			//np = FlattenIf(SubTree, out);
+			np = FlattenIf(SubTree);
 		}
 		else if(SubTree instanceof LoopNode)
 		{
@@ -130,6 +130,10 @@ public class BuildFlat
 		else if(SubTree instanceof DeclarationNode)
 		{
 			np = FlattenDeclarationNode(SubTree);
+		}
+		else if(SubTree instanceof SubBlockNode)
+		{
+			np = flattenBlockNode(((SubBlockNode) SubTree).getBlockNode());
 		}
 		else
 		{
@@ -349,6 +353,42 @@ public class BuildFlat
 		return new NodePair(fnn, fnn, tmp);
 	}
 	
+	public NodePair FlattenIf(TreeNode SubTree) // NOT WORKING
+	{
+		ExpressionNode condition = ((IfStatementNode)SubTree).getCondition();
+		BlockNode trueStatement = ((IfStatementNode)SubTree).getTrueBlock();
+		BlockNode elseStatement = ((IfStatementNode)SubTree).getFalseBlock();
+		
+		NodePair testFlatCond = FlattenExpression(condition);
+		
+		
+		
+		NodePair trueFlatBlock = flattenBlockNode(trueStatement);
+		NodePair elseFlatBlock = null;
+		
+		if(elseStatement != null)
+		{
+			elseFlatBlock = flattenBlockNode(elseStatement);
+		}
+		else
+		{
+			elseFlatBlock = FlattenNopNode(null);
+		}
+		
+		TempDescriptor tmp = testFlatCond.tmp;
+		
+		FlatCondBranch ifStatement = new FlatCondBranch(tmp);
+		
+		if(elseFlatBlock != null)
+		{
+			return new NodePair(ifStatement.loopEntrance = elseFlatBlock.getBegin(), trueFlatBlock.getBegin(), tmp);
+		}
+		else
+		{
+			return new NodePair(ifStatement.loopEntrance = null, trueFlatBlock.begin, tmp);
+		}
+	}
+	
 	public NodePair FlattenNopNode(TreeNode SubTree)
 	{
 		FlatNop fn = new FlatNop();
@@ -359,6 +399,12 @@ public class BuildFlat
 	{
 		tempDescCount++;
 		return new TempDescriptor("t" + tempDescCount, type);
+	}
+	
+	private String getLabel()
+	{
+		labelCount++;
+		return "Label" + labelCount;
 	}
 	
 	public String toString()
