@@ -159,7 +159,7 @@ public class BuildFlat
 		}
 		else if (SubTree instanceof CreateObjectNode)
 		{
-			np = FlattenCreateObjectNode(SubTree);
+			np = FlattenCreateObjectNode(SubTree, null);
 		}
 		else if (SubTree instanceof FieldAccessNode)
 		{
@@ -330,7 +330,7 @@ public class BuildFlat
 		}
 		else if (as.getSrc() instanceof CreateObjectNode)
 		{
-			return FlattenCreateObjectNode(SubTree);
+			return FlattenCreateObjectNode(SubTree, out);
 		}
 		else if (as.getSrc() instanceof MethodInvokeNode)
 		{
@@ -342,11 +342,20 @@ public class BuildFlat
 		}
 	}
 
-	public NodePair FlattenCreateObjectNode(TreeNode SubTree)
+	public NodePair FlattenCreateObjectNode(TreeNode SubTree, TempDescriptor out)
 	{
 		TypeDescriptor type = ((AssignmentNode) SubTree).getSrc().getType();
-		TempDescriptor tmp = getTempDescriptor(type);
-
+		TempDescriptor tmp = null;
+		
+		if(out == null)
+		{
+			tmp = getTempDescriptor(type);
+		}
+		else
+		{
+			tmp = out;
+		}
+			
 		FlatNew fn = new FlatNew(type, tmp);
 
 		return new NodePair(fn, fn, tmp);
