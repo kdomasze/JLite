@@ -301,12 +301,9 @@ public class BuildFlat
 
 		if (as.getDest() instanceof NameNode)
 		{
-			String name = ((NameNode) as.getDest()).getName().getIdentifier();
+			String name = ((NameNode) as.getDest()).getName().toString();
 
-			if (((NameNode) as.getDest()).getExpression() instanceof FieldAccessNode)
-			{
-				name += "." + ((FieldAccessNode)((NameNode) as.getDest()).getExpression()).getFieldName();
-			}
+			
 			
 			out = new TempDescriptor(name, as.getSrc().getType());
 		}
