@@ -241,9 +241,7 @@ public class BuildFlat
 			{
 				AssignmentNode as = ((AssignmentNode)SubTree);
 				NameNode nn = ((NameNode)as.getDest());
-				//TypeDescriptor type = ((VarDescriptor)nametable.get(nn.getName().getSymbol())).getType();
-				TypeDescriptor type = nn.getType();
-				
+				TypeDescriptor type = ((AssignmentNode)SubTree).getSrc().getType();
 				tmp = new TempDescriptor(nn.getName().getSymbol(), type);
 				op = new Operation(Operation.ASSIGN);
 			}
@@ -319,10 +317,21 @@ public class BuildFlat
 		return new NodePair(frn, frn, tmp);
 	}
 	
-	public NodePair FlattenFieldAccessNode(TreeNode SubTree)
+	public NodePair FlattenFieldAccessNode(TreeNode SubTree) // MAYBE WORKING
 	{
-		NodePair np = null;
-		return np;
+		System.out.println("If you see this, check FlattenFieldAccessNode");
+		
+		FieldAccessNode FieldNode = (FieldAccessNode)SubTree;
+		
+		FieldDescriptor fd = FieldNode.getField();
+		TempDescriptor dst = getTempDescriptor(fd.getType());
+		NodePair np = FlattenExpression(FieldNode.getExpression());
+		
+		TempDescriptor src = np.tmp;
+		
+		FlatFieldNode ffn = new FlatFieldNode(fd, src, dst);
+		
+		return new NodePair(ffn, ffn, dst);
 	}
 	
 	public NodePair FlattenMethodInvokeNode(TreeNode SubTree)
