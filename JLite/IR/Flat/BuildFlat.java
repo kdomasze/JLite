@@ -428,6 +428,8 @@ public class BuildFlat
 		
 		
 		NodePair trueFlatBlock = flattenBlockNode(trueStatement);
+		testFlatCond.end.addNext(trueFlatBlock.begin);
+		
 		NodePair elseFlatBlock = null;
 		
 		if(elseStatement != null)
@@ -438,6 +440,7 @@ public class BuildFlat
 		{
 			elseFlatBlock = FlattenNopNode(null);
 		}
+		trueFlatBlock.end.addNext(elseFlatBlock.begin);
 		
 		TempDescriptor tmp = testFlatCond.tmp;
 		
@@ -445,7 +448,8 @@ public class BuildFlat
 		
 		if(elseFlatBlock != null)
 		{
-			return new NodePair(ifStatement.loopEntrance = elseFlatBlock.getBegin(), trueFlatBlock.getBegin(), tmp);
+			ifStatement.loopEntrance = elseFlatBlock.getBegin();
+			return new NodePair(testFlatCond.begin,elseFlatBlock.getEnd(),  tmp);
 		}
 		else
 		{
