@@ -119,7 +119,7 @@ public class BuildFlat
 		}
 		else if (SubTree instanceof LoopNode)
 		{
-			// np = FlattenLoop(SubTree, out);
+			 np = FlattenLoop(SubTree);
 		}
 		else if (SubTree instanceof ReturnNode)
 		{
@@ -455,7 +455,29 @@ public class BuildFlat
 		return new NodePair(fnn, fnn, tmp);
 	}
 
-	public NodePair FlattenIf(TreeNode SubTree) // NOT WORKING
+	public NodePair FlattenLoop(TreeNode SubTree)
+	{
+		ExpressionNode condition = ((LoopNode) SubTree).getCondition();
+		BlockNode loopBody = ((LoopNode) SubTree).getBody();
+		
+		NodePair testFlatCond = FlattenExpression(condition);
+		
+		NodePair FlatLoopBody = flattenBlockNode(loopBody);
+		FlatLabel L1 = new FlatLabel(labelCount++); 
+		GoFlatLabel L2 = new GoFlatLabel("ifZ "+ ((FlatOpNode)(testFlatCond.end)).dest.getSymbol() + " Goto L", labelCount++);
+		
+		L1.addNext(testFlatCond.begin);
+		testFlatCond.end.addNext(L2);
+		L2.addNext(FlatLoopBody.begin);
+		GoFlatLabel L3 = new GoFlatLabel("Goto L", L1.numL);
+		FlatLoopBody.end.addNext(L3);
+		FlatLabel L4 = new FlatLabel(L2.numL);
+		L3.addNext(L4);
+		
+		return new NodePair(L1,L4);
+	}
+	
+	public NodePair FlattenIf(TreeNode SubTree) 
 	{
 		ExpressionNode condition = ((IfStatementNode) SubTree).getCondition();
 		BlockNode trueStatement = ((IfStatementNode) SubTree).getTrueBlock();
