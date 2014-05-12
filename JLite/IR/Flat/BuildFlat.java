@@ -487,7 +487,7 @@ public class BuildFlat
 		
 		NodePair FlatLoopBody = flattenBlockNode(loopBody);
 		FlatLabel L1 = new FlatLabel(labelCount++); 
-		GoFlatLabel L2 = new GoFlatLabel("ifZ "+ ((FlatOpNode)(testFlatCond.end)).dest.getSymbol() + " Goto L", labelCount++);
+		GoFlatLabel L2 = new GoFlatLabel("FlatCondBranch_if(!"+ ((FlatOpNode)(testFlatCond.end)).dest.getSymbol() + ") Goto L", labelCount++);
 		
 		L1.addNext(testFlatCond.begin);
 		testFlatCond.end.addNext(L2);
@@ -510,7 +510,7 @@ public class BuildFlat
 
 		NodePair trueFlatBlock = flattenBlockNode(trueStatement);
 		
-		GoFlatLabel L1 = new GoFlatLabel("ifZ "+ ((FlatOpNode)(testFlatCond.end)).dest.getSymbol() +  " Goto L", labelCount++);
+		GoFlatLabel L1 = new GoFlatLabel("FlatCondBranch_if(!"+ ((FlatOpNode)(testFlatCond.end)).dest.getSymbol() +  ") Goto L", labelCount++);
 		
 		testFlatCond.end.addNext(L1);
 		L1.addNext(trueFlatBlock.begin);
