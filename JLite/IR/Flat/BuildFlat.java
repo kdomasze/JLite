@@ -481,8 +481,11 @@ public class BuildFlat
 		NodePair testFlatCond = FlattenExpression(condition);
 
 		NodePair trueFlatBlock = flattenBlockNode(trueStatement);
-		testFlatCond.end.addNext(trueFlatBlock.begin);
-
+		
+		GoFlatLabel L1 = new GoFlatLabel("ifZ "+ ((FlatOpNode)(testFlatCond.end)).dest.getSymbol() +  " Goto L", labelCount++);
+		
+		testFlatCond.end.addNext(L1);
+		L1.addNext(trueFlatBlock.begin);
 		NodePair elseFlatBlock = null;
 
 		if (elseStatement != null)
@@ -493,8 +496,14 @@ public class BuildFlat
 		{
 			elseFlatBlock = FlattenNopNode(null);
 		}
-		trueFlatBlock.end.addNext(elseFlatBlock.begin);
-
+		
+		GoFlatLabel L2 = new GoFlatLabel("Goto L", labelCount++);
+		trueFlatBlock.end.addNext(L2);
+		FlatLabel L3 = new FlatLabel(L1.numL);
+		L2.addNext(L3);
+		L3.addNext(elseFlatBlock.begin);
+		FlatLabel L4 = new FlatLabel(L2.numL);
+		elseFlatBlock.end.addNext(L4);
 		TempDescriptor tmp = testFlatCond.tmp;
 
 		FlatCondBranch ifStatement = new FlatCondBranch(tmp);
@@ -502,7 +511,7 @@ public class BuildFlat
 		if (elseFlatBlock != null)
 		{
 			ifStatement.loopEntrance = elseFlatBlock.getBegin();
-			return new NodePair(testFlatCond.begin, elseFlatBlock.getEnd(), tmp);
+			return new NodePair(testFlatCond.begin, L4, tmp);
 		}
 		else
 		{
