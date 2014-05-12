@@ -16,7 +16,7 @@ public class BuildFlat
 	{
 		state = s;
 	}
-
+	
 	public void flatten()
 	{
 		// grab symbol table of all classes
@@ -427,21 +427,22 @@ public class BuildFlat
 		TempDescriptor tmp = null;
 
 		MethodDescriptor md = min.getMethod();
-		TempDescriptor[] argArray = new TempDescriptor[min.getArgVector()
-				.size()];
+		
+			TempDescriptor[] argArray = new TempDescriptor[min.getArgVector().size()];
+		
 
 		for (int i = 0; i < min.getArgVector().size(); i++)
 		{
 			argArray[i] = FlattenExpression(min.getArg(i)).tmp;
 		}
 
-		if (out == null)
+		if ((md.getReturnType().getSymbol().equals("void")))
 		{
-			tmp = getTempDescriptor(md.getReturnType());
+			tmp = null;
 		}
 		else
 		{
-			tmp = out;
+			tmp = getTempDescriptor(md.getReturnType());
 		}
 		FlatCall fc = new FlatCall(md, tmp, null, argArray); // should not be
 																// null. Need to
