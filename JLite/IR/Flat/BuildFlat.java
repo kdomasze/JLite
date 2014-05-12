@@ -385,8 +385,8 @@ public class BuildFlat
 		TempDescriptor tmp = np.tmp;
 
 		FlatReturnNode frn = new FlatReturnNode(tmp);
-
-		return new NodePair(frn, np.begin, tmp);
+		np.end.addNext(frn);
+		return new NodePair(np.begin,frn,  tmp);
 	}
 
 	public NodePair FlattenFieldAccessNode(TreeNode SubTree, TempDescriptor out)
