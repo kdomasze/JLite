@@ -336,10 +336,27 @@ public class BuildFlat
 		{
 			return FlattenMethodInvokeNode(as.getSrc(), out);
 		}
+		else if (as.getSrc() instanceof CastNode)
+		{
+			return FlattenCastNode(as.getSrc(), as.getDest());
+		}
 		else
 		{
 			throw new Error("I can't let you do that, Dave.");
 		}
+	}
+	
+	public NodePair FlattenCastNode(TreeNode SubTree, TreeNode SubTree2)
+	{
+		TypeDescriptor type = ((CastNode) SubTree).getType();
+		NodePair np = FlattenExpression(((CastNode)SubTree).getExpression());
+		
+		TempDescriptor src = np.tmp;
+		TempDescriptor dest = new TempDescriptor(((NameNode)SubTree2).getName().getIdentifier(), type);
+		
+		FlatCastNode fcn = new FlatCastNode(type, src, dest);
+		
+		return new NodePair(fcn, fcn);
 	}
 
 	public NodePair FlattenCreateObjectNode(TreeNode SubTree, TempDescriptor out)
