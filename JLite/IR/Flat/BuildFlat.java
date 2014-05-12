@@ -465,7 +465,7 @@ public class BuildFlat
 
 		NodePair trueFlatBlock = flattenBlockNode(trueStatement);
 		
-		GoFlatLabel L1 = new GoFlatLabel("ifZ "+ ((FlatOpNode)(testFlatCond.end)).left.getSymbol() +  " Goto L", labelCount++);
+		GoFlatLabel L1 = new GoFlatLabel("ifZ "+ ((FlatOpNode)(testFlatCond.end)).dest.getSymbol() +  " Goto L", labelCount++);
 		
 		testFlatCond.end.addNext(L1);
 		L1.addNext(trueFlatBlock.begin);
