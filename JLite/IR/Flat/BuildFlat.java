@@ -574,7 +574,7 @@ public class BuildFlat
 		{
 			
 			MethodDescriptor fm = ((FlatMethod) flat).getMethod();
-			returnString += "."+ fm.getSymbol() + "(";
+			returnString += fm.getClassDesc().getClassName() + "." + fm.getSymbol() + "(";
 			for (int i = 0; i < fm.numParameters(); i++)
 			{
 				returnString += fm.getParameter(i);
