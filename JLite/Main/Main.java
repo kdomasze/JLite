@@ -40,6 +40,7 @@ public class Main
 				System.out.println("-dump -- dump Parse Tree");
 				System.out
 						.println("-mainclass -- this class cointains the main method");
+				System.out.println("Sample run command: \"-dump test/fact.java System.java -mainclass fact\"");
 				System.exit(0);
 			}
 			else if (option.equals("-dump"))
