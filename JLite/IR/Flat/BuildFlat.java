@@ -16,7 +16,7 @@ public class BuildFlat
 	{
 		state = s;
 	}
-	
+
 	public void flatten()
 	{
 		// grab symbol table of all classes
@@ -29,6 +29,21 @@ public class BuildFlat
 			if (Class.getClassName().equals("System") == true)
 			{
 				continue;
+			}
+
+			// grab symbol table all fields in Class
+			SymbolTable fields = Class.getFieldTable();
+			Set<FieldDescriptor> fieldset = fields.getAllValueSet();
+			int c = 0;
+			FlatNode fntmp = null;
+			for (FieldDescriptor Field : fieldset)
+			{
+				TempDescriptor tmp = new TempDescriptor(Field.getSymbol(),
+						Field.getType());
+				FlatFieldNode ffn = new FlatFieldNode(Field, tmp, tmp);
+
+				Store(Field, ffn);
+				fntmp = ffn;
 			}
 
 			// grab symbol table for all methods in Class
@@ -124,7 +139,7 @@ public class BuildFlat
 		}
 		else if (SubTree instanceof LoopNode)
 		{
-			 np = FlattenLoop(SubTree);
+			np = FlattenLoop(SubTree);
 		}
 		else if (SubTree instanceof ReturnNode)
 		{
@@ -308,8 +323,6 @@ public class BuildFlat
 		{
 			String name = ((NameNode) as.getDest()).getName().toString();
 
-			
-			
 			out = new TempDescriptor(name, as.getSrc().getType());
 		}
 
@@ -350,17 +363,18 @@ public class BuildFlat
 			throw new Error("I can't let you do that, Dave.");
 		}
 	}
-	
+
 	public NodePair FlattenCastNode(TreeNode SubTree, TreeNode SubTree2)
 	{
 		TypeDescriptor type = ((CastNode) SubTree).getType();
-		NodePair np = FlattenExpression(((CastNode)SubTree).getExpression());
-		
+		NodePair np = FlattenExpression(((CastNode) SubTree).getExpression());
+
 		TempDescriptor src = np.tmp;
-		TempDescriptor dest = new TempDescriptor(((NameNode)SubTree2).getName().getIdentifier(), type);
-		
+		TempDescriptor dest = new TempDescriptor(((NameNode) SubTree2)
+				.getName().getIdentifier(), type);
+
 		FlatCastNode fcn = new FlatCastNode(type, src, dest);
-		
+
 		return new NodePair(fcn, fcn);
 	}
 
@@ -368,8 +382,8 @@ public class BuildFlat
 	{
 		TypeDescriptor type = ((AssignmentNode) SubTree).getSrc().getType();
 		TempDescriptor tmp = null;
-		
-		if(out == null)
+
+		if (out == null)
 		{
 			tmp = getTempDescriptor(type);
 		}
@@ -377,7 +391,7 @@ public class BuildFlat
 		{
 			tmp = out;
 		}
-			
+
 		FlatNew fn = new FlatNew(type, tmp);
 
 		return new NodePair(fn, fn, tmp);
@@ -391,7 +405,7 @@ public class BuildFlat
 
 		FlatReturnNode frn = new FlatReturnNode(tmp);
 		np.end.addNext(frn);
-		return new NodePair(np.begin,frn,  tmp);
+		return new NodePair(np.begin, frn, tmp);
 	}
 
 	public NodePair FlattenFieldAccessNode(TreeNode SubTree, TempDescriptor out)
@@ -432,9 +446,9 @@ public class BuildFlat
 		TempDescriptor tmp = null;
 
 		MethodDescriptor md = min.getMethod();
-		
-			TempDescriptor[] argArray = new TempDescriptor[min.getArgVector().size()];
-		
+
+		TempDescriptor[] argArray = new TempDescriptor[min.getArgVector()
+				.size()];
 
 		for (int i = 0; i < min.getArgVector().size(); i++)
 		{
@@ -482,13 +496,15 @@ public class BuildFlat
 	{
 		ExpressionNode condition = ((LoopNode) SubTree).getCondition();
 		BlockNode loopBody = ((LoopNode) SubTree).getBody();
-		
+
 		NodePair testFlatCond = FlattenExpression(condition);
-		
+
 		NodePair FlatLoopBody = flattenBlockNode(loopBody);
-		FlatLabel L1 = new FlatLabel(labelCount++); 
-		GoFlatLabel L2 = new GoFlatLabel("ifZ "+ ((FlatOpNode)(testFlatCond.end)).dest.getSymbol() + " Goto L", labelCount++);
-		
+		FlatLabel L1 = new FlatLabel(labelCount++);
+		GoFlatLabel L2 = new GoFlatLabel("ifZ "
+				+ ((FlatOpNode) (testFlatCond.end)).dest.getSymbol()
+				+ " Goto L", labelCount++);
+
 		L1.addNext(testFlatCond.begin);
 		testFlatCond.end.addNext(L2);
 		L2.addNext(FlatLoopBody.begin);
@@ -496,11 +512,11 @@ public class BuildFlat
 		FlatLoopBody.end.addNext(L3);
 		FlatLabel L4 = new FlatLabel(L2.numL);
 		L3.addNext(L4);
-		
-		return new NodePair(L1,L4);
+
+		return new NodePair(L1, L4);
 	}
-	
-	public NodePair FlattenIf(TreeNode SubTree) 
+
+	public NodePair FlattenIf(TreeNode SubTree)
 	{
 		ExpressionNode condition = ((IfStatementNode) SubTree).getCondition();
 		BlockNode trueStatement = ((IfStatementNode) SubTree).getTrueBlock();
@@ -509,9 +525,11 @@ public class BuildFlat
 		NodePair testFlatCond = FlattenExpression(condition);
 
 		NodePair trueFlatBlock = flattenBlockNode(trueStatement);
-		
-		GoFlatLabel L1 = new GoFlatLabel("ifZ "+ ((FlatOpNode)(testFlatCond.end)).dest.getSymbol() +  " Goto L", labelCount++);
-		
+
+		GoFlatLabel L1 = new GoFlatLabel("ifZ "
+				+ ((FlatOpNode) (testFlatCond.end)).dest.getSymbol()
+				+ " Goto L", labelCount++);
+
 		testFlatCond.end.addNext(L1);
 		L1.addNext(trueFlatBlock.begin);
 		NodePair elseFlatBlock = null;
@@ -524,7 +542,7 @@ public class BuildFlat
 		{
 			elseFlatBlock = FlattenNopNode(null);
 		}
-		
+
 		GoFlatLabel L2 = new GoFlatLabel("Goto L", labelCount++);
 		trueFlatBlock.end.addNext(L2);
 		FlatLabel L3 = new FlatLabel(L1.numL);
@@ -573,30 +591,38 @@ public class BuildFlat
 		for (FlatNode flat : TAC.values())
 		{
 			
-			MethodDescriptor fm = ((FlatMethod) flat).getMethod();
-			returnString += fm.getClassDesc().getClassName() + "." + fm.getSymbol() + "(";
-			for (int i = 0; i < fm.numParameters(); i++)
-			{
-				returnString += fm.getParameter(i);
-				if (fm.numParameters() == i+1)
-				{
-					continue;
-				}
-				returnString += ", ";
+			if (flat instanceof FlatFieldNode)
+			{			
+				returnString += "FlatFieldNode_"+((FlatFieldNode) flat).dst.toString() + "\n";
 			}
-			returnString += ")\n{\n";
-			FlatNode f = flat.getNext(0);
-			while (true)
+			else if (flat instanceof FlatMethod)
 			{
-				returnString += "\t" + f.toString() + "\n";
-
-				if (f.next.size() == 0)
+				MethodDescriptor fm = ((FlatMethod) flat).getMethod();
+			
+				returnString += fm.getClassDesc().getClassName() + "." + fm.getSymbol() + "(";
+				for (int i = 0; i < fm.numParameters(); i++)
 				{
-					returnString += "}\n\n";
-					break;
+					returnString += fm.getParameter(i);
+					if (fm.numParameters() == i + 1)
+					{
+						continue;
+					}
+					returnString += ", ";
 				}
-
-				f = f.next.get(0);
+				returnString += ")\n{\n";
+				FlatNode f = flat.getNext(0);
+				while (true)
+				{
+					returnString += "\t" + f.toString() + "\n";
+	
+					if (f.next.size() == 0)
+					{
+						returnString += "}\n\n";
+						break;
+					}
+	
+					f = f.next.get(0);
+				}
 			}
 		}
 
