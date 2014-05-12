@@ -26,6 +26,11 @@ public class BuildFlat
 		// iterate over classes
 		for (ClassDescriptor Class : classSet)
 		{
+			if (Class.getClassName().equals("System") == true)
+			{
+				continue;
+			}
+
 			// grab symbol table for all methods in Class
 			SymbolTable methods = Class.getMethodTable();
 			Set<MethodDescriptor> methodSet = methods.getAllValueSet();
@@ -567,8 +572,19 @@ public class BuildFlat
 
 		for (FlatNode flat : TAC.values())
 		{
-			returnString += ((FlatMethod) flat).getMethod().getSymbol()
-					+ "()\n{\n";
+			
+			MethodDescriptor fm = ((FlatMethod) flat).getMethod();
+			returnString += "."+ fm.getSymbol() + "(";
+			for (int i = 0; i < fm.numParameters(); i++)
+			{
+				returnString += fm.getParameter(i);
+				if (fm.numParameters() == i+1)
+				{
+					continue;
+				}
+				returnString += ", ";
+			}
+			returnString += ")\n{\n";
 			FlatNode f = flat.getNext(0);
 			while (true)
 			{
