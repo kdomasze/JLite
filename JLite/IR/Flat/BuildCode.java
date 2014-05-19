@@ -86,6 +86,7 @@ public class BuildCode
 
 		/* Output Structures */
 		generateClassDefs();
+		generateVMT();
 		// Output the C class declarations
 		// These could mutually reference each other
 
@@ -201,6 +202,65 @@ public class BuildCode
 		structDefsPW.printf("#ifndef STRUCTDEFS_H\n#define STRUCTDEFS_H\n#include \"classdefs.h\"\n#define NUMCLASSES " + count + "\n#endif");
 	
 		structDefsPW.close();
+	}
+	
+	private void generateVMT()
+	{
+		int numClasses = 0;
+		int numMethods = 0;
+		int maxMethods = 0;
+		for(Descriptor key : TACParent.keySet())
+		{
+			numClasses ++;
+			numMethods = 0;
+			for(Descriptor desc : TACParent.get(key))
+			{
+				FlatNode flat = TAC.get(desc);
+				if(flat instanceof FlatMethod)
+				{
+					numMethods ++;
+				}
+			}
+			if(maxMethods < numMethods)
+			{
+				maxMethods = numMethods;
+			}
+		}
+		//System.out.println("numClasses = " + numClasses + "  maxMethods = " + maxMethods);
+		
+		String vmtString = "void * vitualtable[]={";
+		int counter = 0;
+		for(Descriptor key : TACParent.keySet())
+		{
+			numMethods = 0;
+			for(Descriptor desc : TACParent.get(key))
+			{
+				FlatNode flat = TAC.get(desc);
+				if(flat instanceof FlatMethod)
+				{	
+					FlatMethod fm = (FlatMethod) flat;
+					vmtString += " &_" + fm.getMethod().getClassDesc().getSymbol() + "_" + fm.method.getSymbol();
+					numMethods +=1;
+					if(counter < maxMethods * numClasses -1)
+					{
+						vmtString +=",";
+						counter ++;
+					}
+				}
+			}
+			while (numMethods < maxMethods)
+			{
+				vmtString +=" 0";
+				if(counter < maxMethods * numClasses -1)
+				{
+					vmtString +=",";
+					counter ++;
+				}
+				numMethods++;
+			}
+		}
+		vmtString += "}";
+		System.out.println(vmtString);
 	}
 
 	// /** Example code to generate code for FlatMethod fm. */
