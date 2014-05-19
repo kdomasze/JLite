@@ -27,7 +27,7 @@ public class Main
 		boolean dumpnodes = false;
 		BuildIR bir = new BuildIR(state);
 		BuildFlat bflat = new BuildFlat(state);
-		BuildCode build = new BuildCode();
+		BuildCode build;
 		TypeUtil typeutil = new TypeUtil(state, bir);
 		SemanticCheck check = new SemanticCheck(state, typeutil);
 
@@ -92,6 +92,7 @@ public class Main
 		/* End build TAC */
 		
 		/* Start BuildCode */
+		build = new BuildCode(bflat.TACParent, bflat.TAC);
 		build.buildCode();
 	}
 

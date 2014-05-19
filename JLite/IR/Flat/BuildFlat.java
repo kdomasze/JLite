@@ -8,8 +8,8 @@ import IR.Tree.*;
 public class BuildFlat
 {
 	State state;
-	HashMap<Descriptor, FlatNode> TAC = new HashMap();
-	HashMap<Descriptor, Vector<Descriptor>> TACParent = new HashMap();
+	public HashMap<Descriptor, FlatNode> TAC = new HashMap();
+	public HashMap<Descriptor, Vector<Descriptor>> TACParent = new HashMap();
 	int tempDescCount = 0;
 	int labelCount = 0;
 

@@ -7,13 +7,76 @@ import java.io.*;
 
 public class BuildCode
 {
+	HashMap<Descriptor, Vector<Descriptor>> TACParent;
+	public HashMap<Descriptor, FlatNode> TAC;
 
-	public BuildCode(/* Needed parameters */)
+	public BuildCode(HashMap<Descriptor, Vector<Descriptor>> tacp, HashMap<Descriptor, FlatNode> tac)
 	{
+		TACParent = tacp;
+		TAC = tac;
 	}
 
 	public void buildCode()
 	{
+		for (Vector<Descriptor> descriptorVector : TACParent.values())
+		{
+			
+			if(descriptorVector.get(0) instanceof FieldDescriptor)
+			{
+				// Fields Desc
+			}
+			else if(descriptorVector.get(0) instanceof MethodDescriptor)
+			{
+				// Methods Desc
+			}
+			
+			for(Descriptor desc : descriptorVector)
+			{
+				FlatNode flat = TAC.get(desc);
+				
+				if (flat instanceof FlatFieldNode)
+				{			
+					// Field Nodes
+				}
+				else if (flat instanceof FlatMethod)
+				{
+					MethodDescriptor fm = ((FlatMethod) flat).getMethod();
+				
+					for (int i = 0; i < fm.numParameters(); i++)
+					{
+						if (fm.numParameters() == i + 1)
+						{
+							continue;
+						}
+					}
+
+					FlatNode f = flat.getNext(0);
+					while (true)
+					{
+		
+						if (f.next.size() == 0)
+						{
+							break;
+						}
+		
+						f = f.next.get(0);
+					}
+				}
+			}
+		}
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
 		/* Create output streams to write to */
 		/* Refer to PrintWriter Class in JAVA LIB */
 		File file = new File("test.txt");
@@ -38,13 +101,12 @@ public class BuildCode
 			e.printStackTrace();
 			throw new Error("This is how the world ends.");
 		}
-		
 		/* Build the virtual dispatch tables */
 
 		/* Output includes */
 
 		/* Output Structures */
-
+		
 		// Output the C class declarations
 		// These could mutually reference each other
 
@@ -56,6 +118,70 @@ public class BuildCode
 
 		/* Close files */
 		pw.close();
+	}
+	
+	private void generateClassDefs()
+	{
+		/* Create output streams to write to */
+		/* Refer to PrintWriter Class in JAVA LIB */
+		File classDefs = new File("classdefs.h");
+		PrintWriter classDefsPW;
+		
+		try
+		{
+			classDefs.createNewFile();
+		}
+		catch (IOException e1)
+		{
+			e1.printStackTrace();
+			throw new Error("It's Oracle's fault.");
+		}
+
+		try
+		{
+			classDefsPW = new PrintWriter(classDefs);
+		}
+		catch (FileNotFoundException e)
+		{
+			e.printStackTrace();
+			throw new Error("This is how the world ends.");
+		}
+		
+		/* Output Structures */
+		
+		
+		// Output the C class declarations
+		// These could mutually reference each other
+	}
+	
+	private void generateStructDefs(int count)
+	{
+		File structDefs = new File("structdefs.h");
+		PrintWriter structDefsPW;
+		
+		try
+		{
+			structDefs.createNewFile();
+		}
+		catch (IOException e1)
+		{
+			e1.printStackTrace();
+			throw new Error("It's Oracle's fault.");
+		}
+
+		try
+		{
+			structDefsPW = new PrintWriter(structDefs);
+		}
+		catch (FileNotFoundException e)
+		{
+			e.printStackTrace();
+			throw new Error("This is how the world ends.");
+		}
+		
+		structDefsPW.printf("#ifndef STRUCTDEFS_H\n#define STRUCTDEFS_H\n#include \"classdefs.h\"\n#define NUMCLASSES " + count + "\n#endif");
+	
+		structDefsPW.close();
 	}
 
 	// /** Example code to generate code for FlatMethod fm. */
