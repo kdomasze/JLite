@@ -18,52 +18,52 @@ public class BuildCode
 
 	public void buildCode()
 	{
-		for (Vector<Descriptor> descriptorVector : TACParent.values())
-		{
-			
-			if(descriptorVector.get(0) instanceof FieldDescriptor)
-			{
-				// Fields Desc
-			}
-			else if(descriptorVector.get(0) instanceof MethodDescriptor)
-			{
-				// Methods Desc
-			}
-			
-			for(Descriptor desc : descriptorVector)
-			{
-				FlatNode flat = TAC.get(desc);
-				
-				if (flat instanceof FlatFieldNode)
-				{			
-					// Field Nodes
-				}
-				else if (flat instanceof FlatMethod)
-				{
-					MethodDescriptor fm = ((FlatMethod) flat).getMethod();
-				
-					for (int i = 0; i < fm.numParameters(); i++)
-					{
-						if (fm.numParameters() == i + 1)
-						{
-							continue;
-						}
-					}
-
-					FlatNode f = flat.getNext(0);
-					while (true)
-					{
-		
-						if (f.next.size() == 0)
-						{
-							break;
-						}
-		
-						f = f.next.get(0);
-					}
-				}
-			}
-		}
+//		for (Vector<Descriptor> descriptorVector : TACParent.values())
+//		{
+//			
+//			if(descriptorVector.get(0) instanceof FieldDescriptor)
+//			{
+//				// Fields Desc
+//			}
+//			else if(descriptorVector.get(0) instanceof MethodDescriptor)
+//			{
+//				// Methods Desc
+//			}
+//			
+//			for(Descriptor desc : descriptorVector)
+//			{
+//				FlatNode flat = TAC.get(desc);
+//				
+//				if (flat instanceof FlatFieldNode)
+//				{			
+//					// Field Nodes
+//				}
+//				else if (flat instanceof FlatMethod)
+//				{
+//					MethodDescriptor fm = ((FlatMethod) flat).getMethod();
+//				
+//					for (int i = 0; i < fm.numParameters(); i++)
+//					{
+//						if (fm.numParameters() == i + 1)
+//						{
+//							continue;
+//						}
+//					}
+//
+//					FlatNode f = flat.getNext(0);
+//					while (true)
+//					{
+//		
+//						if (f.next.size() == 0)
+//						{
+//							break;
+//						}
+//		
+//						f = f.next.get(0);
+//					}
+//				}
+//			}
+//		}
 		
 		
 		
@@ -79,34 +79,13 @@ public class BuildCode
 		
 		/* Create output streams to write to */
 		/* Refer to PrintWriter Class in JAVA LIB */
-		File file = new File("test.txt");
-		PrintWriter pw;
-
-		try
-		{
-			file.createNewFile();
-		}
-		catch (IOException e1)
-		{
-			e1.printStackTrace();
-			throw new Error("It's Oracle's fault.");
-		}
-
-		try
-		{
-			pw = new PrintWriter(file);
-		}
-		catch (FileNotFoundException e)
-		{
-			e.printStackTrace();
-			throw new Error("This is how the world ends.");
-		}
+		
 		/* Build the virtual dispatch tables */
 
 		/* Output includes */
 
 		/* Output Structures */
-		
+		generateClassDefs();
 		// Output the C class declarations
 		// These could mutually reference each other
 
@@ -117,7 +96,6 @@ public class BuildCode
 		/* Generate main method */
 
 		/* Close files */
-		pw.close();
 	}
 	
 	private void generateClassDefs()
@@ -126,6 +104,8 @@ public class BuildCode
 		/* Refer to PrintWriter Class in JAVA LIB */
 		File classDefs = new File("classdefs.h");
 		PrintWriter classDefsPW;
+		
+		int count = 0;
 		
 		try
 		{
@@ -152,6 +132,45 @@ public class BuildCode
 		
 		// Output the C class declarations
 		// These could mutually reference each other
+		
+		classDefsPW.append("extern int classsize[];\n");
+		classDefsPW.append("extern int supertypes[];\n\n");
+		
+		for (Descriptor key : TACParent.keySet())
+		{
+			classDefsPW.append("struct " + key.getSymbol());
+			
+			classDefsPW.append("\n{\n");
+			
+			classDefsPW.append("\tint type;\n");
+			
+			for(Descriptor desc : TACParent.get(key))
+			{
+				FlatNode flat = TAC.get(desc);
+				
+				if (flat instanceof FlatFieldNode)
+				{			
+					// Field Nodes
+					FlatFieldNode ffn = (FlatFieldNode)flat;
+					
+					if(ffn.dst.getType().getSymbol() == "int")
+					{
+						classDefsPW.append("\t" + ffn.dst.getType().getSymbol() + " " + ffn.dst.getSymbol() + ";\n");
+					}
+					else
+					{
+						classDefsPW.append("\tstruct " + ffn.dst.getType().getSymbol() + " *" + ffn.dst.getSymbol() + ";\n");
+					}
+				}
+			}
+
+			classDefsPW.append("};\n\n");
+			count++;
+		}
+		
+		classDefsPW.close();
+		
+		generateStructDefs(count);
 	}
 	
 	private void generateStructDefs(int count)
