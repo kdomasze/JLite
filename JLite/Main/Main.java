@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.Vector;
 
 import IR.*;
+import IR.Flat.BuildCode;
 import IR.Flat.BuildFlat;
 import IR.Tree.*;
 import Parse.*;
@@ -26,6 +27,7 @@ public class Main
 		boolean dumpnodes = false;
 		BuildIR bir = new BuildIR(state);
 		BuildFlat bflat = new BuildFlat(state);
+		BuildCode build = new BuildCode();
 		TypeUtil typeutil = new TypeUtil(state, bir);
 		SemanticCheck check = new SemanticCheck(state, typeutil);
 
@@ -88,6 +90,9 @@ public class Main
 		bflat.flatten();
 		System.out.println(bflat);
 		/* End build TAC */
+		
+		/* Start BuildCode */
+		build.buildCode();
 	}
 
 	/** Reads in a source file and returns the parse tree. */
