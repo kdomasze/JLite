@@ -228,7 +228,7 @@ public class BuildCode
 		}
 		//System.out.println("numClasses = " + numClasses + "  maxMethods = " + maxMethods);
 		
-		String vmtString = "void * vitualtable[]={";
+		String vmtString = "void * virtualtable[]={";
 		int counter = 0;
 		for(Descriptor key : TACParent.keySet())
 		{
@@ -246,6 +246,10 @@ public class BuildCode
 						vmtString +=",";
 						counter ++;
 					}
+					if(counter%5 == 0)
+					{
+						vmtString +="\n\t";
+					}
 				}
 			}
 			while (numMethods < maxMethods)
@@ -260,7 +264,29 @@ public class BuildCode
 			}
 		}
 		vmtString += "}";
-		System.out.println(vmtString);
+		//System.out.println(vmtString);
+		File virtualTable = new File("virtualtable.h");
+		PrintWriter virtualTablePW;
+		try
+		{
+			virtualTable.createNewFile();
+		}
+		catch(IOException e1)
+		{
+			e1.printStackTrace();
+			throw new Error("The table is fubar");
+		}
+		try
+		{
+			virtualTablePW = new PrintWriter(virtualTable);
+		}
+		catch(FileNotFoundException e2)
+		{
+			e2.printStackTrace();
+			throw new Error("It was not Christian's fault!!!");
+		}
+		virtualTablePW.append(vmtString);
+		virtualTablePW.close();
 	}
 
 	// /** Example code to generate code for FlatMethod fm. */
