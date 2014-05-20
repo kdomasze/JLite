@@ -80,6 +80,7 @@ public class BuildCode
 
 		/* Output Structures */
 		generateClassDefs();
+		generateVMT();
 		// Output the C class declarations
 		// These could mutually reference each other
 
@@ -545,6 +546,91 @@ public class BuildCode
 		}
 		
 		return returnString + "\n";
+	}
+	
+	private void generateVMT()
+	{
+		int numClasses = 0;
+		int numMethods = 0;
+		int maxMethods = 0;
+		for(Descriptor key : TACParent.keySet())
+		{
+			numClasses ++;
+			numMethods = 0;
+			for(Descriptor desc : TACParent.get(key))
+			{
+				FlatNode flat = TAC.get(desc);
+				if(flat instanceof FlatMethod)
+				{
+					numMethods ++;
+				}
+			}
+			if(maxMethods < numMethods)
+			{
+				maxMethods = numMethods;
+			}
+		}
+		//System.out.println("numClasses = " + numClasses + "  maxMethods = " + maxMethods);
+		
+		String vmtString = "void * virtualtable[]={";
+		int counter = 0;
+		for(Descriptor key : TACParent.keySet())
+		{
+			numMethods = 0;
+			for(Descriptor desc : TACParent.get(key))
+			{
+				FlatNode flat = TAC.get(desc);
+				if(flat instanceof FlatMethod)
+				{	
+					FlatMethod fm = (FlatMethod) flat;
+					vmtString += " &_" + fm.getMethod().getClassDesc().getSymbol() + "_" + fm.method.getSymbol();
+					numMethods +=1;
+					if(counter < maxMethods * numClasses -1)
+					{
+						vmtString +=",";
+						counter ++;
+					}
+					if(counter%5 == 0)
+					{
+						vmtString +="\n\t";
+					}
+				}
+			}
+			while (numMethods < maxMethods)
+			{
+				vmtString +=" 0";
+				if(counter < maxMethods * numClasses -1)
+				{
+					vmtString +=",";
+					counter ++;
+				}
+				numMethods++;
+			}
+		}
+		vmtString += "}";
+		//System.out.println(vmtString);
+		File virtualTable = new File("virtualtable.h");
+		PrintWriter virtualTablePW;
+		try
+		{
+			virtualTable.createNewFile();
+		}
+		catch(IOException e1)
+		{
+			e1.printStackTrace();
+			throw new Error("The table is fubar");
+		}
+		try
+		{
+			virtualTablePW = new PrintWriter(virtualTable);
+		}
+		catch(FileNotFoundException e2)
+		{
+			e2.printStackTrace();
+			throw new Error("It was not Christian's fault!!!");
+		}
+		virtualTablePW.append(vmtString);
+		virtualTablePW.close();
 	}
 
 	// /** Example code to generate code for FlatMethod fm. */
