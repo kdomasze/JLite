@@ -33,7 +33,7 @@ public class BuildFlat
 			}
 
 			Vector<Descriptor> descriptorVector = new Vector<Descriptor>();
-			
+
 			// grab symbol table all fields in Class
 			SymbolTable fields = Class.getFieldTable();
 			Set<FieldDescriptor> fieldset = fields.getAllValueSet();
@@ -47,14 +47,14 @@ public class BuildFlat
 
 				Store(Field, ffn);
 				fntmp = ffn;
-				
+
 				descriptorVector.add(Field);
 			}
 
 			// grab symbol table for all methods in Class
 			SymbolTable methods = Class.getMethodTable();
 			Set<MethodDescriptor> methodSet = methods.getAllValueSet();
-			
+
 			// iterate over methods
 			for (MethodDescriptor Method : methodSet)
 			{
@@ -229,8 +229,9 @@ public class BuildFlat
 	{
 		TAC.put(desc, fn);
 	}
-	
-	public void StoreClass(Descriptor classDesc, Vector<Descriptor> descriptorVector)
+
+	public void StoreClass(Descriptor classDesc,
+			Vector<Descriptor> descriptorVector)
 	{
 		TACParent.put(classDesc, descriptorVector);
 	}
@@ -596,35 +597,41 @@ public class BuildFlat
 	public String toString()
 	{
 		String returnString = "";
-		
+
 		for (Vector<Descriptor> descriptorVector : TACParent.values())
 		{
 			returnString += "Class ";
-			
-			if(descriptorVector.get(0) instanceof FieldDescriptor)
+
+			if (descriptorVector.get(0) instanceof FieldDescriptor)
 			{
 				returnString += ((FieldDescriptor)descriptorVector.get(0)).getClassDescriptor().getClassName();
+				returnString += ((FieldDescriptor) descriptorVector.get(0))
+						.getClassDescriptor().getClassName();
 			}
-			else if(descriptorVector.get(0) instanceof MethodDescriptor)
+			else if (descriptorVector.get(0) instanceof MethodDescriptor)
 			{
 				returnString += ((MethodDescriptor)descriptorVector.get(0)).getClassDesc().getClassName();
+				returnString += ((MethodDescriptor) descriptorVector.get(0))
+						.getClassDesc().getClassName();
 			}
-			
+
 			returnString += "\n{\n";
-			
-			for(Descriptor desc : descriptorVector)
+
+			for (Descriptor desc : descriptorVector)
 			{
 				FlatNode flat = TAC.get(desc);
-				
+
 				if (flat instanceof FlatFieldNode)
-				{			
-					returnString += "\tFlatFieldNode_"+((FlatFieldNode) flat).dst.toString() + "\n";
+				{
+					returnString += "\tFlatFieldNode_"
+							+ ((FlatFieldNode) flat).dst.toString() + "\n";
 				}
 				else if (flat instanceof FlatMethod)
 				{
 					MethodDescriptor fm = ((FlatMethod) flat).getMethod();
-				
-					returnString += "\t" + fm.getClassDesc().getClassName() + "." + fm.getSymbol() + "(";
+
+					returnString += "\t" + fm.getClassDesc().getClassName()
+							+ "." + fm.getSymbol() + "(";
 					for (int i = 0; i < fm.numParameters(); i++)
 					{
 						returnString += fm.getParameter(i);
@@ -639,13 +646,13 @@ public class BuildFlat
 					while (true)
 					{
 						returnString += "\t\t" + f.toString() + "\n";
-		
+
 						if (f.next.size() == 0)
 						{
 							returnString += "\t}\n\n";
 							break;
 						}
-		
+
 						f = f.next.get(0);
 					}
 				}
