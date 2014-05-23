@@ -513,11 +513,15 @@ public class BuildFlat
 		NodePair testFlatCond = FlattenExpression(condition);
 
 		NodePair FlatLoopBody = flattenBlockNode(loopBody);
+		TempDescriptor tmp = testFlatCond.tmp;
+
+		FlatCondBranch ifStatement = new FlatCondBranch(tmp);
 		FlatLabel L1 = new FlatLabel(labelCount++); 
 		GoFlatLabel L2 = new GoFlatLabel("Goto L", labelCount++);
 		
 		L1.addNext(testFlatCond.begin);
-		testFlatCond.end.addNext(L2);
+		testFlatCond.end.addNext(ifStatement);
+		ifStatement.addNext(L2);
 		L2.addNext(FlatLoopBody.begin);
 		GoFlatLabel L3 = new GoFlatLabel("Goto L", L1.numL);
 		FlatLoopBody.end.addNext(L3);
