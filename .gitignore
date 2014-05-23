@@ -54,3 +54,8 @@ JLite/results.txt
 out/production/
 JLite/test/Test015.java
 JLite/test/Test012.java
+JLite/classdefs.h
+JLite/methods.c
+JLite/structdefs.h
+JLite/test.txt
+JLite/virtualtable.h
