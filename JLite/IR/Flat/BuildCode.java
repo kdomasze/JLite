@@ -10,8 +10,10 @@ public class BuildCode
 {
 	HashMap<Descriptor, Vector<Descriptor>> TACParent;
 	HashMap<Descriptor, FlatNode> TAC;
-
+	
 	private LinkedHashMap<String, HashMap<String, String>> classNames = new LinkedHashMap<>();
+	
+	public static Vector<String> methodVector;
 
 	public BuildCode(HashMap<Descriptor, Vector<Descriptor>> tacp,
 			HashMap<Descriptor, FlatNode> tac)
@@ -506,92 +508,176 @@ public class BuildCode
 		return returnString + "\n";
 	}
 
-	private void generateVMT()
+	private void generateVMT() 
+    { 
+        int numClasses = 0; 
+        int numMethods = 0; 
+        int maxMethods = 0; 
+        boolean copy; 
+        int maxGen = 0; 
+          
+        methodVector = new Vector<String>(); 
+        Vector<ClassDescriptor> classVector = new Vector<ClassDescriptor>(); 
+        HashMap<String, Integer> classGen = new HashMap<>(); 
+          
+        //Make Table of class names matched to generation value 
+        for(Descriptor key : TACParent.keySet()) 
+        {    
+            ClassDescriptor cd = (ClassDescriptor) key; 
+            int thisgen = generation(cd); 
+            classGen.put(cd.getSymbol(), thisgen); 
+            if(generation(cd)> maxGen) 
+            { 
+                maxGen = thisgen; 
+            } 
+        } 
+          
+        //Fill Vector with classes in generation order starting from 0 
+        for(int count = 0; count <= maxGen; count++) 
+        { 
+            for(Descriptor key : TACParent.keySet()) 
+            { 
+                if(classGen.get(key.getSymbol()) == count) 
+                { 
+                    classVector.add((ClassDescriptor)key); 
+                } 
+            } 
+        } 
+          
+          
+        classGen = new HashMap<>(); 
+        //Find max number of methods and fill vector with method names 
+        for(Descriptor key : classVector) 
+        { 
+            numClasses ++; 
+            numMethods = 0; 
+            for(Descriptor desc : TACParent.get(key)) 
+            { 
+                FlatNode flat = TAC.get(desc); 
+                if(flat instanceof FlatMethod) 
+                { 
+                    FlatMethod fm = (FlatMethod) flat; 
+                    copy = false; 
+                    if(methodVector.isEmpty()) 
+                    { 
+                        methodVector.add(fm.method.getSymbol()); 
+                        numMethods ++; 
+                    } 
+                    for(String src: methodVector) 
+                    { 
+                        if(src.equals(fm.method.getSymbol())) 
+                        { 
+                            //numMethods ++; 
+                            copy = true; 
+                            break; 
+                        } 
+                    } 
+                    if(!copy) 
+                    { 
+                        methodVector.add(fm.method.getSymbol()); 
+                        numMethods ++; 
+                    } 
+                } 
+            } 
+            classGen.put(key.getSymbol(), numMethods); 
+            if(((ClassDescriptor)key).getSuper() != null) 
+            { 
+                numMethods += classGen.get(key.getSymbol()); 
+            } 
+            if(maxMethods < numMethods) 
+            { 
+                maxMethods = numMethods; 
+            } 
+        } 
+        System.out.println("numClasses = " + numClasses + "  maxMethods = " + maxMethods); 
+          
+        String vmtString = "void * virtualtable[]={"; 
+        int counter = 0; 
+          
+        //Prepare virtual Table String 
+        for(Descriptor key : classVector) 
+        { 
+            numMethods = 0; 
+            for(String src: methodVector) 
+            { 
+                for(Descriptor desc : TACParent.get(key)) 
+                { 
+                    FlatNode flat = TAC.get(desc); 
+                    if(flat instanceof FlatMethod) 
+                    {    
+                        FlatMethod fm = (FlatMethod) flat; 
+                        if(fm.method.getSymbol().equals(src)) 
+                        { 
+                            vmtString += " &_" + fm.getMethod().getClassDesc().getSymbol() + "_" + fm.method.getSymbol(); 
+                            numMethods +=1; 
+                            if(counter < maxMethods * numClasses -1) 
+                            { 
+                                vmtString +=","; 
+                                counter ++; 
+                            } 
+                            if(counter%5 == 0) 
+                            { 
+                                vmtString +="\n\t"; 
+                            } 
+                            break; 
+                        } 
+                    } 
+                } 
+            } 
+            while (numMethods < maxMethods) 
+            { 
+                vmtString +=" 0"; 
+                if(counter < maxMethods * numClasses -1) 
+                { 
+                    vmtString +=","; 
+                    counter ++; 
+                } 
+                if(counter%5 == 0) 
+                { 
+                    vmtString +="\n\t"; 
+                } 
+                numMethods++; 
+            } 
+        } 
+        vmtString += "}"; 
+        //System.out.println(vmtString); 
+          
+        //prepare file for opening and write virtual table string to file 
+        File virtualTable = new File("virtualtable.h"); 
+        PrintWriter virtualTablePW; 
+        try
+        { 
+            virtualTable.createNewFile(); 
+        } 
+        catch(IOException e1) 
+        { 
+            e1.printStackTrace(); 
+            throw new Error("The table is fubar"); 
+        } 
+        try
+        { 
+            virtualTablePW = new PrintWriter(virtualTable); 
+        } 
+        catch(FileNotFoundException e2) 
+        { 
+            e2.printStackTrace(); 
+            throw new Error("It was not Christian's fault!!!"); 
+        } 
+        virtualTablePW.append(vmtString); 
+        virtualTablePW.close(); 
+    } 
+	
+	private int generation(ClassDescriptor cd)
 	{
-		int numClasses = 0;
-		int numMethods = 0;
-		int maxMethods = 0;
-		for (Descriptor key : TACParent.keySet())
+		int generation = 0;
+		if(cd.getSuper() == null)
 		{
-			numClasses++;
-			numMethods = 0;
-			for (Descriptor desc : TACParent.get(key))
-			{
-				FlatNode flat = TAC.get(desc);
-				if (flat instanceof FlatMethod)
-				{
-					numMethods++;
-				}
-			}
-			if (maxMethods < numMethods)
-			{
-				maxMethods = numMethods;
-			}
+			return generation;
 		}
-		// System.out.println("numClasses = " + numClasses + "  maxMethods = " +
-		// maxMethods);
-
-		String vmtString = "void * virtualtable[]={";
-		int counter = 0;
-		for (Descriptor key : TACParent.keySet())
+		else
 		{
-			numMethods = 0;
-			for (Descriptor desc : TACParent.get(key))
-			{
-				FlatNode flat = TAC.get(desc);
-				if (flat instanceof FlatMethod)
-				{
-					FlatMethod fm = (FlatMethod) flat;
-					vmtString += " &_"
-							+ fm.getMethod().getClassDesc().getSymbol() + "_"
-							+ fm.method.getSymbol();
-					numMethods += 1;
-					if (counter < maxMethods * numClasses - 1)
-					{
-						vmtString += ",";
-						counter++;
-					}
-					if (counter % 5 == 0)
-					{
-						vmtString += "\n\t";
-					}
-				}
-			}
-			while (numMethods < maxMethods)
-			{
-				vmtString += " 0";
-				if (counter < maxMethods * numClasses - 1)
-				{
-					vmtString += ",";
-					counter++;
-				}
-				numMethods++;
-			}
+			return generation(cd.getSuperDesc()) + 1;
 		}
-		vmtString += "}";
-		// System.out.println(vmtString);
-		File virtualTable = new File("virtualtable.h");
-		PrintWriter virtualTablePW;
-		try
-		{
-			virtualTable.createNewFile();
-		}
-		catch (IOException e1)
-		{
-			e1.printStackTrace();
-			throw new Error("The table is fubar");
-		}
-		try
-		{
-			virtualTablePW = new PrintWriter(virtualTable);
-		}
-		catch (FileNotFoundException e2)
-		{
-			e2.printStackTrace();
-			throw new Error("It was not Christian's fault!!!");
-		}
-		virtualTablePW.append(vmtString);
-		virtualTablePW.close();
 	}
 
 	// /** Example code to generate code for FlatMethod fm. */
@@ -716,5 +802,5 @@ public class BuildCode
 	// }
 	// return nodetolabel;
 	// }
-
 }
+
