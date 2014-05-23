@@ -513,7 +513,7 @@ public class BuildFlat
 
 		NodePair FlatLoopBody = flattenBlockNode(loopBody);
 		FlatLabel L1 = new FlatLabel(labelCount++); 
-		GoFlatLabel L2 = new GoFlatLabel("FlatCondBranch_if(!"+ ((FlatOpNode)(testFlatCond.end)).dest.getSymbol() + ") Goto L", labelCount++);
+		GoFlatLabel L2 = new GoFlatLabel("Goto L", labelCount++);
 		
 		L1.addNext(testFlatCond.begin);
 		testFlatCond.end.addNext(L2);
@@ -536,9 +536,12 @@ public class BuildFlat
 
 		NodePair trueFlatBlock = flattenBlockNode(trueStatement);
 		
-		GoFlatLabel L1 = new GoFlatLabel("FlatCondBranch_if(!"+ ((FlatOpNode)(testFlatCond.end)).dest.getSymbol() +  ") Goto L", labelCount++);
-		
-		testFlatCond.end.addNext(L1);
+		GoFlatLabel L1 = new GoFlatLabel("Goto L", labelCount++);
+		TempDescriptor tmp = testFlatCond.tmp;
+
+		FlatCondBranch ifStatement = new FlatCondBranch(tmp);
+		testFlatCond.end.addNext(ifStatement);
+		ifStatement.addNext(L1);
 		L1.addNext(trueFlatBlock.begin);
 		NodePair elseFlatBlock = null;
 
@@ -558,9 +561,7 @@ public class BuildFlat
 		L3.addNext(elseFlatBlock.begin);
 		FlatLabel L4 = new FlatLabel(L2.numL);
 		elseFlatBlock.end.addNext(L4);
-		TempDescriptor tmp = testFlatCond.tmp;
-
-		FlatCondBranch ifStatement = new FlatCondBranch(tmp);
+		
 
 		if (elseFlatBlock != null)
 		{

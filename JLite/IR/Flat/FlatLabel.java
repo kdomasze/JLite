@@ -12,6 +12,6 @@ public class FlatLabel extends FlatNode
 	
 	public String toString()
 	{
-		return "L"+numL+":";
+		return "L"+numL;
 	}
 }

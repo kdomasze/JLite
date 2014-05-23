@@ -13,6 +13,6 @@ public class GoFlatLabel extends FlatNode
 	
 	public String toString()
 	{
-		return label + numL + ";";
+		return label + numL;
 	}
 }

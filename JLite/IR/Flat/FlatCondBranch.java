@@ -10,6 +10,6 @@ public class FlatCondBranch extends FlatNode {
   }
 
   public String toString() {
-    return "conditional branch("+test_cond.toString()+")";
+    return "conditional branch(!"+test_cond.toString()+")";
   }
 }
