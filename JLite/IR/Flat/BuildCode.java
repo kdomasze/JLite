@@ -1,7 +1,6 @@
 package IR.Flat;
 
 import IR.*;
-import IR.Tree.NameNode;
 
 import java.util.*;
 import java.io.*;
@@ -10,9 +9,9 @@ public class BuildCode
 {
 	HashMap<Descriptor, Vector<Descriptor>> TACParent;
 	HashMap<Descriptor, FlatNode> TAC;
-	
+
 	private LinkedHashMap<String, HashMap<String, String>> classNames = new LinkedHashMap<>();
-	
+
 	public static Vector<String> methodVector;
 
 	public BuildCode(HashMap<Descriptor, Vector<Descriptor>> tacp,
@@ -304,6 +303,7 @@ public class BuildCode
 	{
 		File methodsF = new File("methods.c");
 		PrintWriter methodsPW;
+		int tempVarCount = 0;
 
 		Vector<String> classSize = new Vector<>();
 		Vector<String> superTypes = new Vector<>();
@@ -389,10 +389,129 @@ public class BuildCode
 		}
 
 		methodsPW.append("};\n\n");
-		
+
 		/*
 		 * print methods
 		 */
+		for (Descriptor Class : TACParent.keySet())
+		{
+			Vector<Descriptor> MethodVector = TACParent.get(Class);
+
+			HashMap<String, String> Fields = new HashMap<>();
+			for (Descriptor desc : MethodVector)
+			{
+				FlatNode flatNode = TAC.get(desc);
+
+				if (flatNode instanceof FlatFieldNode)
+				{
+					FlatFieldNode flatFieldNode = (FlatFieldNode) flatNode;
+					Fields.put(flatFieldNode.dst.toString(), flatFieldNode.dst
+							.getType().getSymbol());
+				}
+				else if (flatNode instanceof FlatMethod)
+				{
+					MethodDescriptor method = (MethodDescriptor) desc;
+					FlatMethod flatMethod = (FlatMethod) flatNode;
+					
+					HashMap<String, String> MethodArgs = new HashMap<>();
+					
+					// get all arguments for method
+					for (int i = 0; i < method.numParameters(); i++)
+					{
+						MethodArgs.put(method.getParamName(i), method
+								.getParamType(i).getSymbol());
+					}
+					
+					// print main structure of method declaration
+					methodsPW.append(method.getReturnType().getSymbol() + " "
+							+ Class.getSymbol() + "_" + method.getSymbol()
+							+ "(struct " + Class.getSymbol() + " *this"
+							+ tempVarCount);
+					
+					// print any arguments that are apart of the method
+					for(String name : MethodArgs.keySet())
+					{
+						String type = MethodArgs.get(name) + " ";
+						
+						if(!type.equals("int "))
+						{
+							type = "struct " + type + "*";
+						}
+						methodsPW.append(", " + type + name);
+					}
+					
+					// close the method declaration and open the block body
+					methodsPW.append(")\n{\n");
+					
+					/*
+					 * get all var declarations
+					 */
+					Vector<String> methodBlockVector = new Vector<>();
+					
+					FlatNode f = flatMethod.getNext(0);
+					while (true)
+					{
+						String output = "";
+						
+						if(f instanceof FlatLiteralNode)
+						{
+							FlatLiteralNode fln = (FlatLiteralNode) f;
+							output = fln.dst.type.getSymbol() + " " + fln.dst.getSymbol() + ";\n";
+						}
+						else if(f instanceof FlatOpNode)
+						{
+							FlatOpNode fln = (FlatOpNode) f;
+							output = fln.dest.type.getSymbol() + " " + fln.dest.getSymbol() + ";\n";
+						}
+						else if(f instanceof FlatNameNode)
+						{
+							FlatNameNode fnn = (FlatNameNode) f;
+							output = fnn.dst.type.getSymbol() + " " + fnn.dst.getSymbol() + ";\n";
+						}
+						
+						if(!methodBlockVector.contains(output))
+						{
+							methodBlockVector.add(output);
+						}
+						
+						if (f.next.size() == 0)
+						{
+							methodBlockVector.add("\n");
+							break;
+						}
+
+						f = f.next.get(0);
+					}
+					
+					/*
+					 * begin loop for method body
+					 */
+					f = flatMethod.getNext(0);
+					while (true)
+					{
+						String output = formatFlatPrint(f, Fields, "this" + tempVarCount);
+						
+						methodBlockVector.add(output);
+						
+						if (f.next.size() == 0)
+						{
+							break;
+						}
+
+						f = f.next.get(0);
+					}
+					
+					for(String out : methodBlockVector)
+					{
+						methodsPW.append(out);
+					}
+					
+					
+					// close the method
+					methodsPW.append("}\n\n");
+				}
+			}
+		}
 
 		methodsPW.close();
 	}
@@ -425,17 +544,16 @@ public class BuildCode
 		methodHeadersPW.close();
 	}
 
-	private String formatFlatPrint(FlatNode fn, Vector<String> fieldNames,
-			String thisVar)
+	private String formatFlatPrint(FlatNode fn, HashMap<String, String> fieldsMap, String thisVar)
 	{
 		String returnString = "";
-
+		
 		if (fn instanceof FlatLiteralNode)
 		{
 			String dst = ((FlatLiteralNode) fn).dst.getSymbol();
 			String value = ((FlatLiteralNode) fn).value.toString();
 
-			for (String str : fieldNames)
+			for (String str : fieldsMap.keySet())
 			{
 				if (dst.equals(str))
 				{
@@ -458,7 +576,7 @@ public class BuildCode
 				op = ((FlatOpNode) fn).op.toString();
 			}
 
-			for (String str : fieldNames)
+			for (String str : fieldsMap.keySet())
 			{
 				if (dst.equals(str))
 				{
@@ -508,169 +626,171 @@ public class BuildCode
 		return returnString + "\n";
 	}
 
-	private void generateVMT() 
-    { 
-        int numClasses = 0; 
-        int numMethods = 0; 
-        int maxMethods = 0; 
-        boolean copy; 
-        int maxGen = 0; 
-          
-        methodVector = new Vector<String>(); 
-        Vector<ClassDescriptor> classVector = new Vector<ClassDescriptor>(); 
-        HashMap<String, Integer> classGen = new HashMap<>(); 
-          
-        //Make Table of class names matched to generation value 
-        for(Descriptor key : TACParent.keySet()) 
-        {    
-            ClassDescriptor cd = (ClassDescriptor) key; 
-            int thisgen = generation(cd); 
-            classGen.put(cd.getSymbol(), thisgen); 
-            if(generation(cd)> maxGen) 
-            { 
-                maxGen = thisgen; 
-            } 
-        } 
-          
-        //Fill Vector with classes in generation order starting from 0 
-        for(int count = 0; count <= maxGen; count++) 
-        { 
-            for(Descriptor key : TACParent.keySet()) 
-            { 
-                if(classGen.get(key.getSymbol()) == count) 
-                { 
-                    classVector.add((ClassDescriptor)key); 
-                } 
-            } 
-        } 
-          
-          
-        classGen = new HashMap<>(); 
-        //Find max number of methods and fill vector with method names 
-        for(Descriptor key : classVector) 
-        { 
-            numClasses ++; 
-            numMethods = 0; 
-            for(Descriptor desc : TACParent.get(key)) 
-            { 
-                FlatNode flat = TAC.get(desc); 
-                if(flat instanceof FlatMethod) 
-                { 
-                    FlatMethod fm = (FlatMethod) flat; 
-                    copy = false; 
-                    if(methodVector.isEmpty()) 
-                    { 
-                        methodVector.add(fm.method.getSymbol()); 
-                        numMethods ++; 
-                    } 
-                    for(String src: methodVector) 
-                    { 
-                        if(src.equals(fm.method.getSymbol())) 
-                        { 
-                            //numMethods ++; 
-                            copy = true; 
-                            break; 
-                        } 
-                    } 
-                    if(!copy) 
-                    { 
-                        methodVector.add(fm.method.getSymbol()); 
-                        numMethods ++; 
-                    } 
-                } 
-            } 
-            classGen.put(key.getSymbol(), numMethods); 
-            if(((ClassDescriptor)key).getSuper() != null) 
-            { 
-                numMethods += classGen.get(key.getSymbol()); 
-            } 
-            if(maxMethods < numMethods) 
-            { 
-                maxMethods = numMethods; 
-            } 
-        } 
-        System.out.println("numClasses = " + numClasses + "  maxMethods = " + maxMethods); 
-          
-        String vmtString = "void * virtualtable[]={"; 
-        int counter = 0; 
-          
-        //Prepare virtual Table String 
-        for(Descriptor key : classVector) 
-        { 
-            numMethods = 0; 
-            for(String src: methodVector) 
-            { 
-                for(Descriptor desc : TACParent.get(key)) 
-                { 
-                    FlatNode flat = TAC.get(desc); 
-                    if(flat instanceof FlatMethod) 
-                    {    
-                        FlatMethod fm = (FlatMethod) flat; 
-                        if(fm.method.getSymbol().equals(src)) 
-                        { 
-                            vmtString += " &_" + fm.getMethod().getClassDesc().getSymbol() + "_" + fm.method.getSymbol(); 
-                            numMethods +=1; 
-                            if(counter < maxMethods * numClasses -1) 
-                            { 
-                                vmtString +=","; 
-                                counter ++; 
-                            } 
-                            if(counter%5 == 0) 
-                            { 
-                                vmtString +="\n\t"; 
-                            } 
-                            break; 
-                        } 
-                    } 
-                } 
-            } 
-            while (numMethods < maxMethods) 
-            { 
-                vmtString +=" 0"; 
-                if(counter < maxMethods * numClasses -1) 
-                { 
-                    vmtString +=","; 
-                    counter ++; 
-                } 
-                if(counter%5 == 0) 
-                { 
-                    vmtString +="\n\t"; 
-                } 
-                numMethods++; 
-            } 
-        } 
-        vmtString += "}"; 
-        //System.out.println(vmtString); 
-          
-        //prepare file for opening and write virtual table string to file 
-        File virtualTable = new File("virtualtable.h"); 
-        PrintWriter virtualTablePW; 
-        try
-        { 
-            virtualTable.createNewFile(); 
-        } 
-        catch(IOException e1) 
-        { 
-            e1.printStackTrace(); 
-            throw new Error("The table is fubar"); 
-        } 
-        try
-        { 
-            virtualTablePW = new PrintWriter(virtualTable); 
-        } 
-        catch(FileNotFoundException e2) 
-        { 
-            e2.printStackTrace(); 
-            throw new Error("It was not Christian's fault!!!"); 
-        } 
-        virtualTablePW.append(vmtString); 
-        virtualTablePW.close(); 
-    } 
-	
+	private void generateVMT()
+	{
+		int numClasses = 0;
+		int numMethods = 0;
+		int maxMethods = 0;
+		boolean copy;
+		int maxGen = 0;
+
+		methodVector = new Vector<String>();
+		Vector<ClassDescriptor> classVector = new Vector<ClassDescriptor>();
+		HashMap<String, Integer> classGen = new HashMap<>();
+
+		// Make Table of class names matched to generation value
+		for (Descriptor key : TACParent.keySet())
+		{
+			ClassDescriptor cd = (ClassDescriptor) key;
+			int thisgen = generation(cd);
+			classGen.put(cd.getSymbol(), thisgen);
+			if (generation(cd) > maxGen)
+			{
+				maxGen = thisgen;
+			}
+		}
+
+		// Fill Vector with classes in generation order starting from 0
+		for (int count = 0; count <= maxGen; count++)
+		{
+			for (Descriptor key : TACParent.keySet())
+			{
+				if (classGen.get(key.getSymbol()) == count)
+				{
+					classVector.add((ClassDescriptor) key);
+				}
+			}
+		}
+
+		classGen = new HashMap<>();
+		// Find max number of methods and fill vector with method names
+		for (Descriptor key : classVector)
+		{
+			numClasses++;
+			numMethods = 0;
+			for (Descriptor desc : TACParent.get(key))
+			{
+				FlatNode flat = TAC.get(desc);
+				if (flat instanceof FlatMethod)
+				{
+					FlatMethod fm = (FlatMethod) flat;
+					copy = false;
+					if (methodVector.isEmpty())
+					{
+						methodVector.add(fm.method.getSymbol());
+						numMethods++;
+					}
+					for (String src : methodVector)
+					{
+						if (src.equals(fm.method.getSymbol()))
+						{
+							// numMethods ++;
+							copy = true;
+							break;
+						}
+					}
+					if (!copy)
+					{
+						methodVector.add(fm.method.getSymbol());
+						numMethods++;
+					}
+				}
+			}
+			classGen.put(key.getSymbol(), numMethods);
+			if (((ClassDescriptor) key).getSuper() != null)
+			{
+				numMethods += classGen.get(key.getSymbol());
+			}
+			if (maxMethods < numMethods)
+			{
+				maxMethods = numMethods;
+			}
+		}
+		System.out.println("numClasses = " + numClasses + "  maxMethods = "
+				+ maxMethods);
+
+		String vmtString = "void * virtualtable[]={";
+		int counter = 0;
+
+		// Prepare virtual Table String
+		for (Descriptor key : classVector)
+		{
+			numMethods = 0;
+			for (String src : methodVector)
+			{
+				for (Descriptor desc : TACParent.get(key))
+				{
+					FlatNode flat = TAC.get(desc);
+					if (flat instanceof FlatMethod)
+					{
+						FlatMethod fm = (FlatMethod) flat;
+						if (fm.method.getSymbol().equals(src))
+						{
+							vmtString += " &_"
+									+ fm.getMethod().getClassDesc().getSymbol()
+									+ "_" + fm.method.getSymbol();
+							numMethods += 1;
+							if (counter < maxMethods * numClasses - 1)
+							{
+								vmtString += ",";
+								counter++;
+							}
+							if (counter % 5 == 0)
+							{
+								vmtString += "\n\t";
+							}
+							break;
+						}
+					}
+				}
+			}
+			while (numMethods < maxMethods)
+			{
+				vmtString += " 0";
+				if (counter < maxMethods * numClasses - 1)
+				{
+					vmtString += ",";
+					counter++;
+				}
+				if (counter % 5 == 0)
+				{
+					vmtString += "\n\t";
+				}
+				numMethods++;
+			}
+		}
+		vmtString += "}";
+		// System.out.println(vmtString);
+
+		// prepare file for opening and write virtual table string to file
+		File virtualTable = new File("virtualtable.h");
+		PrintWriter virtualTablePW;
+		try
+		{
+			virtualTable.createNewFile();
+		}
+		catch (IOException e1)
+		{
+			e1.printStackTrace();
+			throw new Error("The table is fubar");
+		}
+		try
+		{
+			virtualTablePW = new PrintWriter(virtualTable);
+		}
+		catch (FileNotFoundException e2)
+		{
+			e2.printStackTrace();
+			throw new Error("It was not Christian's fault!!!");
+		}
+		virtualTablePW.append(vmtString);
+		virtualTablePW.close();
+	}
+
 	private int generation(ClassDescriptor cd)
 	{
 		int generation = 0;
-		if(cd.getSuper() == null)
+		if (cd.getSuper() == null)
 		{
 			return generation;
 		}
@@ -803,4 +923,3 @@ public class BuildCode
 	// return nodetolabel;
 	// }
 }
-
