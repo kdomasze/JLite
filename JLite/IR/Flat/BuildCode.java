@@ -586,6 +586,8 @@ public class BuildCode
 			}
 		}
 		
+		
+		classGen = new HashMap<>();
 		//Find max number of methods and fill vector with method names
 		for(Descriptor key : classVector)
 		{
@@ -607,7 +609,7 @@ public class BuildCode
 					{
 						if(src.equals(fm.method.getSymbol()))
 						{
-							numMethods ++;
+							//numMethods ++;
 							copy = true;
 							break;
 						}
@@ -619,12 +621,17 @@ public class BuildCode
 					}
 				}
 			}
+			classGen.put(key.getSymbol(), numMethods);
+			if(((ClassDescriptor)key).getSuper() != null)
+			{
+				numMethods += classGen.get(key.getSymbol());
+			}
 			if(maxMethods < numMethods)
 			{
 				maxMethods = numMethods;
 			}
 		}
-		//System.out.println("numClasses = " + numClasses + "  maxMethods = " + maxMethods);
+		System.out.println("numClasses = " + numClasses + "  maxMethods = " + maxMethods);
 		
 		String vmtString = "void * virtualtable[]={";
 		int counter = 0;
