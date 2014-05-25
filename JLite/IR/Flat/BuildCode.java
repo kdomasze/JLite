@@ -1,7 +1,6 @@
 package IR.Flat;
 
 import IR.*;
-import IR.Tree.NameNode;
 
 import java.util.*;
 import java.io.*;
@@ -10,12 +9,10 @@ public class BuildCode
 {
 	HashMap<Descriptor, Vector<Descriptor>> TACParent;
 	HashMap<Descriptor, FlatNode> TAC;
-	
+
+	private LinkedHashMap<String, HashMap<String, String>> classNames = new LinkedHashMap<>();
+
 	public static Vector<String> methodVector;
-	
-	private LinkedHashMap<String, Integer> classNames = new LinkedHashMap<>();
-	
-	private HashMap<String, Vector<String>> classFields = new HashMap<>();
 
 	public BuildCode(HashMap<Descriptor, Vector<Descriptor>> tacp,
 			HashMap<Descriptor, FlatNode> tac)
@@ -98,12 +95,15 @@ public class BuildCode
 	private void generateClassDefs()
 	{
 		/* Create output streams to write to */
-		/* Refer to PrintWriter Class in JAVA LIB */
 		File classDefs = new File("classdefs.h");
 		PrintWriter classDefsPW;
+		boolean generateSystem = false;
+		Vector<String> outString = new Vector<>();
+		Vector<String> fields;
 
-		int count = 0;
+		int classCount = 0;
 
+		// create new file
 		try
 		{
 			classDefs.createNewFile();
@@ -114,6 +114,7 @@ public class BuildCode
 			throw new Error("It's Oracle's fault.");
 		}
 
+		// create print writer
 		try
 		{
 			classDefsPW = new PrintWriter(classDefs);
@@ -124,104 +125,151 @@ public class BuildCode
 			throw new Error("This is how the world ends.");
 		}
 
-		/* Output Structures */
+		// begin generating classdefs.h
 
-		// Output the C class declarations
-		// These could mutually reference each other
-
-		classDefsPW.append("extern int classsize[];\n");
-		classDefsPW.append("extern int supertypes[];\n\n");
-
+		/*
+		 * generate structure prototypes
+		 */
 		for (Descriptor key : TACParent.keySet())
 		{
-			classDefsPW.append("struct " + key.getSymbol());
-			
-			classNames.put(key.getSymbol() + ":" + ((ClassDescriptor)key).getSuper(), count);
+			outString.add("struct " + key.getSymbol() + ";\n");
+		}
 
-			classDefsPW.append("\n{\n");
+		outString.add("\n");
 
-			classDefsPW.append("\tint type;\n");
-			
-			Vector<String> fieldVector = new Vector<>();
-			for (Descriptor desc : TACParent.get(key))
+		/*
+		 * generate arrays for class size and super types
+		 */
+		outString.add("extern int classsize[];\n");
+		outString.add("extern int supertypes[];\n\n");
+
+		/*
+		 * generate actual structures for classes
+		 */
+		for (Descriptor key : TACParent.keySet())
+		{
+			fields = new Vector<>();
+			HashMap<String, String> superInfo = new HashMap<>();
+			String superClass;
+
+			if (((ClassDescriptor) key).getSuperDesc() != null)
 			{
-				FlatNode flat = TAC.get(desc);
-
-				if (flat instanceof FlatFieldNode)
-				{
-					// Field Nodes
-					FlatFieldNode ffn = (FlatFieldNode) flat;
-					
-					if (ffn.dst.getType().getSymbol() == "int")
-					{
-						classDefsPW.append("\t" + ffn.dst.getType().getSymbol()
-								+ " " + ffn.dst.getSymbol() + ";\n");
-					}
-					else
-					{
-						classDefsPW.append("\tstruct "
-								+ ffn.dst.getType().getSymbol() + " *"
-								+ ffn.dst.getSymbol() + ";\n");
-					}
-					
-					fieldVector.add(ffn.dst.getSymbol());
-				}
+				superClass = ((ClassDescriptor) key).getSuperDesc().getSymbol();
 			}
-			
-			classFields.put(key.getSymbol(), fieldVector);
+			else
+			{
+				superClass = "null";
+			}
 
-			classDefsPW.append("};\n\n");
+			if (!superInfo.containsKey(key.getSymbol()))
+			{
+				superInfo.put(superClass, Integer.toString(classCount));
 
-			count++;
+				classNames.put(key.getSymbol(), superInfo);
+			}
 
+			outString.add("struct " + key.getSymbol() + "\n{\n");
+
+			outString.add("\tint type;\n");
+
+			// loop though all of the fields in each class
 			for (Descriptor desc : TACParent.get(key))
 			{
-				FlatNode flat = TAC.get(desc);
-				if (flat instanceof FlatMethod)
+				FlatNode fn = TAC.get(desc);
+
+				if (fn instanceof FlatFieldNode)
 				{
-					MethodDescriptor fm = ((FlatMethod) flat).getMethod();
+					boolean duplicateField = false;
+					FlatFieldNode ffn = (FlatFieldNode) fn;
 
-					if (!(fm.getSymbol().equals("main")))
+					// check if the field is already defined
+					for (String str : fields)
 					{
-						continue;
-					}
-
-					for (int i = 0; i < fm.numParameters(); i++)
-					{
-						if (!(fm.getParameter(i).getType().getSymbol()
-								.equals("System")))
+						if (str.equals(ffn.dst.getSymbol()))
 						{
-							continue;
+							duplicateField = true;
 						}
+					}
 
-						classDefsPW.append("struct System");
+					// don't add the field if it's defined already
+					if (!duplicateField)
+					{
+						// if the type of the field is an int, we don't need
+						// to worry about it's super class
+						if (ffn.dst.getType().getSymbol() == "int")
+						{
+							outString.add("\tint " + ffn.dst.getSymbol()
+									+ ";\n");
+						}
+						// if the type is anything else, we need to create
+						// a pointer reference to the structure
+						else
+						{
+							outString.add("\tstruct "
+									+ ffn.dst.getType().getSymbol() + " *"
+									+ ffn.dst.getSymbol() + ";\n");
+						}
+						fields.add(ffn.dst.getSymbol());
+					}
+				}
 
-						classNames.put("System:null", count);
-						
-						classDefsPW.append("\n{\n");
+				// check FlatMethods contain system
+				if (fn instanceof FlatMethod && generateSystem == false)
+				{
+					FlatMethod fm = (FlatMethod) fn;
 
-						classDefsPW.append("\tint type;\n");
+					for (int i = 0; i < fm.method.numParameters(); i++)
+					{
+						if (fm.method.getParamType(i).getSymbol()
+								.equals("System"))
+						{
+							HashMap<String, String> superInfoSystem = new HashMap<>();
 
-						classDefsPW.append("}\n\n");
+							superInfoSystem.put("null",
+									Integer.toString(classCount));
 
-						count++;
+							classNames.put("System", superInfoSystem);
 
-						break;
+							classCount++;
+							generateSystem = true;
+						}
 					}
 				}
 			}
+
+			outString.add("};\n\n");
+
+			classCount++;
+		}
+
+		// if System is called, generate System struct
+		if (generateSystem == true)
+		{
+			outString.add(0, "struct System;\n"); // append System prototype to
+													// the beginning of the file
+
+			outString.add("struct System\n{\n");
+			outString.add("\tint type;\n");
+			outString.add("};\n\n");
+		}
+
+		// put output in the file
+		for (String str : outString)
+		{
+			classDefsPW.append(str);
 		}
 
 		classDefsPW.close();
 
-		generateStructDefs(count);
+		generateStructDefs(classCount);
 	}
 
-	private void generateStructDefs(int count)
+	private void generateStructDefs(int classCount)
 	{
 		File structDefs = new File("structdefs.h");
 		PrintWriter structDefsPW;
 
+		// create new file
 		try
 		{
 			structDefs.createNewFile();
@@ -232,6 +280,7 @@ public class BuildCode
 			throw new Error("It's Oracle's fault.");
 		}
 
+		// create new print writer
 		try
 		{
 			structDefsPW = new PrintWriter(structDefs);
@@ -242,9 +291,10 @@ public class BuildCode
 			throw new Error("This is how the world ends.");
 		}
 
+		// add the file contents to the file
 		structDefsPW
 				.printf("#ifndef STRUCTDEFS_H\n#define STRUCTDEFS_H\n#include \"classdefs.h\"\n#define NUMCLASSES "
-						+ count + "\n#endif");
+						+ classCount + "\n#endif");
 
 		structDefsPW.close();
 	}
@@ -253,8 +303,11 @@ public class BuildCode
 	{
 		File methodsF = new File("methods.c");
 		PrintWriter methodsPW;
-		String appendString = "";
-		
+		int tempVarCount = 0;
+
+		Vector<String> classSize = new Vector<>();
+		Vector<String> superTypes = new Vector<>();
+
 		try
 		{
 			methodsF.createNewFile();
@@ -274,154 +327,171 @@ public class BuildCode
 			e.printStackTrace();
 			throw new Error("This is how the world ends.");
 		}
-		
-		methodsPW.append("#include \"methodheaders.h\"\n#include \"virtualtable.h\"\n#include <runtime.h>\n");
-		
+
+		/*
+		 * print includes
+		 */
+		methodsPW
+				.append("#include \"methodheaders.h\"\n#include \"virtualtable.h\"\n#include <runtime.h>\n\n");
+
+		/*
+		 * get the info necessary for classsize and supertypes arrays
+		 */
+		for (String name : classNames.keySet())
+		{
+			// add each class name to the classSize vector
+			classSize.add(name);
+
+			// check if the super is null or not. Will default to -1 if null;
+			String superName = classNames.get(name).keySet().toArray()[0]
+					.toString();
+			String superValue = "-1";
+			if (!superName.equals("null"))
+			{
+				superValue = classNames.get(superName).values().toArray()[0]
+						.toString();
+			}
+
+			// add super value to supertypes vector
+			superTypes.add(superValue);
+		}
+
+		/*
+		 * print the classsize array
+		 */
 		methodsPW.append("int classsize[] = {");
-		
-		int inc = 0;
-		
-		for(String str : classNames.keySet())
-		{
-			appendString += "sizeof(struct " + str.split(":")[0] + ")";
-			
-			if(!(classNames.keySet().size() - 1 == inc))
-			{
-				appendString += ", ";
-			}
-			
-			inc++;
-		}
-		
-		methodsPW.append(appendString + "};\n");
 
-		
+		for (int i = 0; i < classSize.size(); i++)
+		{
+			methodsPW.append("sizeof(struct " + classSize.get(i) + ")");
+
+			if (i < classSize.size() - 1)
+			{
+				methodsPW.append(", ");
+			}
+		}
+
+		methodsPW.append(")};\n");
+
+		/*
+		 * print supertypes array
+		 */
 		methodsPW.append("int supertypes[] = {");
-		
-		inc = 0;
-		appendString = "";
 
-		for(String str : classNames.keySet())
+		for (int i = 0; i < superTypes.size(); i++)
 		{
-			if(!str.split(":")[1].equals("null"))
+			methodsPW.append(superTypes.get(i));
+
+			if (i < superTypes.size() - 1)
 			{
-				for(String str1 : classNames.keySet())
-				{
-					if(str1.contains(str.split(":")[1]))
-					{
-						appendString += classNames.get(str1);
-						break;
-					}
-				}
+				methodsPW.append(", ");
 			}
-			else
-			{
-				appendString += "-1";
-			}
-			
-			if(!(classNames.keySet().size() - 1 == inc))
-			{
-				appendString += ", ";
-			}
-			
-			inc++;
 		}
-		
-		methodsPW.append(appendString + "};\n");
-		
-		int thisCount = 0;
-		
-		for (Vector<Descriptor> descriptorVector : TACParent.values())
-		{
-			for (Descriptor desc : descriptorVector)
-			{
-				FlatNode flat = TAC.get(desc);
 
-				if (flat instanceof FlatMethod)
+		methodsPW.append("};\n\n");
+
+		/*
+		 * print methods
+		 */
+		for (Descriptor Class : TACParent.keySet())
+		{
+			Vector<Descriptor> MethodVector = TACParent.get(Class);
+
+			HashMap<String, String> Fields = new HashMap<>();
+			for (Descriptor desc : MethodVector)
+			{
+				FlatNode flatNode = TAC.get(desc);
+
+				if (flatNode instanceof FlatFieldNode)
 				{
-					FlatMethod fm = (FlatMethod)flat;
-					MethodDescriptor md = fm.getMethod();
+					FlatFieldNode flatFieldNode = (FlatFieldNode) flatNode;
+					Fields.put(flatFieldNode.dst.toString(), flatFieldNode.dst
+							.getType().getSymbol());
+				}
+				else if (flatNode instanceof FlatMethod)
+				{
+					MethodDescriptor method = (MethodDescriptor) desc;
+					FlatMethod flatMethod = (FlatMethod) flatNode;
 					
-					methodsPW.append(md.getReturnType() + " " + 
-									 md.getClassDesc().getSymbol() + "_" + 
-									 md.getSymbol() +
-									 "(struct " + md.getClassDesc().getSymbol() + 
-									 " *this" +  thisCount);
+					HashMap<String, String> MethodArgs = new HashMap<>();
 					
-					for (int i = 0; i < md.numParameters(); i++)
+					// get all arguments for method
+					for (int i = 0; i < method.numParameters(); i++)
 					{
-						methodsPW.append(", " + md.getParameter(i).getType().getSymbol() + 
-										 " " + md.getParameter(i).getName());
+						MethodArgs.put(method.getParamName(i), method
+								.getParamType(i).getSymbol());
 					}
 					
+					// print main structure of method declaration
+					methodsPW.append(method.getReturnType().getSymbol() + " "
+							+ Class.getSymbol() + "_" + method.getSymbol()
+							+ "(struct " + Class.getSymbol() + " *this"
+							+ tempVarCount);
+					
+					// print any arguments that are apart of the method
+					for(String name : MethodArgs.keySet())
+					{
+						String type = MethodArgs.get(name) + " ";
+						
+						if(!type.equals("int "))
+						{
+							type = "struct " + type + "*";
+						}
+						methodsPW.append(", " + type + name);
+					}
+					
+					// close the method declaration and open the block body
 					methodsPW.append(")\n{\n");
 					
-					FlatNode f = flat.getNext(0);
+					/*
+					 * get all var declarations
+					 */
+					Vector<String> methodBlockVector = new Vector<>();
+					
+					FlatNode f = flatMethod.getNext(0);
 					while (true)
 					{
+						String output = "";
+						
 						if(f instanceof FlatLiteralNode)
 						{
-							String dst = ((FlatLiteralNode)f).dst.getSymbol();
-							String type = ((FlatLiteralNode)f).type.getSymbol();
-							
-							methodsPW.append(type + " " + dst+ ";\n");
-						}
-						else if(f instanceof FlatNameNode)
-						{
-							String dst = ((FlatNameNode)f).dst.getSymbol();
-							String type = ((FlatNameNode)f).type.getSymbol();
-							
-							boolean print = true;
-							
-							for(String str : classFields.get(md.getClassDesc().getClassName()))
-							{
-								if(str.equals(dst))
-								{
-									print = false;
-								}
-							}
-							
-							if(print)
-							{
-								methodsPW.append(type + " " + dst + ";\n");
-							}
+							FlatLiteralNode fln = (FlatLiteralNode) f;
+							output = fln.dst.type.getSymbol() + " " + fln.dst.getSymbol() + ";\n";
 						}
 						else if(f instanceof FlatOpNode)
 						{
-							String dst = ((FlatOpNode)f).dest.getSymbol();
-							String type = ((FlatOpNode)f).dest.type.getSymbol();
-							
-							boolean print = true;
-							
-							for(String str : classFields.get(md.getClassDesc().getClassName()))
-							{
-								if(str.equals(dst))
-								{
-									print = false;
-								}
-							}
-							
-							if(print)
-							{
-								methodsPW.append(type + " " + dst + ";\n");
-							}
+							FlatOpNode fln = (FlatOpNode) f;
+							output = fln.dest.type.getSymbol() + " " + fln.dest.getSymbol() + ";\n";
+						}
+						else if(f instanceof FlatNameNode)
+						{
+							FlatNameNode fnn = (FlatNameNode) f;
+							output = fnn.dst.type.getSymbol() + " " + fnn.dst.getSymbol() + ";\n";
+						}
+						
+						if(!methodBlockVector.contains(output))
+						{
+							methodBlockVector.add(output);
 						}
 						
 						if (f.next.size() == 0)
 						{
+							methodBlockVector.add("\n");
 							break;
 						}
 
 						f = f.next.get(0);
 					}
 					
-					f = flat.getNext(0);
+					/*
+					 * begin loop for method body
+					 */
+					f = flatMethod.getNext(0);
 					while (true)
 					{
-						if(!(f instanceof FlatNameNode))
-						{
-							methodsPW.append(formatFlatPrint(f, classFields.get(md.getClassDesc().getClassName()), "this" + thisCount));
-						}
+						String output = formatFlatPrint(f, Fields, "this" + tempVarCount);
+						
+						methodBlockVector.add(output);
 						
 						if (f.next.size() == 0)
 						{
@@ -431,9 +501,14 @@ public class BuildCode
 						f = f.next.get(0);
 					}
 					
-					methodsPW.append("}\n\n");
+					for(String out : methodBlockVector)
+					{
+						methodsPW.append(out);
+					}
 					
-					thisCount++;
+					
+					// close the method
+					methodsPW.append("}\n\n");
 				}
 			}
 		}
@@ -468,105 +543,89 @@ public class BuildCode
 
 		methodHeadersPW.close();
 	}
-	
-	private String formatFlatPrint(FlatNode fn, Vector<String> fieldNames, String thisVar)
+
+	private String formatFlatPrint(FlatNode fn, HashMap<String, String> fieldsMap, String thisVar)
 	{
 		String returnString = "";
 		
-		if(fn instanceof FlatLiteralNode)
+		if (fn instanceof FlatLiteralNode)
 		{
-			String dst = ((FlatLiteralNode)fn).dst.getSymbol();
-			String value = ((FlatLiteralNode)fn).value.toString();
-			
-			for(String str : fieldNames)
+			String dst = ((FlatLiteralNode) fn).dst.getSymbol();
+			String value = ((FlatLiteralNode) fn).value.toString();
+
+			for (String str : fieldsMap.keySet())
 			{
-				if(dst.equals(str))
+				if (dst.equals(str))
 				{
 					dst = thisVar + "->" + dst;
 				}
 			}
-			
+
 			returnString = dst + " = " + value + ";";
 		}
-		else if(fn instanceof FlatOpNode)
+		else if (fn instanceof FlatOpNode)
 		{
-			String dst = ((FlatOpNode)fn).dest.getSymbol();
-			String valueLeft = ((FlatOpNode)fn).left.getSymbol();
+			String dst = ((FlatOpNode) fn).dest.getSymbol();
+			String valueLeft = ((FlatOpNode) fn).left.getSymbol();
 			String op = "";
 			String valueRight = "";
-			
-			if(((FlatOpNode)fn).right != null)
+
+			if (((FlatOpNode) fn).right != null)
 			{
-				valueRight = ((FlatOpNode)fn).right.getSymbol();
-				op = ((FlatOpNode)fn).op.toString();
+				valueRight = ((FlatOpNode) fn).right.getSymbol();
+				op = ((FlatOpNode) fn).op.toString();
 			}
-			
-			for(String str : fieldNames)
+
+			for (String str : fieldsMap.keySet())
 			{
-				if(dst.equals(str))
+				if (dst.equals(str))
 				{
 					dst = thisVar + "->" + dst;
 				}
-				
-				if(valueLeft.equals(str))
+
+				if (valueLeft.equals(str))
 				{
 					valueLeft = thisVar + "->" + valueLeft;
 				}
-				
-				if(valueRight.equals(str))
+
+				if (valueRight.equals(str))
 				{
 					valueRight = thisVar + "->" + valueRight;
 				}
 			}
-			
-			if(valueRight != "")
+
+			if (valueRight != "")
 			{
-				returnString = dst + " = " + valueLeft + " " +  op + " " + valueRight + ";";
+				returnString = dst + " = " + valueLeft + " " + op + " "
+						+ valueRight + ";";
 			}
 			else
 			{
 				returnString = dst + " = " + valueLeft + ";";
 			}
 		}
-		else if(fn instanceof FlatNameNode)
+		else if (fn instanceof FlatNameNode)
 		{
-			
+
 		}
-		else if(fn instanceof FlatCall)
+		else if (fn instanceof FlatCall)
 		{
-			
+
 		}
-		else if(fn instanceof FlatLabel)
+		else if (fn instanceof FlatNew)
 		{
-			returnString = ((FlatLabel) fn).toString();
-		}
-		else if(fn instanceof FlatCondBranch)
-		{
-			GoFlatLabel gfl = ((GoFlatLabel)fn.next.firstElement());
-			if(!fn.prev.isEmpty() && fn.prev.firstElement() instanceof GoFlatLabel)
-			{
-				gfl = ((GoFlatLabel)fn.prev.firstElement());
-				returnString = "if (!" + ((FlatCondBranch) fn).test_cond.getSymbol() + ")" + gfl.toString();
-			}
-			else
-			{
-				returnString = "if (!" + ((FlatCondBranch) fn).test_cond.getSymbol() + ") " + gfl.toString();
-			}
-		}
-		else if(fn instanceof FlatNew)
-		{
-			String type = ((FlatNew)fn).type.getSymbol();
-			
+			String type = ((FlatNew) fn).type.getSymbol();
+
 			returnString = "struct *" + type + " = allocate_new(0);";
 		}
 		else
 		{
-			//throw new Error("Oh, god, what have we done?");
+			// throw new Error("Oh, god, what have we done?");
 		}
-		
+
 		return returnString + "\n";
 	}
-	
+
 	private void generateVMT()
 	{
 		int numClasses = 0;
@@ -574,109 +633,111 @@ public class BuildCode
 		int maxMethods = 0;
 		boolean copy;
 		int maxGen = 0;
-		
+
 		methodVector = new Vector<String>();
 		Vector<ClassDescriptor> classVector = new Vector<ClassDescriptor>();
 		HashMap<String, Integer> classGen = new HashMap<>();
-		
-		//Make Table of class names matched to generation value
-		for(Descriptor key : TACParent.keySet())
-		{	
+
+		// Make Table of class names matched to generation value
+		for (Descriptor key : TACParent.keySet())
+		{
 			ClassDescriptor cd = (ClassDescriptor) key;
 			int thisgen = generation(cd);
 			classGen.put(cd.getSymbol(), thisgen);
-			if(generation(cd)> maxGen)
+			if (generation(cd) > maxGen)
 			{
 				maxGen = thisgen;
 			}
 		}
-		
-		//Fill Vector with classes in generation order starting from 0
-		for(int count = 0; count <= maxGen; count++)
+
+		// Fill Vector with classes in generation order starting from 0
+		for (int count = 0; count <= maxGen; count++)
 		{
-			for(Descriptor key : TACParent.keySet())
+			for (Descriptor key : TACParent.keySet())
 			{
-				if(classGen.get(key.getSymbol()) == count)
+				if (classGen.get(key.getSymbol()) == count)
 				{
-					classVector.add((ClassDescriptor)key);
+					classVector.add((ClassDescriptor) key);
 				}
 			}
 		}
-		
-		
+
 		classGen = new HashMap<>();
-		//Find max number of methods and fill vector with method names
-		for(Descriptor key : classVector)
+		// Find max number of methods and fill vector with method names
+		for (Descriptor key : classVector)
 		{
-			numClasses ++;
+			numClasses++;
 			numMethods = 0;
-			for(Descriptor desc : TACParent.get(key))
+			for (Descriptor desc : TACParent.get(key))
 			{
 				FlatNode flat = TAC.get(desc);
-				if(flat instanceof FlatMethod)
+				if (flat instanceof FlatMethod)
 				{
 					FlatMethod fm = (FlatMethod) flat;
 					copy = false;
-					if(methodVector.isEmpty())
+					if (methodVector.isEmpty())
 					{
 						methodVector.add(fm.method.getSymbol());
-						numMethods ++;
+						numMethods++;
 					}
-					for(String src: methodVector)
+					for (String src : methodVector)
 					{
-						if(src.equals(fm.method.getSymbol()))
+						if (src.equals(fm.method.getSymbol()))
 						{
-							//numMethods ++;
+							// numMethods ++;
 							copy = true;
 							break;
 						}
 					}
-					if(!copy)
+					if (!copy)
 					{
 						methodVector.add(fm.method.getSymbol());
-						numMethods ++;
+						numMethods++;
 					}
 				}
 			}
 			classGen.put(key.getSymbol(), numMethods);
-			if(((ClassDescriptor)key).getSuper() != null)
+			if (((ClassDescriptor) key).getSuper() != null)
 			{
 				numMethods += classGen.get(key.getSymbol());
 			}
-			if(maxMethods < numMethods)
+			if (maxMethods < numMethods)
 			{
 				maxMethods = numMethods;
 			}
 		}
-		System.out.println("numClasses = " + numClasses + "  maxMethods = " + maxMethods);
-		
+		System.out.println("numClasses = " + numClasses + "  maxMethods = "
+				+ maxMethods);
+
 		String vmtString = "void * virtualtable[]={";
 		int counter = 0;
-		
-		//Prepare virtual Table String
-		for(Descriptor key : classVector)
+
+		// Prepare virtual Table String
+		for (Descriptor key : classVector)
 		{
 			numMethods = 0;
-			for(String src: methodVector)
+			for (String src : methodVector)
 			{
-				for(Descriptor desc : TACParent.get(key))
+				for (Descriptor desc : TACParent.get(key))
 				{
 					FlatNode flat = TAC.get(desc);
-					if(flat instanceof FlatMethod)
-					{	
+					if (flat instanceof FlatMethod)
+					{
 						FlatMethod fm = (FlatMethod) flat;
-						if(fm.method.getSymbol().equals(src))
+						if (fm.method.getSymbol().equals(src))
 						{
-							vmtString += " &_" + fm.getMethod().getClassDesc().getSymbol() + "_" + fm.method.getSymbol();
-							numMethods +=1;
-							if(counter < maxMethods * numClasses -1)
+							vmtString += " &_"
+									+ fm.getMethod().getClassDesc().getSymbol()
+									+ "_" + fm.method.getSymbol();
+							numMethods += 1;
+							if (counter < maxMethods * numClasses - 1)
 							{
-								vmtString +=",";
-								counter ++;
+								vmtString += ",";
+								counter++;
 							}
-							if(counter%5 == 0)
+							if (counter % 5 == 0)
 							{
-								vmtString +="\n\t";
+								vmtString += "\n\t";
 							}
 							break;
 						}
@@ -685,30 +746,30 @@ public class BuildCode
 			}
 			while (numMethods < maxMethods)
 			{
-				vmtString +=" 0";
-				if(counter < maxMethods * numClasses -1)
+				vmtString += " 0";
+				if (counter < maxMethods * numClasses - 1)
 				{
-					vmtString +=",";
-					counter ++;
+					vmtString += ",";
+					counter++;
 				}
-				if(counter%5 == 0)
+				if (counter % 5 == 0)
 				{
-					vmtString +="\n\t";
+					vmtString += "\n\t";
 				}
 				numMethods++;
 			}
 		}
 		vmtString += "}";
-		//System.out.println(vmtString);
-		
-		//prepare file for opening and write virtual table string to file
+		// System.out.println(vmtString);
+
+		// prepare file for opening and write virtual table string to file
 		File virtualTable = new File("virtualtable.h");
 		PrintWriter virtualTablePW;
 		try
 		{
 			virtualTable.createNewFile();
 		}
-		catch(IOException e1)
+		catch (IOException e1)
 		{
 			e1.printStackTrace();
 			throw new Error("The table is fubar");
@@ -717,7 +778,7 @@ public class BuildCode
 		{
 			virtualTablePW = new PrintWriter(virtualTable);
 		}
-		catch(FileNotFoundException e2)
+		catch (FileNotFoundException e2)
 		{
 			e2.printStackTrace();
 			throw new Error("It was not Christian's fault!!!");
@@ -725,11 +786,11 @@ public class BuildCode
 		virtualTablePW.append(vmtString);
 		virtualTablePW.close();
 	}
-	
+
 	private int generation(ClassDescriptor cd)
 	{
 		int generation = 0;
-		if(cd.getSuper() == null)
+		if (cd.getSuper() == null)
 		{
 			return generation;
 		}
@@ -862,4 +923,3 @@ public class BuildCode
 	// return nodetolabel;
 	// }
 }
-
