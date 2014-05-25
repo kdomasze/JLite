@@ -1,18 +1,37 @@
-/*
- * Test case 1:
- * No identifier is declared twice in the same scope. 
- */
-class Test001 {
-	int x;
-	int y; 
-	  
-	  void main(System s) {
-		y = 0;
-	    int x = y;  
-	    if (y == 1) {
-	    	int x = 1; /* Declared twice */
-	    	y = x;
-	    }
-	  }
-	  
+class fact {
+
+	int n;
+
+	void setNumber(int num) {
+		n = num;
+	}
+
+	int factRec(int num) {
+		if (num == 1) {
+			return 1;
+		}
+		return (factRec(num-1) * num);
+	}
+
+	int factIter() {
+		int i;
+		int f;
+
+		i=1;
+		f=1;
+
+		while (i < (n +1)) {
+			f = f*i;
+			i = i +1;
+		}
+
+		return f;
+	}
+
+	void main(System x) {
+		fact f=new fact();
+		f.setNumber(4);
+		f.factIter();
+	}
+
 }

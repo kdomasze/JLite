@@ -517,7 +517,7 @@ public class BuildFlat
 
 		FlatCondBranch ifStatement = new FlatCondBranch(tmp);
 		FlatLabel L1 = new FlatLabel(labelCount++); 
-		GoFlatLabel L2 = new GoFlatLabel("Goto L", labelCount++);
+		GoFlatLabel L2 = new GoFlatLabel("goto L", labelCount++);
 		
 		L1.addNext(testFlatCond.begin);
 		testFlatCond.begin.addPrev(L1);
@@ -527,7 +527,7 @@ public class BuildFlat
 		L2.addPrev(ifStatement);
 		L2.addNext(FlatLoopBody.begin);
 		FlatLoopBody.begin.addPrev(L2);
-		GoFlatLabel L3 = new GoFlatLabel("Goto L", L1.numL);
+		GoFlatLabel L3 = new GoFlatLabel("goto L", L1.numL);
 		FlatLoopBody.end.addNext(L3);
 		L3.addPrev(FlatLoopBody.end);
 		FlatLabel L4 = new FlatLabel(L2.numL);
@@ -547,7 +547,7 @@ public class BuildFlat
 
 		NodePair trueFlatBlock = flattenBlockNode(trueStatement);
 		
-		GoFlatLabel L1 = new GoFlatLabel("Goto L", labelCount++);
+		GoFlatLabel L1 = new GoFlatLabel("goto L", labelCount++);
 		TempDescriptor tmp = testFlatCond.tmp;
 
 		FlatCondBranch ifStatement = new FlatCondBranch(tmp);
@@ -568,7 +568,7 @@ public class BuildFlat
 			elseFlatBlock = FlattenNopNode(null);
 		}
 
-		GoFlatLabel L2 = new GoFlatLabel("Goto L", labelCount++);
+		GoFlatLabel L2 = new GoFlatLabel("goto L", labelCount++);
 		trueFlatBlock.end.addNext(L2);
 		L2.addPrev(trueFlatBlock.end);
 		FlatLabel L3 = new FlatLabel(L1.numL);
