@@ -612,6 +612,23 @@ public class BuildCode
 		{
 
 		}
+		else if(fn instanceof FlatLabel)
+		{
+			returnString = ((FlatLabel) fn).toString();
+		}
+		else if(fn instanceof FlatCondBranch)
+		{
+			GoFlatLabel gfl = ((GoFlatLabel)fn.next.firstElement());
+			if(!fn.prev.isEmpty() && fn.prev.firstElement() instanceof GoFlatLabel)
+			{
+				gfl = ((GoFlatLabel)fn.prev.firstElement());
+				returnString = "if (!" + ((FlatCondBranch) fn).test_cond.getSymbol() + ")" + gfl.toString();
+			}
+			else
+			{
+				returnString = "if (!" + ((FlatCondBranch) fn).test_cond.getSymbol() + ") " + gfl.toString();
+			}
+		}
 		else if (fn instanceof FlatNew)
 		{
 			String type = ((FlatNew) fn).type.getSymbol();
