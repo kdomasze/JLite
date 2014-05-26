@@ -651,7 +651,15 @@ public class BuildCode
 		else if (fn instanceof FlatReturnNode)
 		{
 			FlatReturnNode frn = (FlatReturnNode)fn;
-			returnString = "return " + frn.tempdesc.getSymbol() + ";";
+			if (frn.tempdesc == null)
+			{
+				returnString = "return;";
+			}
+			else
+			{
+				returnString = "return " + frn.tempdesc.getSymbol() + ";";
+			}
+
 		}
 		
 		else
