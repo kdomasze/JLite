@@ -563,6 +563,14 @@ public class BuildCode
 
 			returnString = dst + " = " + value + ";";
 		}
+		else if (fn instanceof FlatCastNode)
+		{
+			String dst = ((FlatCastNode)fn).dst.getSymbol();
+			String src = ((FlatCastNode)fn).src.getSymbol();
+			String type = ((FlatCastNode)fn).type.getSymbol();
+			
+			returnString = dst + " = " + "(" + type + ")" +  src + ";";
+		}
 		else if (fn instanceof FlatOpNode)
 		{
 			String dst = ((FlatOpNode) fn).dest.getSymbol();
@@ -645,6 +653,7 @@ public class BuildCode
 			FlatReturnNode frn = (FlatReturnNode)fn;
 			returnString = "return " + frn.tempdesc.getSymbol() + ";";
 		}
+		
 		else
 		{
 			// throw new Error("Oh, god, what have we done?");
