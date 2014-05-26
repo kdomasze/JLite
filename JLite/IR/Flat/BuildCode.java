@@ -640,6 +640,11 @@ public class BuildCode
 
 			returnString = "struct *" + type + " = allocate_new(0);";
 		}
+		else if (fn instanceof FlatReturnNode)
+		{
+			FlatReturnNode frn = (FlatReturnNode)fn;
+			returnString = "return " + frn.tempdesc.getSymbol() + ";";
+		}
 		else
 		{
 			// throw new Error("Oh, god, what have we done?");
