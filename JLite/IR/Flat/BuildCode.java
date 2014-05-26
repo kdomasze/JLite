@@ -468,6 +468,11 @@ public class BuildCode
 							FlatNameNode fnn = (FlatNameNode) f;
 							output = fnn.dst.type.getSymbol() + " " + fnn.dst.getSymbol() + ";\n";
 						}
+						else if(f instanceof FlatCastNode)
+						{
+							FlatCastNode fcn = (FlatCastNode)f;
+							output = fcn.dst.type.getSymbol() + " " + fcn.dst.getSymbol() + ";\n";
+						}
 						
 						if(!methodBlockVector.contains(output))
 						{
