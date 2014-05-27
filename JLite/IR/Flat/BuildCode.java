@@ -725,11 +725,14 @@ public class BuildCode
 				}
 			}
 			classGen.put(key.getSymbol(), numMethods);
-			//System.out.println(numMethods);
+			System.out.println("this gen = "+numMethods);
 			if (((ClassDescriptor) key).getSuper() != null)
 			{
+				System.out.println("last gen =" + classGen.get(((ClassDescriptor)key).getSuper()));
 				numMethods += classGen.get(((ClassDescriptor)key).getSuper());
-				//System.out.println(numMethods);
+				classGen.remove(key.getSymbol());
+				classGen.put(key.getSymbol(), numMethods);
+				System.out.println(numMethods);
 			}
 			if (maxMethods < numMethods)
 			{
