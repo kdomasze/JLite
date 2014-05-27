@@ -14,6 +14,7 @@ public class BuildCode
 
 	public static Vector<String> methodVector;
 	public static Vector<String> methodVT = new Vector<>();
+	Vector<ClassDescriptor> classVector = new Vector<ClassDescriptor>();
 
 	public BuildCode(HashMap<Descriptor, Vector<Descriptor>> tacp,
 			HashMap<Descriptor, FlatNode> tac)
@@ -79,6 +80,7 @@ public class BuildCode
 		/* Output includes */
 
 		/* Output Structures */
+		fillVector();
 		generateClassDefs();
 		generateVMT();
 		// Output the C class declarations
@@ -676,18 +678,10 @@ public class BuildCode
 		return returnString + "\n";
 	}
 
-	private void generateVMT()
+	private void fillVector()
 	{
-		int numClasses = 0;
-		int numMethods = 0;
-		int maxMethods = 0;
-		boolean copy;
 		int maxGen = 0;
-
-		methodVector = new Vector<String>();
-		Vector<ClassDescriptor> classVector = new Vector<ClassDescriptor>();
 		HashMap<String, Integer> classGen = new HashMap<>();
-
 		// Make Table of class names matched to generation value
 		for (Descriptor key : TACParent.keySet())
 		{
@@ -699,7 +693,7 @@ public class BuildCode
 				maxGen = thisgen;
 			}
 		}
-
+		
 		// Fill Vector with classes in generation order starting from 0
 		for (int count = 0; count <= maxGen; count++)
 		{
@@ -711,6 +705,19 @@ public class BuildCode
 				}
 			}
 		}
+	}
+	
+	private void generateVMT()
+	{
+		int numClasses = 0;
+		int numMethods = 0;
+		int maxMethods = 0;
+		boolean copy;
+	
+
+		methodVector = new Vector<String>();
+		
+		HashMap<String, Integer> classGen = new HashMap<>();
 
 		classGen = new HashMap<>();
 		// Find max number of methods and fill vector with method names
