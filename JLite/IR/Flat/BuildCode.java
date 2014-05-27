@@ -13,7 +13,8 @@ public class BuildCode
 	private LinkedHashMap<String, HashMap<String, String>> classNames = new LinkedHashMap<>();
 
 	public static Vector<String> methodVector;
-	public static Vector<String> methodVT = new Vector<>();
+	public static Vector<String> methodVT = new Vector<>();	
+	Vector<ClassDescriptor> classVector = new Vector<ClassDescriptor>();
 
 	private int maxMethods;
 
@@ -81,6 +82,7 @@ public class BuildCode
 		/* Output includes */
 
 		/* Output Structures */
+		fillVector();
 		generateClassDefs();
 		generateVMT();
 		// Output the C class declarations
@@ -777,35 +779,11 @@ public class BuildCode
 		int numClasses = 0;
 		int numMethods = 0;
 		boolean copy;
-		int maxGen = 0;
+	
 
 		methodVector = new Vector<String>();
-		Vector<ClassDescriptor> classVector = new Vector<ClassDescriptor>();
+		
 		HashMap<String, Integer> classGen = new HashMap<>();
-
-		// Make Table of class names matched to generation value
-		for (Descriptor key : TACParent.keySet())
-		{
-			ClassDescriptor cd = (ClassDescriptor) key;
-			int thisgen = generation(cd);
-			classGen.put(cd.getSymbol(), thisgen);
-			if (generation(cd) > maxGen)
-			{
-				maxGen = thisgen;
-			}
-		}
-
-		// Fill Vector with classes in generation order starting from 0
-		for (int count = 0; count <= maxGen; count++)
-		{
-			for (Descriptor key : TACParent.keySet())
-			{
-				if (classGen.get(key.getSymbol()) == count)
-				{
-					classVector.add((ClassDescriptor) key);
-				}
-			}
-		}
 
 		classGen = new HashMap<>();
 		// Find max number of methods and fill vector with method names
@@ -955,6 +933,35 @@ public class BuildCode
 		}
 	}
 
+	private void fillVector()
+	{
+		int maxGen = 0;
+		HashMap<String, Integer> classGen = new HashMap<>();
+		// Make Table of class names matched to generation value
+		for (Descriptor key : TACParent.keySet())
+		{
+			ClassDescriptor cd = (ClassDescriptor) key;
+			int thisgen = generation(cd);
+			classGen.put(cd.getSymbol(), thisgen);
+			if (generation(cd) > maxGen)
+			{
+				maxGen = thisgen;
+			}
+		}
+		
+		// Fill Vector with classes in generation order starting from 0
+		for (int count = 0; count <= maxGen; count++)
+		{
+			for (Descriptor key : TACParent.keySet())
+			{
+				if (classGen.get(key.getSymbol()) == count)
+				{
+					classVector.add((ClassDescriptor) key);
+				}
+			}
+		}
+	}
+	
 	// /** Example code to generate code for FlatMethod fm. */
 	// /** DFS algorithm **/
 	// private void generateFlatMethod(FlatMethod fm, PrintWriter output)
