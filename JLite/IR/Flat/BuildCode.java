@@ -13,7 +13,7 @@ public class BuildCode
 	private LinkedHashMap<String, HashMap<String, String>> classNames = new LinkedHashMap<>();
 
 	public static Vector<String> methodVector;
-	public static Vector<String> methodVT = new Vector<>();	
+	public static Vector<String> methodVT = new Vector<>();
 	Vector<ClassDescriptor> classVector = new Vector<ClassDescriptor>();
 
 	private int maxMethods;
@@ -396,8 +396,10 @@ public class BuildCode
 
 		methodsPW.append("};\n\n");
 
+		HashMap<String, HashMap<String, String>> fieldsPerClass = new HashMap<>();
+
 		/*
-		 * print methods
+		 * get fields to exclude them from generating in method body
 		 */
 		for (Descriptor Class : TACParent.keySet())
 		{
@@ -411,10 +413,26 @@ public class BuildCode
 				if (flatNode instanceof FlatFieldNode)
 				{
 					FlatFieldNode flatFieldNode = (FlatFieldNode) flatNode;
-					Fields.put(flatFieldNode.dst.toString(), flatFieldNode.dst
+					Fields.put(flatFieldNode.dst.getSymbol(), flatFieldNode.dst
 							.getType().getSymbol());
 				}
-				else if (flatNode instanceof FlatMethod)
+			}
+			fieldsPerClass.put(Class.getSymbol(), Fields);
+		}
+
+		/*
+		 * print methods
+		 */
+		for (Descriptor Class : TACParent.keySet())
+		{
+			Vector<Descriptor> MethodVector = TACParent.get(Class);
+
+			HashMap<String, String> Fields = new HashMap<>();
+			for (Descriptor desc : MethodVector)
+			{
+				FlatNode flatNode = TAC.get(desc);
+
+				if (flatNode instanceof FlatMethod)
 				{
 					LinkedHashMap<String, String> thisVarClassVector = new LinkedHashMap<>();
 					MethodDescriptor method = (MethodDescriptor) desc;
@@ -428,11 +446,11 @@ public class BuildCode
 						MethodArgs.put(method.getParamName(i), method
 								.getParamType(i).getSymbol());
 					}
-					
-					String methodAppend = method.getReturnType().getSymbol() + " "
-							+ Class.getSymbol() + "_" + method.getSymbol()
-							+ "(struct " + Class.getSymbol() + " *this"
-							+ tempVarCount;
+
+					String methodAppend = method.getReturnType().getSymbol()
+							+ " " + Class.getSymbol() + "_"
+							+ method.getSymbol() + "(struct "
+							+ Class.getSymbol() + " *this" + tempVarCount;
 
 					// print any arguments that are apart of the method
 					for (String name : MethodArgs.keySet())
@@ -445,12 +463,12 @@ public class BuildCode
 						}
 						methodAppend += ", " + type + name;
 					}
-					
+
 					// print main structure of method declaration
 					methodsPW.append(methodAppend);
-					
+
 					methodDecs.add(methodAppend + ");");
-					
+
 					// close the method declaration and open the block body
 					methodsPW.append(")\n{\n");
 
@@ -467,36 +485,102 @@ public class BuildCode
 						if (f instanceof FlatLiteralNode)
 						{
 							FlatLiteralNode fln = (FlatLiteralNode) f;
-							output = fln.dst.type.getSymbol() + " "
-									+ fln.dst.getSymbol() + ";\n";
+							boolean instanceOfField = false;
+							for (String args : MethodArgs.keySet())
+							{
+								if (fln.dst.getSymbol().equals(args))
+								{
+									instanceOfField = true;
+									break;
+								}
+							}
+
+							if (!instanceOfField)
+							{
+								output = fln.dst.type.getSymbol() + " "
+										+ fln.dst.getSymbol() + ";\n";
+							}
 						}
 						else if (f instanceof FlatOpNode)
 						{
-							FlatOpNode fln = (FlatOpNode) f;
-							output = fln.dest.type.getSymbol() + " "
-									+ fln.dest.getSymbol() + ";\n";
+							FlatOpNode fon = (FlatOpNode) f;
+
+							boolean instanceOfField = false;
+							for (String args : MethodArgs.keySet())
+							{
+								if (fon.dest.getSymbol().equals(args))
+								{
+									instanceOfField = true;
+									break;
+								}
+							}
+
+							if (!instanceOfField)
+							{
+								output = fon.dest.type.getSymbol() + " "
+										+ fon.dest.getSymbol() + ";\n";
+							}
 						}
 						else if (f instanceof FlatNameNode)
 						{
 							FlatNameNode fnn = (FlatNameNode) f;
-							output = fnn.dst.type.getSymbol() + " "
+							boolean instanceOfField = false;
+							for(String args : MethodArgs.keySet())
+							{
+								if(fnn.dst.getSymbol().equals(args))
+								{
+									instanceOfField = true;
+									break;
+								}
+							}
+							
+							if(!instanceOfField)
+							{
+								output = fnn.dst.type.getSymbol() + " "
 									+ fnn.dst.getSymbol() + ";\n";
+							}
 						}
 						else if (f instanceof FlatCastNode)
 						{
 							FlatCastNode fcn = (FlatCastNode) f;
-							output = fcn.dst.type.getSymbol() + " "
+							boolean instanceOfField = false;
+							for(String args : MethodArgs.keySet())
+							{
+								if(fcn.dst.getSymbol().equals(args))
+								{
+									instanceOfField = true;
+									break;
+								}
+							}
+							
+							if(!instanceOfField)
+							{
+								output = fcn.dst.type.getSymbol() + " "
 									+ fcn.dst.getSymbol() + ";\n";
+							}
 						}
 						else if (f instanceof FlatNew)
 						{
 							FlatNew fn = (FlatNew) f;
 							String type = ((FlatNew) fn).type.getSymbol();
 							String dst = ((FlatNew) fn).dst.getSymbol();
-
-							output = "struct " + type + " *" + dst + ";\n";
-
-							thisVarClassVector.put(fn.type.getSymbol(), dst);
+							
+							boolean instanceOfField = false;
+							for(String args : MethodArgs.keySet())
+							{
+								if(fn.dst.getSymbol().equals(args))
+								{
+									instanceOfField = true;
+									break;
+								}
+							}
+							
+							if(!instanceOfField)
+							{
+								output = "struct " + type + " *" + dst + ";\n";
+	
+								thisVarClassVector.put(fn.type.getSymbol(), dst);
+							}
 						}
 
 						if (!methodBlockVector.contains(output))
@@ -519,8 +603,10 @@ public class BuildCode
 					f = flatMethod.getNext(0);
 					while (true)
 					{
-						String output = formatFlatPrint(f, Fields, "this"
-								+ tempVarCount, thisVarClassVector);
+						String output = formatFlatPrint(f,
+								fieldsPerClass.get(((MethodDescriptor) desc)
+										.getClassDesc().getSymbol()), "this"
+										+ tempVarCount, thisVarClassVector);
 
 						methodBlockVector.add(output);
 
@@ -544,7 +630,7 @@ public class BuildCode
 		}
 
 		methodsPW.close();
-		
+
 		generateMethodHeader(methodDecs);
 	}
 
@@ -572,16 +658,17 @@ public class BuildCode
 			e.printStackTrace();
 			throw new Error("This is how the world ends.");
 		}
-		
-		methodHeadersPW.append("#ifndef METHODHEADERS_H\n#define METHODHEADERS_H\n#include \"strucdefs.h\"\n\n");
-		
-		for(String str : methodDecs)
+
+		methodHeadersPW
+				.append("#ifndef METHODHEADERS_H\n#define METHODHEADERS_H\n#include \"strucdefs.h\"\n\n");
+
+		for (String str : methodDecs)
 		{
 			methodHeadersPW.append(str + "\n\n");
 		}
-		
+
 		methodHeadersPW.append("#endif\n");
-		
+
 		methodHeadersPW.close();
 	}
 
@@ -677,12 +764,12 @@ public class BuildCode
 			}
 
 			String methodNum = null;
-			
+
 			int classNum = 0;
-			
-			for(String str : classNames.keySet())
+
+			for (String str : classNames.keySet())
 			{
-				if(str.equals(className))
+				if (str.equals(className))
 				{
 					break;
 				}
@@ -779,10 +866,9 @@ public class BuildCode
 		int numClasses = 0;
 		int numMethods = 0;
 		boolean copy;
-	
 
 		methodVector = new Vector<String>();
-		
+
 		HashMap<String, Integer> classGen = new HashMap<>();
 
 		classGen = new HashMap<>();
@@ -820,11 +906,12 @@ public class BuildCode
 				}
 			}
 			classGen.put(key.getSymbol(), numMethods);
-			System.out.println("this gen = "+numMethods);
+			System.out.println("this gen = " + numMethods);
 			if (((ClassDescriptor) key).getSuper() != null)
 			{
-				System.out.println("last gen =" + classGen.get(((ClassDescriptor)key).getSuper()));
-				numMethods += classGen.get(((ClassDescriptor)key).getSuper());
+				System.out.println("last gen ="
+						+ classGen.get(((ClassDescriptor) key).getSuper()));
+				numMethods += classGen.get(((ClassDescriptor) key).getSuper());
 				classGen.remove(key.getSymbol());
 				classGen.put(key.getSymbol(), numMethods);
 				System.out.println(numMethods);
@@ -834,8 +921,10 @@ public class BuildCode
 				maxMethods = numMethods;
 			}
 		}
-	/*	System.out.println("numClasses = " + numClasses + "  maxMethods = "
-				+ maxMethods);*/
+		/*
+		 * System.out.println("numClasses = " + numClasses + "  maxMethods = " +
+		 * maxMethods);
+		 */
 
 		String vmtString = "void * virtualtable[]={";
 		String vmtAdd;
@@ -855,8 +944,7 @@ public class BuildCode
 						FlatMethod fm = (FlatMethod) flat;
 						if (fm.method.getSymbol().equals(src))
 						{
-							vmtAdd =
-									 fm.getMethod().getClassDesc().getSymbol()
+							vmtAdd = fm.getMethod().getClassDesc().getSymbol()
 									+ "_" + fm.method.getSymbol();
 							vmtString += " &" + vmtAdd;
 							numMethods += 1;
@@ -891,10 +979,9 @@ public class BuildCode
 				numMethods++;
 			}
 		}
-		/*for(String s:methodVT)
-		{
-			System.out.println(s);
-		}*/
+		/*
+		 * for(String s:methodVT) { System.out.println(s); }
+		 */
 		vmtString += "}";
 		// System.out.println(vmtString);
 
@@ -951,7 +1038,7 @@ public class BuildCode
 				maxGen = thisgen;
 			}
 		}
-		
+
 		// Fill Vector with classes in generation order starting from 0
 		for (int count = 0; count <= maxGen; count++)
 		{
@@ -964,7 +1051,7 @@ public class BuildCode
 			}
 		}
 	}
-	
+
 	// /** Example code to generate code for FlatMethod fm. */
 	// /** DFS algorithm **/
 	// private void generateFlatMethod(FlatMethod fm, PrintWriter output)
