@@ -14,6 +14,8 @@ public class BuildCode
 
 	public static Vector<String> methodVector;
 
+	private int maxMethods;
+
 	public BuildCode(HashMap<Descriptor, Vector<Descriptor>> tacp,
 			HashMap<Descriptor, FlatNode> tac)
 	{
@@ -410,75 +412,90 @@ public class BuildCode
 				}
 				else if (flatNode instanceof FlatMethod)
 				{
+					LinkedHashMap<String, String> thisVarClassVector = new LinkedHashMap<>();
 					MethodDescriptor method = (MethodDescriptor) desc;
 					FlatMethod flatMethod = (FlatMethod) flatNode;
-					
+
 					HashMap<String, String> MethodArgs = new HashMap<>();
-					
+
 					// get all arguments for method
 					for (int i = 0; i < method.numParameters(); i++)
 					{
 						MethodArgs.put(method.getParamName(i), method
 								.getParamType(i).getSymbol());
 					}
-					
+
 					// print main structure of method declaration
 					methodsPW.append(method.getReturnType().getSymbol() + " "
 							+ Class.getSymbol() + "_" + method.getSymbol()
 							+ "(struct " + Class.getSymbol() + " *this"
 							+ tempVarCount);
-					
+
 					// print any arguments that are apart of the method
-					for(String name : MethodArgs.keySet())
+					for (String name : MethodArgs.keySet())
 					{
 						String type = MethodArgs.get(name) + " ";
-						
-						if(!type.equals("int "))
+
+						if (!type.equals("int "))
 						{
 							type = "struct " + type + "*";
 						}
 						methodsPW.append(", " + type + name);
 					}
-					
+
 					// close the method declaration and open the block body
 					methodsPW.append(")\n{\n");
-					
+
 					/*
 					 * get all var declarations
 					 */
 					Vector<String> methodBlockVector = new Vector<>();
-					
+
 					FlatNode f = flatMethod.getNext(0);
 					while (true)
 					{
 						String output = "";
-						
-						if(f instanceof FlatLiteralNode)
+
+						if (f instanceof FlatLiteralNode)
 						{
 							FlatLiteralNode fln = (FlatLiteralNode) f;
-							output = fln.dst.type.getSymbol() + " " + fln.dst.getSymbol() + ";\n";
+							output = fln.dst.type.getSymbol() + " "
+									+ fln.dst.getSymbol() + ";\n";
 						}
-						else if(f instanceof FlatOpNode)
+						else if (f instanceof FlatOpNode)
 						{
 							FlatOpNode fln = (FlatOpNode) f;
-							output = fln.dest.type.getSymbol() + " " + fln.dest.getSymbol() + ";\n";
+							output = fln.dest.type.getSymbol() + " "
+									+ fln.dest.getSymbol() + ";\n";
 						}
-						else if(f instanceof FlatNameNode)
+						else if (f instanceof FlatNameNode)
 						{
 							FlatNameNode fnn = (FlatNameNode) f;
-							output = fnn.dst.type.getSymbol() + " " + fnn.dst.getSymbol() + ";\n";
+							output = fnn.dst.type.getSymbol() + " "
+									+ fnn.dst.getSymbol() + ";\n";
 						}
-						else if(f instanceof FlatCastNode)
+						else if (f instanceof FlatCastNode)
 						{
-							FlatCastNode fcn = (FlatCastNode)f;
-							output = fcn.dst.type.getSymbol() + " " + fcn.dst.getSymbol() + ";\n";
+							FlatCastNode fcn = (FlatCastNode) f;
+							output = fcn.dst.type.getSymbol() + " "
+									+ fcn.dst.getSymbol() + ";\n";
 						}
-						
-						if(!methodBlockVector.contains(output))
+						else if (f instanceof FlatNew)
+						{
+							FlatNew fn = (FlatNew) f;
+							String type = ((FlatNew) fn).type.getSymbol();
+							String dst = ((FlatNew) fn).dst.getSymbol();
+
+							output = "struct " + type + " *" + dst + ";\n";
+
+							thisVarClassVector.put(fn.type.getSymbol(), dst);
+						}
+
+						if (!methodBlockVector.contains(output))
 						{
 							methodBlockVector.add(output);
 						}
-						
+
 						if (f.next.size() == 0)
 						{
 							methodBlockVector.add("\n");
@@ -487,17 +504,18 @@ public class BuildCode
 
 						f = f.next.get(0);
 					}
-					
+
 					/*
 					 * begin loop for method body
 					 */
 					f = flatMethod.getNext(0);
 					while (true)
 					{
-						String output = formatFlatPrint(f, Fields, "this" + tempVarCount);
-						
+						String output = formatFlatPrint(f, Fields, "this"
+								+ tempVarCount, thisVarClassVector);
+
 						methodBlockVector.add(output);
-						
+
 						if (f.next.size() == 0)
 						{
 							break;
@@ -505,13 +523,12 @@ public class BuildCode
 
 						f = f.next.get(0);
 					}
-					
-					for(String out : methodBlockVector)
+
+					for (String out : methodBlockVector)
 					{
 						methodsPW.append(out);
 					}
-					
-					
+
 					// close the method
 					methodsPW.append("}\n\n");
 				}
@@ -549,10 +566,12 @@ public class BuildCode
 		methodHeadersPW.close();
 	}
 
-	private String formatFlatPrint(FlatNode fn, HashMap<String, String> fieldsMap, String thisVar)
+	private String formatFlatPrint(FlatNode fn,
+			HashMap<String, String> fieldsMap, String thisVar,
+			LinkedHashMap<String, String> thisVarClassVector)
 	{
 		String returnString = "";
-		
+
 		if (fn instanceof FlatLiteralNode)
 		{
 			String dst = ((FlatLiteralNode) fn).dst.getSymbol();
@@ -570,11 +589,11 @@ public class BuildCode
 		}
 		else if (fn instanceof FlatCastNode)
 		{
-			String dst = ((FlatCastNode)fn).dst.getSymbol();
-			String src = ((FlatCastNode)fn).src.getSymbol();
-			String type = ((FlatCastNode)fn).type.getSymbol();
-			
-			returnString = dst + " = " + "(" + type + ")" +  src + ";";
+			String dst = ((FlatCastNode) fn).dst.getSymbol();
+			String src = ((FlatCastNode) fn).src.getSymbol();
+			String type = ((FlatCastNode) fn).type.getSymbol();
+
+			returnString = dst + " = " + "(" + type + ")" + src + ";";
 		}
 		else if (fn instanceof FlatOpNode)
 		{
@@ -623,39 +642,101 @@ public class BuildCode
 		}
 		else if (fn instanceof FlatCall)
 		{
+			FlatCall fc = (FlatCall) fn;
+			String className = fc.method.getClassDesc().getClassName();
+			String returnType = fc.method.getReturnType().getSymbol();
 
-		}
-		else if(fn instanceof FlatLabel)
-		{
-			returnString = ((FlatLabel) fn).toString() +':';
-		}
-		else if(fn instanceof GoFlatLabel)
-		{
-			returnString = ((GoFlatLabel)fn).toString() + ';';
-		}
-		else if(fn instanceof FlatCondBranch)
-		{
-			GoFlatLabel gfl = ((GoFlatLabel)fn.next.firstElement());
-			if(!fn.prev.isEmpty() && fn.prev.firstElement() instanceof GoFlatLabel)
+			String thisClass = "";
+
+			if (thisVarClassVector.get(className) == null)
 			{
-				gfl = ((GoFlatLabel)fn.prev.firstElement());
-				returnString = "if (!" + ((FlatCondBranch) fn).test_cond.getSymbol() + ")" ;//+ gfl.toString();
+				thisClass = className;
 			}
 			else
 			{
-				returnString = "if (!" + ((FlatCondBranch) fn).test_cond.getSymbol() + ") " ;//+ gfl.toString();
+				thisClass = thisVarClassVector.get(className);
+			}
+
+			String methodNum = null;
+			
+			int classNum = 0;
+			for(String str : classNames.keySet())
+			{
+				if(str.equals(thisClass))
+				{
+					break;
+				}
+				else
+				{
+					classNum++;
+				}
+			}
+
+			for (int i = 0; i < maxMethods; i++)
+			{
+				System.out.println(classNames);
+
+				if (methodVT.elementAt(classNum * maxMethods + i).equals(
+						thisClass + "_" + fc.method.getSymbol()))
+				{
+					methodNum = Integer.toString(i);
+				}
+			}
+
+			if (methodNum == null)
+			{
+				throw new Error(
+						"The British are coming! The British are coming!");
+			}
+
+			String args = "";
+
+			for (int i = 0; i < fc.method.numParameters(); i++)
+			{
+				args += ", " + fc.method.getParameter(i);
+			}
+
+			returnString = "((void (*)(struct " + className + " *, "
+					+ returnType + "))virtualtable[" + thisClass + "->type*"
+					+ maxMethods + "+" + methodNum + "])((struct " + className
+					+ "*) " + thisClass + args + ");";
+		}
+		else if (fn instanceof FlatLabel)
+		{
+			returnString = ((FlatLabel) fn).toString() + ':';
+		}
+		else if (fn instanceof GoFlatLabel)
+		{
+			returnString = ((GoFlatLabel) fn).toString() + ';';
+		}
+		else if (fn instanceof FlatCondBranch)
+		{
+			GoFlatLabel gfl = ((GoFlatLabel) fn.next.firstElement());
+			if (!fn.prev.isEmpty()
+					&& fn.prev.firstElement() instanceof GoFlatLabel)
+			{
+				gfl = ((GoFlatLabel) fn.prev.firstElement());
+				returnString = "if (!"
+						+ ((FlatCondBranch) fn).test_cond.getSymbol() + ")";// +
+																			// gfl.toString();
+			}
+			else
+			{
+				returnString = "if (!"
+						+ ((FlatCondBranch) fn).test_cond.getSymbol() + ") ";// +
+																				// gfl.toString();
 			}
 			return returnString;
 		}
 		else if (fn instanceof FlatNew)
 		{
-			String type = ((FlatNew) fn).type.getSymbol();
+			String dst = ((FlatNew) fn).dst.getSymbol();
 
-			returnString = "struct *" + type + " = allocate_new(0);";
+			returnString = dst + " = allocate_new(0);";
 		}
 		else if (fn instanceof FlatReturnNode)
 		{
-			FlatReturnNode frn = (FlatReturnNode)fn;
+			FlatReturnNode frn = (FlatReturnNode) fn;
 			if (frn.tempdesc == null)
 			{
 				returnString = "return;";
@@ -666,7 +747,7 @@ public class BuildCode
 			}
 
 		}
-		
+
 		else
 		{
 			// throw new Error("Oh, god, what have we done?");
@@ -679,7 +760,6 @@ public class BuildCode
 	{
 		int numClasses = 0;
 		int numMethods = 0;
-		int maxMethods = 0;
 		boolean copy;
 		int maxGen = 0;
 
