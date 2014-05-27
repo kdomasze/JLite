@@ -495,6 +495,17 @@ public class BuildCode
 								}
 							}
 
+							for (String args : fieldsPerClass.get(
+									((MethodDescriptor) desc).getClassDesc()
+											.getSymbol()).keySet())
+							{
+								if (fln.dst.getSymbol().equals(args))
+								{
+									instanceOfField = true;
+									break;
+								}
+							}
+
 							if (!instanceOfField)
 							{
 								output = fln.dst.type.getSymbol() + " "
@@ -515,6 +526,17 @@ public class BuildCode
 								}
 							}
 
+							for (String args : fieldsPerClass.get(
+									((MethodDescriptor) desc).getClassDesc()
+											.getSymbol()).keySet())
+							{
+								if (fon.dest.getSymbol().equals(args))
+								{
+									instanceOfField = true;
+									break;
+								}
+							}
+
 							if (!instanceOfField)
 							{
 								output = fon.dest.type.getSymbol() + " "
@@ -525,38 +547,60 @@ public class BuildCode
 						{
 							FlatNameNode fnn = (FlatNameNode) f;
 							boolean instanceOfField = false;
-							for(String args : MethodArgs.keySet())
+							for (String args : MethodArgs.keySet())
 							{
-								if(fnn.dst.getSymbol().equals(args))
+								if (fnn.dst.getSymbol().equals(args))
 								{
 									instanceOfField = true;
 									break;
 								}
 							}
-							
-							if(!instanceOfField)
+
+							for (String args : fieldsPerClass.get(
+									((MethodDescriptor) desc).getClassDesc()
+											.getSymbol()).keySet())
+							{
+								if (fnn.dst.getSymbol().equals(args))
+								{
+									instanceOfField = true;
+									break;
+								}
+							}
+
+							if (!instanceOfField)
 							{
 								output = fnn.dst.type.getSymbol() + " "
-									+ fnn.dst.getSymbol() + ";\n";
+										+ fnn.dst.getSymbol() + ";\n";
 							}
 						}
 						else if (f instanceof FlatCastNode)
 						{
 							FlatCastNode fcn = (FlatCastNode) f;
 							boolean instanceOfField = false;
-							for(String args : MethodArgs.keySet())
+							for (String args : MethodArgs.keySet())
 							{
-								if(fcn.dst.getSymbol().equals(args))
+								if (fcn.dst.getSymbol().equals(args))
 								{
 									instanceOfField = true;
 									break;
 								}
 							}
-							
-							if(!instanceOfField)
+
+							for (String args : fieldsPerClass.get(
+									((MethodDescriptor) desc).getClassDesc()
+											.getSymbol()).keySet())
+							{
+								if (fcn.dst.getSymbol().equals(args))
+								{
+									instanceOfField = true;
+									break;
+								}
+							}
+
+							if (!instanceOfField)
 							{
 								output = fcn.dst.type.getSymbol() + " "
-									+ fcn.dst.getSymbol() + ";\n";
+										+ fcn.dst.getSymbol() + ";\n";
 							}
 						}
 						else if (f instanceof FlatNew)
@@ -564,22 +608,34 @@ public class BuildCode
 							FlatNew fn = (FlatNew) f;
 							String type = ((FlatNew) fn).type.getSymbol();
 							String dst = ((FlatNew) fn).dst.getSymbol();
-							
+
 							boolean instanceOfField = false;
-							for(String args : MethodArgs.keySet())
+							for (String args : MethodArgs.keySet())
 							{
-								if(fn.dst.getSymbol().equals(args))
+								if (fn.dst.getSymbol().equals(args))
 								{
 									instanceOfField = true;
 									break;
 								}
 							}
-							
-							if(!instanceOfField)
+
+							for (String args : fieldsPerClass.get(
+									((MethodDescriptor) desc).getClassDesc()
+											.getSymbol()).keySet())
+							{
+								if (fn.dst.getSymbol().equals(args))
+								{
+									instanceOfField = true;
+									break;
+								}
+							}
+
+							if (!instanceOfField)
 							{
 								output = "struct " + type + " *" + dst + ";\n";
-	
-								thisVarClassVector.put(fn.type.getSymbol(), dst);
+
+								thisVarClassVector
+										.put(fn.type.getSymbol(), dst);
 							}
 						}
 
