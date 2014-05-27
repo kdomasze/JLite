@@ -135,7 +135,7 @@ public class BuildCode
 		/*
 		 * generate structure prototypes
 		 */
-		for (Descriptor key : TACParent.keySet())
+		for (Descriptor key : classVector)
 		{
 			outString.add("struct " + key.getSymbol() + ";\n");
 		}
