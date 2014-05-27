@@ -310,6 +310,7 @@ public class BuildCode
 
 		Vector<String> classSize = new Vector<>();
 		Vector<String> superTypes = new Vector<>();
+		Vector<String> methodDecs = new Vector<>();
 
 		try
 		{
@@ -425,12 +426,11 @@ public class BuildCode
 						MethodArgs.put(method.getParamName(i), method
 								.getParamType(i).getSymbol());
 					}
-
-					// print main structure of method declaration
-					methodsPW.append(method.getReturnType().getSymbol() + " "
+					
+					String methodAppend = method.getReturnType().getSymbol() + " "
 							+ Class.getSymbol() + "_" + method.getSymbol()
 							+ "(struct " + Class.getSymbol() + " *this"
-							+ tempVarCount);
+							+ tempVarCount;
 
 					// print any arguments that are apart of the method
 					for (String name : MethodArgs.keySet())
@@ -441,9 +441,14 @@ public class BuildCode
 						{
 							type = "struct " + type + "*";
 						}
-						methodsPW.append(", " + type + name);
+						methodAppend += ", " + type + name;
 					}
-
+					
+					// print main structure of method declaration
+					methodsPW.append(methodAppend);
+					
+					methodDecs.add(methodAppend + ");");
+					
 					// close the method declaration and open the block body
 					methodsPW.append(")\n{\n");
 
@@ -537,9 +542,11 @@ public class BuildCode
 		}
 
 		methodsPW.close();
+		
+		generateMethodHeader(methodDecs);
 	}
 
-	private void generateMethodHeader()
+	private void generateMethodHeader(Vector<String> methodDecs)
 	{
 		File methodHeadersF = new File("methodheaders.h");
 		PrintWriter methodHeadersPW;
@@ -563,7 +570,16 @@ public class BuildCode
 			e.printStackTrace();
 			throw new Error("This is how the world ends.");
 		}
-
+		
+		methodHeadersPW.append("#ifndef METHODHEADERS_H\n#define METHODHEADERS_H\n#include \"strucdefs.h\"\n\n");
+		
+		for(String str : methodDecs)
+		{
+			methodHeadersPW.append(str + "\n\n");
+		}
+		
+		methodHeadersPW.append("#endif\n");
+		
 		methodHeadersPW.close();
 	}
 
@@ -661,9 +677,10 @@ public class BuildCode
 			String methodNum = null;
 			
 			int classNum = 0;
+			
 			for(String str : classNames.keySet())
 			{
-				if(str.equals(thisClass))
+				if(str.equals(className))
 				{
 					break;
 				}
@@ -675,10 +692,8 @@ public class BuildCode
 
 			for (int i = 0; i < maxMethods; i++)
 			{
-				System.out.println(classNames);
-
 				if (methodVT.elementAt(classNum * maxMethods + i).equals(
-						thisClass + "_" + fc.method.getSymbol()))
+						className + "_" + fc.method.getSymbol()))
 				{
 					methodNum = Integer.toString(i);
 				}
