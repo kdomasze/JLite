@@ -13,6 +13,7 @@ public class BuildCode
 	private LinkedHashMap<String, HashMap<String, String>> classNames = new LinkedHashMap<>();
 
 	public static Vector<String> methodVector;
+	public static Vector<String> methodVT = new Vector<>();
 
 	public BuildCode(HashMap<Descriptor, Vector<Descriptor>> tacp,
 			HashMap<Descriptor, FlatNode> tac)
@@ -746,19 +747,22 @@ public class BuildCode
 				}
 			}
 			classGen.put(key.getSymbol(), numMethods);
+			//System.out.println(numMethods);
 			if (((ClassDescriptor) key).getSuper() != null)
 			{
-				numMethods += classGen.get(key.getSymbol());
+				numMethods += classGen.get(((ClassDescriptor)key).getSuper());
+				//System.out.println(numMethods);
 			}
 			if (maxMethods < numMethods)
 			{
 				maxMethods = numMethods;
 			}
 		}
-		System.out.println("numClasses = " + numClasses + "  maxMethods = "
-				+ maxMethods);
+	/*	System.out.println("numClasses = " + numClasses + "  maxMethods = "
+				+ maxMethods);*/
 
 		String vmtString = "void * virtualtable[]={";
+		String vmtAdd;
 		int counter = 0;
 
 		// Prepare virtual Table String
@@ -775,10 +779,12 @@ public class BuildCode
 						FlatMethod fm = (FlatMethod) flat;
 						if (fm.method.getSymbol().equals(src))
 						{
-							vmtString += " &_"
-									+ fm.getMethod().getClassDesc().getSymbol()
+							vmtAdd =
+									 fm.getMethod().getClassDesc().getSymbol()
 									+ "_" + fm.method.getSymbol();
+							vmtString += " &" + vmtAdd;
 							numMethods += 1;
+							methodVT.add(vmtAdd);
 							if (counter < maxMethods * numClasses - 1)
 							{
 								vmtString += ",";
@@ -805,9 +811,14 @@ public class BuildCode
 				{
 					vmtString += "\n\t";
 				}
+				methodVT.add("0");
 				numMethods++;
 			}
 		}
+		/*for(String s:methodVT)
+		{
+			System.out.println(s);
+		}*/
 		vmtString += "}";
 		// System.out.println(vmtString);
 
