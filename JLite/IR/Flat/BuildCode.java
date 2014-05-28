@@ -892,8 +892,18 @@ public class BuildCode
 		else if (fn instanceof FlatNew)
 		{
 			String dst = ((FlatNew) fn).dst.getSymbol();
+			String classNum = "";
+			for (String name : classNames.keySet())
+			{
 
-			returnString = dst + " = allocate_new(0);";
+				if (name.equals(((FlatNew) fn).type.getSymbol()))
+				{
+					classNum = classNames.get(name).values().toArray()[0]
+							.toString();
+				}
+			}			
+			
+			returnString = dst + " = allocate_new(" + classNum + ");";
 		}
 		else if (fn instanceof FlatReturnNode)
 		{
