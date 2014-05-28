@@ -310,6 +310,10 @@ public class BuildCode
 		PrintWriter methodsPW;
 		int tempVarCount = 0;
 
+		String systemNum = "";
+		String mainClassNum = "";
+		String mainClass = "";
+
 		Vector<String> classSize = new Vector<>();
 		Vector<String> superTypes = new Vector<>();
 		Vector<String> methodDecs = new Vector<>();
@@ -377,7 +381,7 @@ public class BuildCode
 			}
 		}
 
-		methodsPW.append(")};\n");
+		methodsPW.append("};\n");
 
 		/*
 		 * print supertypes array
@@ -638,7 +642,52 @@ public class BuildCode
 										.put(fn.type.getSymbol(), dst);
 							}
 						}
+						else if (f instanceof FlatCall)
+						{
+							FlatCall fc = (FlatCall) f;
+							String dst = "";
 
+							if (fc.dst != null)
+							{
+								dst = fc.dst.type.getSymbol() + " "
+										+ fc.dst.getSymbol() + ";\n";
+
+								boolean instanceOfField = false;
+								for (String args : MethodArgs.keySet())
+								{
+									if (fc.dst.getSymbol().equals(args))
+									{
+										instanceOfField = true;
+										break;
+									}
+								}
+
+								for (String args : fieldsPerClass.get(
+										((MethodDescriptor) desc)
+												.getClassDesc().getSymbol())
+										.keySet())
+								{
+									if (fc.dst.getSymbol().equals(args))
+									{
+										instanceOfField = true;
+										break;
+									}
+								}
+
+								if (!instanceOfField)
+								{
+									output = dst;
+								}
+							}
+							else
+							{
+								output = dst;
+							}
+						}
+						
+						String outputTemp = "\t" + output;
+						output = outputTemp;
+						
 						if (!methodBlockVector.contains(output))
 						{
 							methodBlockVector.add(output);
@@ -685,6 +734,48 @@ public class BuildCode
 			}
 		}
 
+		for (Descriptor Class : TACParent.keySet())
+		{
+			if (generation((ClassDescriptor) Class) == 0)
+			{
+				Vector<Descriptor> MethodVector = TACParent.get(Class);
+
+				for (Descriptor desc : MethodVector)
+				{
+					if (desc.getSymbol().equals("main"))
+					{
+						mainClass = Class.getSymbol();
+					}
+				}
+			}
+		}
+
+		int count = 0;
+		for (String name : classNames.keySet())
+		{
+			if (name.equals("System"))
+			{
+				systemNum = Integer.toString(count);
+			}
+			if (name.equals(mainClass))
+			{
+				mainClassNum = Integer.toString(count);
+			}
+
+			count++;
+		}
+
+		methodsPW
+				.append("int main(int argc, const char *argv[])\n{\n\tint i;\n");
+		methodsPW.append("\tvoid *systemptr = allocate_new(");
+		methodsPW.append(systemNum);
+		methodsPW.append(");\n");
+		methodsPW.append("\tvoid *baseptr = allocate_new(");
+		methodsPW.append(mainClassNum);
+		methodsPW.append(");\n");
+		methodsPW.append("\t" + mainClass + "_main(baseptr, systemptr);\n");
+		methodsPW.append("}\n\n");
+
 		methodsPW.close();
 
 		generateMethodHeader(methodDecs);
@@ -716,7 +807,7 @@ public class BuildCode
 		}
 
 		methodHeadersPW
-				.append("#ifndef METHODHEADERS_H\n#define METHODHEADERS_H\n#include \"strucdefs.h\"\n\n");
+				.append("#ifndef METHODHEADERS_H\n#define METHODHEADERS_H\n#include \"structdefs.h\"\n\n");
 
 		for (String str : methodDecs)
 		{
@@ -800,13 +891,14 @@ public class BuildCode
 		}
 		else if (fn instanceof FlatNameNode)
 		{
-
+			return "";
 		}
 		else if (fn instanceof FlatCall)
 		{
 			FlatCall fc = (FlatCall) fn;
 			String className = fc.method.getClassDesc().getClassName();
 			String returnType = fc.method.getReturnType().getSymbol();
+			String dst = "";
 
 			String thisClass = "";
 
@@ -857,7 +949,12 @@ public class BuildCode
 				args += ", " + fc.method.getParameter(i);
 			}
 
-			returnString = "((void (*)(struct " + className + " *, "
+			if (fc.dst != null)
+			{
+				dst = fc.dst.getSymbol() + " = ";
+			}
+
+			returnString = dst + "((void (*)(struct " + className + " *, "
 					+ returnType + "))virtualtable[" + thisClass + "->type*"
 					+ maxMethods + "+" + methodNum + "])((struct " + className
 					+ "*) " + thisClass + args + ");";
@@ -901,8 +998,8 @@ public class BuildCode
 					classNum = classNames.get(name).values().toArray()[0]
 							.toString();
 				}
-			}			
-			
+			}
+
 			returnString = dst + " = allocate_new(" + classNum + ");";
 		}
 		else if (fn instanceof FlatReturnNode)
@@ -924,7 +1021,7 @@ public class BuildCode
 			// throw new Error("Oh, god, what have we done?");
 		}
 
-		return returnString + "\n";
+		return "\t" + returnString + "\n";
 	}
 
 	private void generateVMT()
@@ -1048,7 +1145,7 @@ public class BuildCode
 		/*
 		 * for(String s:methodVT) { System.out.println(s); }
 		 */
-		vmtString += "}";
+		vmtString += "};\n";
 		// System.out.println(vmtString);
 
 		// prepare file for opening and write virtual table string to file
@@ -1070,7 +1167,7 @@ public class BuildCode
 		catch (FileNotFoundException e2)
 		{
 			e2.printStackTrace();
-			throw new Error("It was not Christian's fault!!!");
+			throw new Error("It was Christian's fault!!!");
 		}
 		virtualTablePW.append(vmtString);
 		virtualTablePW.close();

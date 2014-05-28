@@ -1,8 +1,9 @@
 #ifndef RUNTIME_H
 #define RUNTIME_H
 
-struct BaseObject {
-  int type;
+struct BaseObject
+{
+	int type;
 };
 
 typedef struct BaseObject * ObjectPtr;
