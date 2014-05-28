@@ -27,10 +27,7 @@ public class BuildFlat
 		// iterate over classes
 		for (ClassDescriptor Class : classSet)
 		{
-			if (Class.getClassName().equals("System") == true)
-			{
-				continue;
-			}
+			
 
 			Vector<Descriptor> descriptorVector = new Vector<Descriptor>();
 
@@ -459,13 +456,28 @@ public class BuildFlat
 		TempDescriptor tmp = null;
 
 		MethodDescriptor md = min.getMethod();
+		
+		FlatNode flatArg = null;
+		FlatNode prevFlatArg = null;
 
 		TempDescriptor[] argArray = new TempDescriptor[min.getArgVector()
 				.size()];
 
 		for (int i = 0; i < min.getArgVector().size(); i++)
 		{
-			argArray[i] = FlattenExpression(min.getArg(i)).tmp;
+			NodePair argNodePair = FlattenExpression(min.getArg(i));
+			argArray[i] = argNodePair.tmp;
+			
+			if(flatArg == null)
+			{
+				flatArg = argNodePair.getBegin();
+			}
+			else
+			{
+				prevFlatArg.addNext(argNodePair.getBegin());
+			}
+			
+			prevFlatArg = argNodePair.getEnd();
 		}
 
 		if ((md.getReturnType().getSymbol().equals("void")))
@@ -479,8 +491,16 @@ public class BuildFlat
 		FlatCall fc = new FlatCall(md, tmp, null, argArray); // should not be
 																// null. Need to
 																// fix.
-
-		return new NodePair(fc, fc, tmp);
+		if(flatArg != null)
+		{
+			prevFlatArg.addNext(fc);
+		
+			return new NodePair(flatArg, fc, tmp);
+		}
+		else
+		{
+			return new NodePair(fc, fc, tmp);
+		}
 	}
 
 	public NodePair FlattenLiteralNode(TreeNode SubTree)

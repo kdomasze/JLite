@@ -247,17 +247,6 @@ public class BuildCode
 			classCount++;
 		}
 
-		// if System is called, generate System struct
-		if (generateSystem == true)
-		{
-			outString.add(0, "struct System;\n"); // append System prototype to
-													// the beginning of the file
-
-			outString.add("struct System\n{\n");
-			outString.add("\tint type;\n");
-			outString.add("};\n\n");
-		}
-
 		// put output in the file
 		for (String str : outString)
 		{
@@ -441,7 +430,7 @@ public class BuildCode
 					LinkedHashMap<String, String> thisVarClassVector = new LinkedHashMap<>();
 					MethodDescriptor method = (MethodDescriptor) desc;
 					FlatMethod flatMethod = (FlatMethod) flatNode;
-
+					
 					HashMap<String, String> MethodArgs = new HashMap<>();
 
 					// get all arguments for method
@@ -450,7 +439,7 @@ public class BuildCode
 						MethodArgs.put(method.getParamName(i), method
 								.getParamType(i).getSymbol());
 					}
-
+					
 					String methodAppend = method.getReturnType().getSymbol()
 							+ " " + Class.getSymbol() + "_"
 							+ method.getSymbol() + "(struct "
@@ -901,10 +890,11 @@ public class BuildCode
 			String dst = "";
 
 			String thisClass = "";
+			String argsTypes = "";
 
 			if (thisVarClassVector.get(className) == null)
 			{
-				thisClass = className;
+				thisClass = thisVar;
 			}
 			else
 			{
@@ -946,7 +936,12 @@ public class BuildCode
 
 			for (int i = 0; i < fc.method.numParameters(); i++)
 			{
-				args += ", " + fc.method.getParameter(i);
+				args += ", " + fc.args[i].getSymbol();
+			}
+			
+			for (int i = 0; i < fc.method.numParameters(); i++)
+			{
+				argsTypes += ", " + fc.args[i].type.getSymbol();
 			}
 
 			if (fc.dst != null)
@@ -954,8 +949,8 @@ public class BuildCode
 				dst = fc.dst.getSymbol() + " = ";
 			}
 
-			returnString = dst + "((void (*)(struct " + className + " *, "
-					+ returnType + "))virtualtable[" + thisClass + "->type*"
+			returnString = dst + "((" + returnType + " (*)(struct " + className + " *"
+					+ argsTypes + "))virtualtable[" + thisClass + "->type*"
 					+ maxMethods + "+" + methodNum + "])((struct " + className
 					+ "*) " + thisClass + args + ");";
 		}
@@ -1069,15 +1064,11 @@ public class BuildCode
 				}
 			}
 			classGen.put(key.getSymbol(), numMethods);
-			System.out.println("this gen = " + numMethods);
 			if (((ClassDescriptor) key).getSuper() != null)
 			{
-				System.out.println("last gen ="
-						+ classGen.get(((ClassDescriptor) key).getSuper()));
 				numMethods += classGen.get(((ClassDescriptor) key).getSuper());
 				classGen.remove(key.getSymbol());
 				classGen.put(key.getSymbol(), numMethods);
-				System.out.println(numMethods);
 			}
 			if (maxMethods < numMethods)
 			{

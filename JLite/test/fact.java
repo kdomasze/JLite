@@ -30,8 +30,10 @@ class fact {
 
 	void main(System x) {
 		fact f=new fact();
-		f.setNumber(4);
-		f.factIter();
+		int i = x.input();
+		f.setNumber(i);
+		x.output(f.factIter());
+		
 	}
 
 }
