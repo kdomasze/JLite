@@ -706,6 +706,10 @@ public class BuildCode
 
 						if (f.next.size() == 0)
 						{
+							if(!(f instanceof FlatReturnNode))
+							{
+								methodBlockVector.add("\t\treturn;\n");
+							}
 							break;
 						}
 

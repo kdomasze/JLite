@@ -64,7 +64,7 @@ public class BuildFlat
 				FlatMethod fm = new FlatMethod(Method);
 				if (!bn.hasNoCode())
 				{
-					fm.addNext(fn);
+					linkNodes(fm,fn);
 				}
 
 				fm.addFormalParameter(Method.getParameterTable());
@@ -103,7 +103,7 @@ public class BuildFlat
 			}
 			else
 			{
-				begin.addNext(np_begin);
+				linkNodes(begin,np_begin);
 			}
 
 			if (end == null)
@@ -112,7 +112,7 @@ public class BuildFlat
 			}
 			else
 			{
-				end.addNext(np_begin);
+				linkNodes(end,np_begin);
 				end = np_end;
 			}
 		}
@@ -414,7 +414,7 @@ public class BuildFlat
 		TempDescriptor tmp = np.tmp;
 
 		FlatReturnNode frn = new FlatReturnNode(tmp);
-		np.end.addNext(frn);
+		linkNodes(np.end, frn);
 		return new NodePair(np.begin, frn, tmp);
 	}
 
@@ -474,7 +474,7 @@ public class BuildFlat
 			}
 			else
 			{
-				prevFlatArg.addNext(argNodePair.getBegin());
+				linkNodes(prevFlatArg, argNodePair.getBegin());
 			}
 			
 			prevFlatArg = argNodePair.getEnd();
@@ -493,7 +493,7 @@ public class BuildFlat
 																// fix.
 		if(flatArg != null)
 		{
-			prevFlatArg.addNext(fc);
+			linkNodes(prevFlatArg, fc);
 		
 			return new NodePair(flatArg, fc, tmp);
 		}
@@ -539,20 +539,16 @@ public class BuildFlat
 		FlatLabel L1 = new FlatLabel(labelCount++); 
 		GoFlatLabel L2 = new GoFlatLabel("goto L", labelCount++);
 		
-		L1.addNext(testFlatCond.begin);
-		testFlatCond.begin.addPrev(L1);
-		testFlatCond.end.addNext(ifStatement);
-		ifStatement.addPrev(testFlatCond.end);
-		ifStatement.addNext(L2);
-		L2.addPrev(ifStatement);
-		L2.addNext(FlatLoopBody.begin);
-		FlatLoopBody.begin.addPrev(L2);
+		linkNodes(L1, testFlatCond.begin);
+		linkNodes(testFlatCond.end, ifStatement);
+		linkNodes(ifStatement, L2);
+		linkNodes(L2, FlatLoopBody.begin);
+	
 		GoFlatLabel L3 = new GoFlatLabel("goto L", L1.numL);
-		FlatLoopBody.end.addNext(L3);
-		L3.addPrev(FlatLoopBody.end);
+		linkNodes(FlatLoopBody.end, L3);
 		FlatLabel L4 = new FlatLabel(L2.numL);
-		L3.addNext(L4);
-		L4.addPrev(L3);
+		linkNodes(L3, L4);
+
 
 		return new NodePair(L1, L4);
 	}
@@ -571,12 +567,10 @@ public class BuildFlat
 		TempDescriptor tmp = testFlatCond.tmp;
 
 		FlatCondBranch ifStatement = new FlatCondBranch(tmp);
-		testFlatCond.end.addNext(ifStatement);
-		ifStatement.addPrev(testFlatCond.end);
-		ifStatement.addNext(L1);
-		L1.addPrev(ifStatement);
-		L1.addNext(trueFlatBlock.begin);
-		trueFlatBlock.begin.addPrev(L1);
+		linkNodes(testFlatCond.end, ifStatement);
+		linkNodes(ifStatement, L1);
+		linkNodes(L1, trueFlatBlock.begin);
+		
 		NodePair elseFlatBlock = null;
 
 		if (elseStatement != null)
@@ -589,17 +583,13 @@ public class BuildFlat
 		}
 
 		GoFlatLabel L2 = new GoFlatLabel("goto L", labelCount++);
-		trueFlatBlock.end.addNext(L2);
-		L2.addPrev(trueFlatBlock.end);
+		linkNodes(trueFlatBlock.end, L2);
 		FlatLabel L3 = new FlatLabel(L1.numL);
-		L2.addNext(L3);
-		L3.addPrev(L2);
-		L3.addNext(elseFlatBlock.begin);
-		elseFlatBlock.begin.addPrev(L3);
+		linkNodes(L2, L3);
+		linkNodes(L3, elseFlatBlock.begin);
 		FlatLabel L4 = new FlatLabel(L2.numL);
-		elseFlatBlock.end.addNext(L4);
-		L4.addPrev(elseFlatBlock.end);
-		
+		linkNodes(elseFlatBlock.end, L4);
+				
 
 		if (elseFlatBlock != null)
 		{
@@ -698,5 +688,11 @@ public class BuildFlat
 		}
 
 		return returnString;
+	}
+	
+	public void linkNodes(FlatNode n1, FlatNode n2)
+	{
+		n1.addNext(n2);
+		n2.addPrev(n1);
 	}
 }
