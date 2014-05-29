@@ -151,7 +151,7 @@ public class BuildCode
 		/*
 		 * generate actual structures for classes
 		 */
-		for (Descriptor key : TACParent.keySet())
+		for (Descriptor key : classVector)
 		{
 			fields = new Vector<>();
 			HashMap<String, String> superInfo = new HashMap<>();
@@ -168,7 +168,8 @@ public class BuildCode
 
 			if (!superInfo.containsKey(key.getSymbol()))
 			{
-				superInfo.put(superClass, Integer.toString(classCount));
+				superInfo.put(superClass, Integer.toString(classVector
+						.indexOf(((ClassDescriptor) key).getSuperDesc())));
 
 				classNames.put(key.getSymbol(), superInfo);
 			}
@@ -219,32 +220,26 @@ public class BuildCode
 				}
 
 				// check FlatMethods contain system
-				if (fn instanceof FlatMethod && generateSystem == false)
-				{
-					FlatMethod fm = (FlatMethod) fn;
-
-					for (int i = 0; i < fm.method.numParameters(); i++)
-					{
-						if (fm.method.getParamType(i).getSymbol()
-								.equals("System"))
-						{
-							HashMap<String, String> superInfoSystem = new HashMap<>();
-
-							superInfoSystem.put("null",
-									Integer.toString(classCount));
-
-							classNames.put("System", superInfoSystem);
-
-							classCount++;
-							generateSystem = true;
-						}
-					}
-				}
+				/*
+				 * if (fn instanceof FlatMethod && generateSystem == false) {
+				 * FlatMethod fm = (FlatMethod) fn;
+				 * 
+				 * for (int i = 0; i < fm.method.numParameters(); i++) { if
+				 * (fm.method.getParamType(i).getSymbol() .equals("System")) {
+				 * HashMap<String, String> superInfoSystem = new HashMap<>();
+				 * 
+				 * superInfoSystem.put("null", Integer.toString(classCount));
+				 * 
+				 * classNames.put("System", superInfoSystem);
+				 * 
+				 * 
+				 * generateSystem = true; } } }
+				 */
 			}
 
 			outString.add("};\n\n");
 
-			classCount++;
+			// classCount++;
 		}
 
 		// put output in the file
@@ -255,7 +250,7 @@ public class BuildCode
 
 		classDefsPW.close();
 
-		generateStructDefs(classCount);
+		generateStructDefs(classVector.size());
 	}
 
 	private void generateStructDefs(int classCount)
@@ -336,8 +331,9 @@ public class BuildCode
 		/*
 		 * get the info necessary for classsize and supertypes arrays
 		 */
-		for (String name : classNames.keySet())
+		for (Descriptor desc : classVector)
 		{
+			String name = desc.getSymbol();
 			// add each class name to the classSize vector
 			classSize.add(name);
 
@@ -394,7 +390,7 @@ public class BuildCode
 		/*
 		 * get fields to exclude them from generating in method body
 		 */
-		for (Descriptor Class : TACParent.keySet())
+		for (Descriptor Class : classVector)
 		{
 			Vector<Descriptor> MethodVector = TACParent.get(Class);
 
@@ -416,7 +412,7 @@ public class BuildCode
 		/*
 		 * print methods
 		 */
-		for (Descriptor Class : TACParent.keySet())
+		for (Descriptor Class : classVector)
 		{
 			Vector<Descriptor> MethodVector = TACParent.get(Class);
 
@@ -430,7 +426,7 @@ public class BuildCode
 					LinkedHashMap<String, String> thisVarClassVector = new LinkedHashMap<>();
 					MethodDescriptor method = (MethodDescriptor) desc;
 					FlatMethod flatMethod = (FlatMethod) flatNode;
-					
+
 					HashMap<String, String> MethodArgs = new HashMap<>();
 
 					// get all arguments for method
@@ -439,7 +435,7 @@ public class BuildCode
 						MethodArgs.put(method.getParamName(i), method
 								.getParamType(i).getSymbol());
 					}
-					
+
 					String methodAppend = method.getReturnType().getSymbol()
 							+ " " + Class.getSymbol() + "_"
 							+ method.getSymbol() + "(struct "
@@ -457,10 +453,17 @@ public class BuildCode
 						methodAppend += ", " + type + name;
 					}
 
-					// print main structure of method declaration
-					methodsPW.append(methodAppend);
-
 					methodDecs.add(methodAppend + ");");
+					
+					// print main structure of method declaration
+					if (Class.getSymbol().equals("System")
+							&& (method.getSymbol().equals("input") || method
+									.getSymbol().equals("output")))
+					{
+						continue;
+					}
+					
+					methodsPW.append(methodAppend);
 
 					// close the method declaration and open the block body
 					methodsPW.append(")\n{\n");
@@ -635,7 +638,7 @@ public class BuildCode
 						{
 							FlatCall fc = (FlatCall) f;
 							String dst = "";
-
+							
 							if (fc.dst != null)
 							{
 								dst = fc.dst.type.getSymbol() + " "
@@ -673,10 +676,10 @@ public class BuildCode
 								output = dst;
 							}
 						}
-						
+
 						String outputTemp = "\t" + output;
 						output = outputTemp;
-						
+
 						if (!methodBlockVector.contains(output))
 						{
 							methodBlockVector.add(output);
@@ -700,13 +703,14 @@ public class BuildCode
 						String output = formatFlatPrint(f,
 								fieldsPerClass.get(((MethodDescriptor) desc)
 										.getClassDesc().getSymbol()), "this"
-										+ tempVarCount, thisVarClassVector);
+										+ tempVarCount, thisVarClassVector,
+								(MethodDescriptor) desc);
 
 						methodBlockVector.add(output);
 
 						if (f.next.size() == 0)
 						{
-							if(!(f instanceof FlatReturnNode))
+							if (!(f instanceof FlatReturnNode))
 							{
 								methodBlockVector.add("\t\treturn;\n");
 							}
@@ -727,7 +731,7 @@ public class BuildCode
 			}
 		}
 
-		for (Descriptor Class : TACParent.keySet())
+		for (Descriptor Class : classVector)
 		{
 			if (generation((ClassDescriptor) Class) == 0)
 			{
@@ -738,25 +742,24 @@ public class BuildCode
 					if (desc.getSymbol().equals("main"))
 					{
 						mainClass = Class.getSymbol();
+						mainClassNum = Integer.toString(classVector
+								.indexOf(Class));
 					}
 				}
 			}
+			if (Class.getSymbol().equals("System"))
+			{
+				systemNum = Integer.toString(classVector.indexOf(Class));
+			}
 		}
 
-		int count = 0;
-		for (String name : classNames.keySet())
-		{
-			if (name.equals("System"))
-			{
-				systemNum = Integer.toString(count);
-			}
-			if (name.equals(mainClass))
-			{
-				mainClassNum = Integer.toString(count);
-			}
-
-			count++;
-		}
+		/*
+		 * int count = 0; for (String name : classNames.keySet()) { if
+		 * (name.equals("System")) { systemNum = Integer.toString(count); } if
+		 * (name.equals(mainClass)) { mainClassNum = Integer.toString(count); }
+		 * 
+		 * count++; }
+		 */
 
 		methodsPW
 				.append("int main(int argc, const char *argv[])\n{\n\tint i;\n");
@@ -814,7 +817,8 @@ public class BuildCode
 
 	private String formatFlatPrint(FlatNode fn,
 			HashMap<String, String> fieldsMap, String thisVar,
-			LinkedHashMap<String, String> thisVarClassVector)
+			LinkedHashMap<String, String> thisVarClassVector,
+			MethodDescriptor thisMethod)
 	{
 		String returnString = "";
 
@@ -894,37 +898,46 @@ public class BuildCode
 			String dst = "";
 
 			String thisClass = "";
+			String paramClass = "";
 			String argsTypes = "";
 
 			if (thisVarClassVector.get(className) == null)
 			{
 				thisClass = thisVar;
+				paramClass = thisClass;
+				for (int i = 0; i < thisMethod.numParameters(); i++)
+				{
+					System.out.println(thisMethod.getParamType(i).getSymbol()
+							+ "    " + className);
+					if (thisMethod.getParamType(i).getSymbol()
+							.equals(className))
+					{
+						thisClass = thisMethod.getParamName(i);
+					}
+				}
 			}
 			else
 			{
 				thisClass = thisVarClassVector.get(className);
+				paramClass = thisClass;
 			}
 
 			String methodNum = null;
 
-			int classNum = 0;
+			int classNum = classVector.indexOf(fc.method.getClassDesc());
 
-			for (String str : classNames.keySet())
-			{
-				if (str.equals(className))
-				{
-					break;
-				}
-				else
-				{
-					classNum++;
-				}
-			}
+			/*
+			 * for (Descriptor desc : classVector) {
+			 * System.out.println(classNum); String str = desc.getSymbol(); if
+			 * (str.equals(className)) { break; } else { classNum++; } }
+			 */
 
 			for (int i = 0; i < maxMethods; i++)
 			{
-				if (methodVT.elementAt(classNum * maxMethods + i).equals(
-						className + "_" + fc.method.getSymbol()))
+				String classCheck1 = methodVT.elementAt(classNum * maxMethods
+						+ i);
+				String classCheck2 = className + "_" + fc.method.getSymbol();
+				if (classCheck1.equals(classCheck2))
 				{
 					methodNum = Integer.toString(i);
 				}
@@ -942,7 +955,7 @@ public class BuildCode
 			{
 				args += ", " + fc.args[i].getSymbol();
 			}
-			
+
 			for (int i = 0; i < fc.method.numParameters(); i++)
 			{
 				argsTypes += ", " + fc.args[i].type.getSymbol();
@@ -953,10 +966,10 @@ public class BuildCode
 				dst = fc.dst.getSymbol() + " = ";
 			}
 
-			returnString = dst + "((" + returnType + " (*)(struct " + className + " *"
-					+ argsTypes + "))virtualtable[" + thisClass + "->type*"
-					+ maxMethods + "+" + methodNum + "])((struct " + className
-					+ "*) " + thisClass + args + ");";
+			returnString = dst + "((" + returnType + " (*)(struct " + className
+					+ " *" + argsTypes + "))virtualtable[" + thisClass
+					+ "->type*" + maxMethods + "+" + methodNum + "])((struct "
+					+ className + "*) " + thisClass + args + ");";
 		}
 		else if (fn instanceof FlatLabel)
 		{
@@ -989,15 +1002,15 @@ public class BuildCode
 		{
 			String dst = ((FlatNew) fn).dst.getSymbol();
 			String classNum = "";
-			for (String name : classNames.keySet())
-			{
+			/*
+			 * for (String name : classNames.keySet()) {
+			 * 
+			 * if (name.equals(((FlatNew) fn).type.getSymbol())) { classNum =
+			 * classNames.get(name).values().toArray()[0] .toString(); } }
+			 */
 
-				if (name.equals(((FlatNew) fn).type.getSymbol()))
-				{
-					classNum = classNames.get(name).values().toArray()[0]
-							.toString();
-				}
-			}
+			classNum = Integer.toString(classVector.indexOf(((FlatNew) fn).type
+					.getClassDesc()));
 
 			returnString = dst + " = allocate_new(" + classNum + ");";
 		}

@@ -10,12 +10,14 @@ __attribute__((malloc)) void * allocate_new(int type)
 	return v;
 }
 
-int System_input(struct System * this) 
+int System_input(struct System * this)
 {
-	return getchar();
+	int input;
+	scanf("%d", &input);
+	return input;
 }
 
-void System_output_I(struct System * this, int out) 
+void System_output(struct System * this, int out)
 {
-	putchar(out);
+	printf("%d\n", out);
 }

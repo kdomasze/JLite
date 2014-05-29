@@ -362,7 +362,14 @@ public class BuildFlat
 		}
 		else if (as.getSrc() instanceof MethodInvokeNode)
 		{
-			return FlattenMethodInvokeNode(as.getSrc(), out);
+			if(as.getDest() != null)
+			{
+				return FlattenMethodInvokeNode(as.getSrc(), as.getDest());
+			}
+			else
+			{
+				return FlattenMethodInvokeNode(as.getSrc(), null);
+			}
 		}
 		else if (as.getSrc() instanceof CastNode)
 		{
@@ -446,10 +453,7 @@ public class BuildFlat
 		return new NodePair(ffn, ffn, dst);
 	}
 
-	public NodePair FlattenMethodInvokeNode(TreeNode SubTree, TempDescriptor out) // ALMOST
-																					// DONE.
-																					// MISSING
-																					// THIS_TEMP
+	public NodePair FlattenMethodInvokeNode(TreeNode SubTree, ExpressionNode exp)
 	{
 		MethodInvokeNode min = (MethodInvokeNode) SubTree;
 
@@ -486,8 +490,17 @@ public class BuildFlat
 		}
 		else
 		{
-			tmp = getTempDescriptor(md.getReturnType());
+			if(exp != null)
+			{
+				NodePair np = FlattenExpression(exp);
+				tmp = new TempDescriptor(np.tmp.getSymbol(), md.getReturnType());
+			}
+			else
+			{
+				tmp = getTempDescriptor(md.getReturnType());
+			}
 		}
+		
 		FlatCall fc = new FlatCall(md, tmp, null, argArray); // should not be
 																// null. Need to
 																// fix.
