@@ -13,6 +13,7 @@ public class BuildCode
 	private LinkedHashMap<String, HashMap<String, String>> classNames = new LinkedHashMap<>();
 
 	public static Vector<String> methodVector;
+	public static Vector<String> testVector = new Vector<>();
 	public static Vector<String> methodVT = new Vector<>();
 	Vector<ClassDescriptor> classVector = new Vector<ClassDescriptor>();
 
@@ -435,7 +436,15 @@ public class BuildCode
 						MethodArgs.put(method.getParamName(i), method
 								.getParamType(i).getSymbol());
 					}
-
+					String testing = Class.getSymbol() + "_" + method.getSymbol();
+					if(testVector.contains(testing))
+					{
+						continue;
+					}
+					else
+					{
+						testVector.add(testing);
+					}
 					String methodAppend = method.getReturnType().getSymbol()
 							+ " " + Class.getSymbol() + "_"
 							+ method.getSymbol() + "(struct "
@@ -1104,7 +1113,7 @@ public class BuildCode
 		// Prepare virtual Table String
 		for (Descriptor key : classVector)
 		{
-			numMethods = 0;
+			numMethods = 0;	
 			for (String src : methodVector)
 			{
 				for (Descriptor desc : TACParent.get(key))
@@ -1120,6 +1129,10 @@ public class BuildCode
 							vmtString += " &" + vmtAdd;
 							numMethods += 1;
 							methodVT.add(vmtAdd);
+							/*if(!(testVector.contains(vmtAdd)))
+							{
+								testVector.add(vmtAdd);
+							}*/
 							if (counter < maxMethods * numClasses - 1)
 							{
 								vmtString += ",";
@@ -1150,6 +1163,12 @@ public class BuildCode
 				numMethods++;
 			}
 		}
+		/*System.out.println("test here");
+		for(String here: testVector)
+		{
+			System.out.println(here);
+		}
+		System.out.println("test end");*/
 		/*
 		 * for(String s:methodVT) { System.out.println(s); }
 		 */
