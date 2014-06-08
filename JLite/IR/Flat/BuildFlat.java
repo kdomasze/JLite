@@ -242,6 +242,7 @@ public class BuildFlat
 		NodePair rightNodePair = null;
 
 		ExpressionNode eRight = null;
+		ExpressionNode lefts = null;
 
 		if (!(SubTree instanceof AssignmentNode))
 		{
@@ -272,8 +273,17 @@ public class BuildFlat
 				AssignmentNode as = ((AssignmentNode) SubTree);
 				if (out == null)
 				{
-					tmp = new TempDescriptor(((NameNode) as.getDest())
-							.getName().getSymbol(), (as.getSrc()).getType());
+					if(as.getDest() instanceof FieldAccessNode)
+					{
+						leftNodePair = FlattenFieldAccessNode(as.getDest(), tmp);
+						/*tmp = new TempDescriptor(((FieldAccessNode) as.getDest())
+								.getFieldName(), (as.getSrc()).getType());*/
+					}
+					else
+					{
+						tmp = new TempDescriptor(((NameNode) as.getDest())
+								.getName().getSymbol(), (as.getSrc()).getType());
+					}
 				}
 				else
 				{
@@ -335,7 +345,11 @@ public class BuildFlat
 
 			out = new TempDescriptor(name, as.getSrc().getType());
 		}
-
+	/*	else if(as.getDest() instanceof FieldAccessNode)
+		{
+			
+		}
+*/
 		if (as.getSrc() instanceof NameNode)
 		{
 			if (((NameNode) as.getSrc()).getExpression() instanceof FieldAccessNode)
@@ -374,6 +388,10 @@ public class BuildFlat
 		else if (as.getSrc() instanceof CastNode)
 		{
 			return FlattenCastNode(as.getSrc(), as.getDest());
+		}
+		else if(as.getSrc() instanceof FieldAccessNode)
+		{
+			return FlattenFieldAccessNode((TreeNode)as.getSrc(), out);
 		}
 		else
 		{

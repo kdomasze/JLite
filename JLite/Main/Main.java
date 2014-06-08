@@ -69,6 +69,7 @@ public class Main
 					System.out.println(pn.PPrint(2, true));
 				/* Start build AST tree */
 				bir.parseFile(pn);
+				System.out.println(bir.toString());
 				/* End build ASR tree */
 			}
 			catch (Exception e)

@@ -129,8 +129,17 @@ public class BuildIR {
       CreateObjectNode con=new CreateObjectNode(td);
       return con;
     } else if (isNode(pn,"name")) {
-      NameDescriptor nd=parseName(pn);
-      return new NameNode(nd);
+    	if(pn.getChild("base") == null)
+    	{
+    		NameDescriptor nd=parseName(pn);
+    		return new NameNode(nd);
+    	}
+    	else
+    	{
+    		ExpressionNode en = parseExpression(pn.getChild("base").getFirstChild());
+    		String fieldname=pn.getChild("identifier").getTerminal();
+    		return new FieldAccessNode(en, fieldname);
+    	}
     } else if (isNode(pn,"this")) {
       NameDescriptor nd=new NameDescriptor("this");
       return new NameNode(nd);
