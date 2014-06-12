@@ -404,7 +404,7 @@ public class SemanticCheck {
       if (bestmd==null)
         bestmd=currmd;
       else {
-      //  throw new Error("Multiple methods work -- no overloading allowed");
+    	throw new Error("Multiple methods work -- no overloading allowed");
         /* Is this more specific than bestmd */
       }
     }
