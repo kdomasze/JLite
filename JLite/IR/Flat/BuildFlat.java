@@ -238,6 +238,8 @@ public class BuildFlat
 		TempDescriptor tmp = null;
 		Operation op = null;
 
+		NodePair destNodePair = null;
+		
 		NodePair leftNodePair = null;
 		NodePair rightNodePair = null;
 
@@ -245,7 +247,7 @@ public class BuildFlat
 		ExpressionNode lefts = null;
 
 		if (!(SubTree instanceof AssignmentNode))
-		{
+		{			
 			if (SubTree instanceof OpNode)
 			{
 				if (out == null)
@@ -257,33 +259,44 @@ public class BuildFlat
 					tmp = out;
 				}
 				op = ((OpNode) SubTree).getOp();
+				
+				leftNodePair = FlattenExpression(((OpNode) SubTree).getLeft());
+				eRight = ((OpNode) SubTree).getRight();
+			}
+			else if(SubTree instanceof FieldAccessNode)
+			{
+				tmp = out;
+				
+				leftNodePair = FlattenFieldAccessNode((FieldAccessNode) SubTree, out);
 			}
 			else
 			{
 				throw new Error("Live free or die hard.");
 			}
-
-			leftNodePair = FlattenExpression(((OpNode) SubTree).getLeft());
-			eRight = ((OpNode) SubTree).getRight();
 		}
 		else
 		{
+			leftNodePair = FlattenExpression(((AssignmentNode) SubTree)
+					.getSrc()); // IF THINGS BREAK, MOVE BACK TO BOTTOM OF THIS BLOCK
+			
 			if (((AssignmentNode) SubTree).getSrc() instanceof LiteralNode)
 			{
 				AssignmentNode as = ((AssignmentNode) SubTree);
 				if (out == null)
 				{
-					if(as.getDest() instanceof FieldAccessNode)
+					/*if(as.getDest() instanceof FieldAccessNode)
 					{
-						leftNodePair = FlattenFieldAccessNode(as.getDest(), tmp);
-						/*tmp = new TempDescriptor(((FieldAccessNode) as.getDest())
-								.getFieldName(), (as.getSrc()).getType());*/
+						destNodePair = FlattenFieldAccessNode(as.getDest(), tmp);
+						tmp = destNodePair.tmp;
 					}
 					else
 					{
 						tmp = new TempDescriptor(((NameNode) as.getDest())
 								.getName().getSymbol(), (as.getSrc()).getType());
-					}
+					}*/
+					
+					tmp = new TempDescriptor(((NameNode) as.getDest())
+							.getName().getSymbol(), (as.getSrc()).getType());
 				}
 				else
 				{
@@ -311,26 +324,34 @@ public class BuildFlat
 			{
 				throw new Error("This is the end of the world as we know it.");
 			}
-
-			leftNodePair = FlattenExpression(((AssignmentNode) SubTree)
-					.getSrc());
 		}
 
 		FlatNode last = leftNodePair.end;
+		
+		System.out.println(leftNodePair);
 
 		if (eRight != null)
 		{
 			rightNodePair = FlattenExpression(((OpNode) SubTree).getRight());
-			leftNodePair.end.next.add(rightNodePair.begin);
+			
+			leftNodePair.end.next.add(rightNodePair.begin);			
 			rightNodePair.begin.prev.add(leftNodePair.end);
 			last = rightNodePair.end;
 		}
-
+		
 		FlatOpNode fon = new FlatOpNode(tmp, leftNodePair.tmp,
 				(rightNodePair != null) ? rightNodePair.tmp : null, op);
 		last.next.add(fon);
+		
 		fon.prev.add(last);
-
+		
+		if(destNodePair != null)
+		{
+			linkNodes(destNodePair.begin, leftNodePair.begin);
+			
+			return new NodePair(destNodePair.begin, fon, tmp);
+		}
+		
 		return new NodePair(leftNodePair.begin, fon, tmp);
 	}
 
@@ -338,6 +359,9 @@ public class BuildFlat
 	{
 		AssignmentNode as = ((AssignmentNode) SubTree);
 		TempDescriptor out = null;
+		FlatFieldNode ffn = null;
+		
+		NodePair np = null;
 
 		if (as.getDest() instanceof NameNode)
 		{
@@ -345,58 +369,73 @@ public class BuildFlat
 
 			out = new TempDescriptor(name, as.getSrc().getType());
 		}
-	/*	else if(as.getDest() instanceof FieldAccessNode)
+		if(as.getDest() instanceof FieldAccessNode)
 		{
-			
+			NodePair fnp = FlattenFieldAccessNode(((FieldAccessNode) as.getDest()), out);
+			ffn = (FlatFieldNode) fnp.begin;
+			out = fnp.tmp;
 		}
-*/
+		
 		if (as.getSrc() instanceof NameNode)
 		{
-			if (((NameNode) as.getSrc()).getExpression() instanceof FieldAccessNode)
+			/*if (((NameNode) as.getSrc()).getExpression() instanceof FieldAccessNode)
 			{
-				return FlattenFieldAccessNode(
+				np = FlattenFieldAccessNode(
 						((NameNode) as.getSrc()).getExpression(), out);
-			}
+			}*/
 
-			return FlattenOpNode(SubTree, out);
+			np = FlattenOpNode(SubTree, out);
 		}
 		else if (as.getSrc() instanceof LiteralNode)
 		{
-			return FlattenOpNode(SubTree, out);
+			np = FlattenOpNode(SubTree, out);
 		}
 		else if (as.getSrc() instanceof OpNode)
 		{
 			OpNode on = ((OpNode) as.getSrc());
 
-			return FlattenOpNode((TreeNode) on, out);
+			np = FlattenOpNode((TreeNode) on, out);
 		}
 		else if (as.getSrc() instanceof CreateObjectNode)
 		{
-			return FlattenCreateObjectNode(SubTree, out);
+			np = FlattenCreateObjectNode(SubTree, out);
 		}
 		else if (as.getSrc() instanceof MethodInvokeNode)
 		{
 			if(as.getDest() != null)
 			{
-				return FlattenMethodInvokeNode(as.getSrc(), as.getDest());
+				np = FlattenMethodInvokeNode(as.getSrc(), as.getDest());
 			}
 			else
 			{
-				return FlattenMethodInvokeNode(as.getSrc(), null);
+				np = FlattenMethodInvokeNode(as.getSrc(), null);
 			}
 		}
 		else if (as.getSrc() instanceof CastNode)
 		{
-			return FlattenCastNode(as.getSrc(), as.getDest());
+			np = FlattenCastNode(as.getSrc(), as.getDest());
 		}
 		else if(as.getSrc() instanceof FieldAccessNode)
 		{
-			return FlattenFieldAccessNode((TreeNode)as.getSrc(), out);
+			np = FlattenFieldAccessNode((TreeNode)as.getSrc(), null);
+			//np = FlattenOpNode((TreeNode)as.getSrc(), out);
+			FlatOpNode fon = new FlatOpNode(out, np.tmp, null, new Operation(Operation.ASSIGN));
+			
+			linkNodes(np.end, fon);
+			np.end = fon;
 		}
 		else
 		{
 			throw new Error("I can't let you do that, Dave.");
 		}
+		
+		if(ffn != null)
+		{
+			linkNodes(ffn, np.begin);
+			np.begin = ffn;
+		}
+		
+		return np;
 	}
 
 	public NodePair FlattenCastNode(TreeNode SubTree, TreeNode SubTree2)
